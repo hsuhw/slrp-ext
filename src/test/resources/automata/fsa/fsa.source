@@ -1,0 +1,29 @@
+fsa1 {
+    start: s0;
+
+    s0 -> s0 bot;
+    s0 -> s0 top;
+    s0 -> s1 top;
+    s1 -> s1 bot;
+    s1 -> s1 top;
+    s1 -> s2 top;
+    s2 -> s2 bot;
+    s2 -> s2 top;
+
+    accept: s1;
+}
+
+fsa2 {
+    start: s0;
+
+    s0 -> s0 bot;
+    s0 -> s0 top;
+    s0 -> s1 top;
+    s1 -> s1 bot;
+    s1 -> s1 top;
+    s1 -> s2 top;
+    s2 -> s2 bot;
+    s2 -> s2 top;
+
+    accept: s1;
+}

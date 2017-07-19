@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cd "$(dirname "${BASH_SOURCE[0]}")/build/libs" || exit
+
+java -Xss20000k -Xmx2000m -ea -jar slrp-ext-all.jar "../../$@"

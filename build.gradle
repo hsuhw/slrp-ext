@@ -1,0 +1,48 @@
+apply plugin: 'com.github.johnrengelman.shadow'
+apply plugin: 'java'
+apply plugin: 'antlr'
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.github.jengelman.gradle.plugins:shadow:2.0.1'
+    }
+}
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    antlr 'org.antlr:antlr4:4.7'
+    compile 'org.ow2.sat4j:org.ow2.sat4j.core:2.3.5'
+    compile 'org.apache.logging.log4j:log4j-api:2.8.2'
+    compile 'org.apache.logging.log4j:log4j-core:2.8.2'
+    compile 'org.eclipse.collections:eclipse-collections-api:8.2.0'
+    compile 'org.eclipse.collections:eclipse-collections:8.2.0'
+    testCompile 'com.mscharhag.oleaster:oleaster-runner:0.2.0'
+    testCompile 'com.mscharhag.oleaster:oleaster-matcher:0.2.0'
+    testCompile 'junit:junit:4.12'
+}
+
+generateGrammarSource {
+    exclude 'parser/generated/Automaton.g4'
+    exclude 'parser/generated/Transducer.g4'
+    exclude 'parser/generated/Tokens.g4'
+    arguments += ["-lib", "src/main/antlr/parser/generated"]
+}
+
+test {
+    testLogging {
+        showStandardStreams = true
+    }
+}
+
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'cli.Main'
+    }
+}

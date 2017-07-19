@@ -1,0 +1,13 @@
+version: "3"
+
+services:
+  gradle:
+    build:
+      context: .
+      args:
+        - JAVA_IMG_VERSION=${JAVA_IMG_VERSION}
+        - GRADLE_VERSION=${GRADLE_VERSION}
+        - GRADLE_SHA=${GRADLE_SHA}
+    volumes:
+      - ..:/usr/share/app
+      - ./volumes/gradle-cache:/root/.gradle/caches

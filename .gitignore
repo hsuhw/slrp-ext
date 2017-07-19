@@ -1,0 +1,50 @@
+### Project Specific Rules
+container/volumes/*
+*.tokens
+
+### IntelliJ Project Files
+.idea/
+out/
+gen/
+*.iml
+
+
+### Java Template
+
+# Compiled class files
+*.class
+
+# Log files
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile tools for Java (J2ME)
+.mtj.tmp/
+
+# Package files
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+
+### Gradle Template
+.gradle/
+build/
+
+# Ignore Gradle GUI config
+gradle-app.setting
+
+# Ignoring Gradle wrapper (use Docker to keep Gradle version instead)
+gradle/
+gradlew*
+
+# Cache of project
+.gradletasknamecache
