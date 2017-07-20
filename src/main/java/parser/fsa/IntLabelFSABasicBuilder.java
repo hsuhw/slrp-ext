@@ -1,5 +1,6 @@
 package parser.fsa;
 
+import automata.IntAlphabet;
 import automata.fsa.IntLabelFSA;
 import automata.part.MutableState;
 import automata.part.MutableStateImpl;
@@ -30,14 +31,13 @@ import java.util.List;
 public class IntLabelFSABasicBuilder extends AutomatonBasicBaseListener
 {
     private static final int N_TRANSITION_CAPACITY = 3;
-    private final MutableObjectIntMap<String> alphabet;
+    private final IntAlphabet alphabet;
     private List<IntLabelFSA> builtAutomata;
     private Bookkeeper keeper;
 
-    public IntLabelFSABasicBuilder(MutableObjectIntMap<String> alphabet)
+    public IntLabelFSABasicBuilder(IntAlphabet alphabet)
     {
         this.alphabet = alphabet;
-        this.alphabet.getIfAbsentPut("", alphabet.size());
         builtAutomata = new FastList<>();
     }
 
@@ -94,7 +94,7 @@ public class IntLabelFSABasicBuilder extends AutomatonBasicBaseListener
     private static class Bookkeeper
     {
         private final int capacity;
-        private final MutableObjectIntMap<String> alphabet;
+        private final IntAlphabet alphabet;
 
         private MutableObjectIntMap<String> stateIndexTable;
         private MutableList<MutableIntObjectMap<MutableIntList>> stateTransTable;
@@ -103,7 +103,7 @@ public class IntLabelFSABasicBuilder extends AutomatonBasicBaseListener
         private ImmutableList<MutableState> states;
         private ImmutableList<IntLabel> labels;
 
-        Bookkeeper(int capacity, MutableObjectIntMap<String> alphabet)
+        Bookkeeper(int capacity, IntAlphabet alphabet)
         {
             this.capacity = capacity;
             this.alphabet = alphabet;
@@ -115,7 +115,7 @@ public class IntLabelFSABasicBuilder extends AutomatonBasicBaseListener
 
         int getSymbolIndex(String symbol)
         {
-            return alphabet.getIfAbsentPut(symbol, alphabet.size());
+            return alphabet.getIfAbsentPut(symbol);
         }
 
         int getStateIndex(String stateName)
@@ -151,7 +151,7 @@ public class IntLabelFSABasicBuilder extends AutomatonBasicBaseListener
         private ImmutableList<IntLabel> prepareIntLabels()
         {
             final IntLabel[] labels = new IntLabel[alphabet.size()];
-            alphabet.forEachValue(s -> labels[s] = new IntLabel(s));
+            alphabet.getInstance().forEachValue(s -> labels[s] = new IntLabel(s));
             return Lists.immutable.of(labels);
         }
 
@@ -198,10 +198,9 @@ public class IntLabelFSABasicBuilder extends AutomatonBasicBaseListener
             states = prepareMutableStates();
 
             // settle state objects
-            final int epsilon = alphabet.get("");
             stateTransTable.forEachWithIndex((stateTrans, stateIndex) -> {
                 final MutableState state = states.get(stateIndex);
-                if (stateTrans.get(epsilon) == null && stateTrans
+                if (stateTrans.get(IntAlphabet.EPSILON) == null && stateTrans
                     .allSatisfy(each -> each == null || each.size() == 1)) {
                     // the state has deterministic transitions
                     finalizeDeterministicState(state, stateTrans);

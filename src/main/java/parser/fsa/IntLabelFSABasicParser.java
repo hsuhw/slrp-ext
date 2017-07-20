@@ -1,5 +1,6 @@
 package parser.fsa;
 
+import automata.IntAlphabet;
 import automata.fsa.IntLabelFSA;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
@@ -19,12 +20,17 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-public class IntLabelFSABasicParser extends ParserWithAlphabetAbst<MutableObjectIntMap<String>>
-    implements ParserWithAlphabet<MutableObjectIntMap<String>>
+public class IntLabelFSABasicParser extends ParserWithAlphabetAbst<IntAlphabet>
+    implements ParserWithAlphabet<IntAlphabet>
 {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    public IntLabelFSABasicParser(MutableObjectIntMap<String> alphabet)
+    public IntLabelFSABasicParser()
+    {
+        super(new IntAlphabet(""));
+    }
+
+    public IntLabelFSABasicParser(IntAlphabet alphabet)
     {
         super(alphabet);
     }

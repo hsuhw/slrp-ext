@@ -1,6 +1,8 @@
 package parser;
 
-public interface ParserWithAlphabet<T> extends Parser
+import automata.Alphabet;
+
+public interface ParserWithAlphabet<T extends Alphabet> extends Parser
 {
     T getAlphabet();
 }

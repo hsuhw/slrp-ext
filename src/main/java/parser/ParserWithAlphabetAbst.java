@@ -1,6 +1,8 @@
 package parser;
 
-public abstract class ParserWithAlphabetAbst<T> implements ParserWithAlphabet<T>
+import automata.Alphabet;
+
+public abstract class ParserWithAlphabetAbst<T extends Alphabet> implements ParserWithAlphabet<T>
 {
     protected final T alphabet;
 
