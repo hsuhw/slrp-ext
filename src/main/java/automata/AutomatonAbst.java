@@ -89,4 +89,6 @@ public abstract class AutomatonAbst implements Automaton
 
         return sout.toString();
     }
+
+    // TODO: [lack] hashCode & equals
 }

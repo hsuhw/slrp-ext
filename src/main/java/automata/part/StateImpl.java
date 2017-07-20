@@ -41,7 +41,7 @@ public class StateImpl implements State
         this.displayName = displayName;
         this.dTransitions = dTransitions;
         isDeterministic = true;
-        hashCode = computeHashCode();
+        hashCode = computeHashCode(); // FIXME: [anti] overridable method in constructor
     }
 
     public StateImpl(int id, String displayName,
