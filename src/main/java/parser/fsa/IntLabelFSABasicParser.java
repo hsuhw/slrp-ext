@@ -10,7 +10,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
+import org.eclipse.collections.api.list.ImmutableList;
 import parser.ParserWithAlphabet;
 import parser.ParserWithAlphabetAbst;
 import parser.generated.AutomatonBasicLexer;
@@ -18,7 +18,6 @@ import parser.generated.AutomatonBasicParser;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 
 public class IntLabelFSABasicParser extends ParserWithAlphabetAbst<IntAlphabet>
     implements ParserWithAlphabet<IntAlphabet>
@@ -35,7 +34,7 @@ public class IntLabelFSABasicParser extends ParserWithAlphabetAbst<IntAlphabet>
         super(alphabet);
     }
 
-    private List<IntLabelFSA> parse(CharStream charStream)
+    private ImmutableList<IntLabelFSA> parse(CharStream charStream)
     {
         LOGGER.info("Invoke the IntLabelFSA parsing on a given source.");
         final long startTime = System.currentTimeMillis();
@@ -57,14 +56,14 @@ public class IntLabelFSABasicParser extends ParserWithAlphabetAbst<IntAlphabet>
     }
 
     @Override
-    public List<IntLabelFSA> parse(InputStream stream) throws IOException
+    public ImmutableList<IntLabelFSA> parse(InputStream stream) throws IOException
     {
         final CharStream charStream = CharStreams.fromStream(stream);
         return parse(charStream);
     }
 
     @Override
-    public List<IntLabelFSA> parse(String source)
+    public ImmutableList<IntLabelFSA> parse(String source)
     {
         final CharStream charStream = CharStreams.fromString(source);
         return parse(charStream);

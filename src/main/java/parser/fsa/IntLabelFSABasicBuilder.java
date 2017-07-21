@@ -26,13 +26,12 @@ import parser.generated.AutomatonBasicBaseListener;
 import parser.generated.AutomatonBasicParser;
 
 import java.util.Arrays;
-import java.util.List;
 
 public class IntLabelFSABasicBuilder extends AutomatonBasicBaseListener
 {
     private static final int N_TRANSITION_CAPACITY = 3;
     private final IntAlphabet alphabet;
-    private List<IntLabelFSA> builtAutomata;
+    private MutableList<IntLabelFSA> builtAutomata;
     private Bookkeeper keeper;
 
     public IntLabelFSABasicBuilder(IntAlphabet alphabet)
@@ -41,9 +40,9 @@ public class IntLabelFSABasicBuilder extends AutomatonBasicBaseListener
         builtAutomata = new FastList<>();
     }
 
-    public List<IntLabelFSA> getAutomata()
+    public ImmutableList<IntLabelFSA> getAutomata()
     {
-        return builtAutomata;
+        return builtAutomata.toImmutable();
     }
 
     private int estimateNeededContainerSpace(ParserRuleContext ctx)

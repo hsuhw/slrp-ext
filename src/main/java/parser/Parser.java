@@ -1,12 +1,13 @@
 package parser;
 
+import org.eclipse.collections.api.list.ImmutableList;
+
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
 
 public interface Parser
 {
-    List<?> parse(String source);
+    ImmutableList<?> parse(String source);
 
-    List<?> parse(InputStream is) throws IOException;
+    ImmutableList<?> parse(InputStream is) throws IOException;
 }
