@@ -30,6 +30,7 @@ import java.util.Arrays;
 public class IntLabelFSABasicBuilder extends AutomatonBasicBaseListener
 {
     private static final int N_TRANSITION_CAPACITY = 3;
+
     private final IntAlphabet alphabet;
     private MutableList<IntLabelFSA> builtAutomata;
     private Bookkeeper keeper;
@@ -94,7 +95,6 @@ public class IntLabelFSABasicBuilder extends AutomatonBasicBaseListener
     {
         private final int capacity;
         private final IntAlphabet alphabet;
-
         private MutableObjectIntMap<String> stateIndexTable;
         private MutableList<MutableIntObjectMap<MutableIntList>> stateTransTable;
         private MutableIntBooleanMap startStateTable;
@@ -139,12 +139,12 @@ public class IntLabelFSABasicBuilder extends AutomatonBasicBaseListener
         {
             final int dept = getStateIndex(deptStateName);
             final int dest = getStateIndex(destStateName);
-            final int s = getSymbolIndex(symbol);
+            final int sym = getSymbolIndex(symbol);
 
-            if (!stateTransTable.get(dept).containsKey(s)) {
-                stateTransTable.get(dept).put(s, new IntArrayList(N_TRANSITION_CAPACITY));
+            if (!stateTransTable.get(dept).containsKey(sym)) {
+                stateTransTable.get(dept).put(sym, new IntArrayList(N_TRANSITION_CAPACITY));
             }
-            stateTransTable.get(dept).get(s).add(dest);
+            stateTransTable.get(dept).get(sym).add(dest);
         }
 
         private ImmutableList<IntLabel> prepareIntLabels()
