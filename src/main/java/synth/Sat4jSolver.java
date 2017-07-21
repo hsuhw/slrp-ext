@@ -93,15 +93,111 @@ public class Sat4jSolver implements SatSolver
         return solver.nConstraints();
     }
 
+    public void setLiteralTruthy(int literal)
+    {
+        model = null;
+        try {
+            solver.addClause(new VecInt(new int[]{literal}));
+        } catch (ContradictionException e) {
+            final String msg = "contradiction found when setting literal " + literal + " true";
+            throw new UnsupportedOperationException(msg);
+        }
+    }
+
+    public void setLiteralFalsy(int literal)
+    {
+        model = null;
+        try {
+            solver.addClause(new VecInt(new int[]{-literal}));
+        } catch (ContradictionException e) {
+            final String msg = "contradiction found when setting literal " + literal + " false";
+            throw new UnsupportedOperationException(msg);
+        }
+    }
+
     @Override
-    public void addClause(int[] clause) throws UnsupportedOperationException
+    public void addClause(int... clause) throws UnsupportedOperationException
     {
         model = null;
         try {
             solver.addClause(new VecInt(clause));
         } catch (ContradictionException e) {
-            final String msg = "contradiction found when adding clause " + Arrays.toString(clause);
-            throw new UnsupportedOperationException(msg);
+            final String msg = "contradiction found when adding clause ";
+            throw new UnsupportedOperationException(msg + Arrays.toString(clause));
+        }
+    }
+
+    @Override
+    public void addClause(IntInterval clause)
+    {
+        addClause(clause.toArray());
+    }
+
+    @Override
+    public void addClauseAtLeast(int degree, int... clause)
+    {
+        model = null;
+        try {
+            solver.addAtLeast(new VecInt(clause), degree);
+        } catch (ContradictionException e) {
+            final String msg = "contradiction found when adding at-least-" + degree + " clause ";
+            throw new UnsupportedOperationException(msg + Arrays.toString(clause));
+        }
+    }
+
+    @Override
+    public void addClauseAtLeast(int degree, IntInterval clause)
+    {
+        addClauseAtLeast(degree, clause.toArray());
+    }
+
+    @Override
+    public void addClauseAtMost(int degree, int... clause)
+    {
+        model = null;
+        try {
+            solver.addAtMost(new VecInt(clause), degree);
+        } catch (ContradictionException e) {
+            final String msg = "contradiction found when adding at-most-" + degree + " clause ";
+            throw new UnsupportedOperationException(msg + Arrays.toString(clause));
+        }
+    }
+
+    @Override
+    public void addClauseAtMost(int degree, IntInterval clause)
+    {
+        addClauseAtMost(degree, clause.toArray());
+    }
+
+    @Override
+    public void addClauseBlocking(int... clause)
+    {
+        model = null;
+        try {
+            solver.addBlockingClause(new VecInt(clause));
+        } catch (ContradictionException e) {
+            final String msg = "contradiction found when adding blocking clause ";
+            throw new UnsupportedOperationException(msg + Arrays.toString(clause));
+        }
+    }
+
+    @Override
+    public void addClauseBlocking(IntInterval clause)
+    {
+        addClauseBlocking(clause.toArray());
+    }
+
+    @Override
+    public void addImplication(int antecedent, int consequent)
+    {
+        addClause(-antecedent, consequent);
+    }
+
+    @Override
+    public void addImplication(int antecedent, int... consequents)
+    {
+        for (int consequent : consequents) {
+            addImplication(antecedent, consequent);
         }
     }
 
@@ -143,5 +239,6 @@ public class Sat4jSolver implements SatSolver
     {
         model = null;
         solver.reset();
+        solver.newVar(MAX_VARIABLE_NUM);
     }
 }

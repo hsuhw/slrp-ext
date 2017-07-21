@@ -26,7 +26,29 @@ public interface SatSolver
 
     int getClauseNumber();
 
-    void addClause(int[] clause);
+    void setLiteralTruthy(int literal);
+
+    void setLiteralFalsy(int literal);
+
+    void addClause(int... clause);
+
+    void addClause(IntInterval clause);
+
+    void addClauseAtLeast(int degree, int... clause);
+
+    void addClauseAtLeast(int degree, IntInterval clause);
+
+    void addClauseAtMost(int degree, int... clause);
+
+    void addClauseAtMost(int degree, IntInterval clause);
+
+    void addClauseBlocking(int... clause);
+
+    void addClauseBlocking(IntInterval clause);
+
+    void addImplication(int antecedent, int consequent);
+
+    void addImplication(int antecedent, int... consequents);
 
     boolean solveSuccessfully();
 
