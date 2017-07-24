@@ -29,7 +29,7 @@ import java.util.Arrays;
 
 public class IntLabelFSABasicBuilder extends AutomatonBasicBaseListener
 {
-    private static final int N_TRANSITION_CAPACITY = 3;
+    private static final int NONDETERMINISTIC_TRANSITIONS_CAPACITY = 3;
 
     private final IntAlphabet alphabet;
     private MutableList<IntLabelFSA> builtAutomata;
@@ -142,7 +142,7 @@ public class IntLabelFSABasicBuilder extends AutomatonBasicBaseListener
             final int sym = getSymbolIndex(symbol);
 
             if (!stateTransTable.get(dept).containsKey(sym)) {
-                stateTransTable.get(dept).put(sym, new IntArrayList(N_TRANSITION_CAPACITY));
+                stateTransTable.get(dept).put(sym, new IntArrayList(NONDETERMINISTIC_TRANSITIONS_CAPACITY));
             }
             stateTransTable.get(dept).get(sym).add(dest);
         }
