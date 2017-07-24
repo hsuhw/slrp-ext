@@ -37,6 +37,7 @@ generateGrammarSource {
 test {
     testLogging {
         showStandardStreams = true
+        events "passed", "skipped", "failed"
     }
 }
 
