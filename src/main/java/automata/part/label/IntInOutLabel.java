@@ -1,9 +1,9 @@
 package automata.part.label;
 
 import automata.part.Label;
-import automata.part.LabelImpl;
+import automata.part.BasicLabel;
 
-public class IntInOutLabel extends LabelImpl implements Label
+public class IntInOutLabel extends BasicLabel implements Label
 {
     private final int in;
     private final int out;

@@ -1,9 +1,9 @@
 package automata.part.label;
 
 import automata.part.Label;
-import automata.part.LabelImpl;
+import automata.part.BasicLabel;
 
-public final class TwoWay<L extends Label> extends LabelImpl implements Label
+public final class TwoWay<L extends Label> extends BasicLabel implements Label
 {
     private final L label;
     private final HeadMove headMove;

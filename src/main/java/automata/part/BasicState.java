@@ -6,7 +6,7 @@ import org.eclipse.collections.impl.factory.Lists;
 
 import java.util.List;
 
-public class StateImpl implements State
+public class BasicState implements State
 {
     private final int id;
     private final String displayName;
@@ -28,14 +28,14 @@ public class StateImpl implements State
         return result;
     }
 
-    protected StateImpl(int id, String displayName, int referenceIndex)
+    protected BasicState(int id, String displayName, int referenceIndex)
     {
         this.id = id;
         this.referenceIndex = referenceIndex;
         this.displayName = displayName;
     }
 
-    public StateImpl(int id, String displayName, ImmutableList<? extends Transition<? extends Label>> dTransitions)
+    public BasicState(int id, String displayName, ImmutableList<? extends Transition<? extends Label>> dTransitions)
     {
         this.id = id;
         this.displayName = displayName;
@@ -44,8 +44,8 @@ public class StateImpl implements State
         hashCode = computeHashCode(); // FIXME: [anti] overridable method in constructor
     }
 
-    public StateImpl(int id, String displayName,
-                     List<? extends ImmutableList<? extends Transition<? extends Label>>> nTransitions)
+    public BasicState(int id, String displayName,
+                      List<? extends ImmutableList<? extends Transition<? extends Label>>> nTransitions)
     {
         this.id = id;
         this.displayName = displayName;

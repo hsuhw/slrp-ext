@@ -5,9 +5,9 @@ import org.eclipse.collections.impl.factory.Lists;
 
 import java.util.List;
 
-public class MutableStateImpl extends StateImpl implements MutableState
+public class MutableBasicState extends BasicState implements MutableState
 {
-    public MutableStateImpl(int id, String displayName, int referenceIndex)
+    public MutableBasicState(int id, String displayName, int referenceIndex)
     {
         super(id, displayName, referenceIndex);
     }

@@ -3,7 +3,7 @@ package parser.fsa;
 import automata.IntAlphabet;
 import automata.fsa.IntLabelFSA;
 import automata.part.MutableState;
-import automata.part.MutableStateImpl;
+import automata.part.MutableBasicState;
 import automata.part.State;
 import automata.part.Transition;
 import automata.part.label.IntLabel;
@@ -156,8 +156,8 @@ public class IntLabelFSABasicBuilder extends AutomatonBasicBaseListener
 
         private ImmutableList<MutableState> prepareMutableStates()
         {
-            final MutableState[] states = new MutableStateImpl[stateIndexTable.size()];
-            stateIndexTable.forEachKeyValue((n, i) -> states[i] = new MutableStateImpl(i, n, i));
+            final MutableState[] states = new MutableBasicState[stateIndexTable.size()];
+            stateIndexTable.forEachKeyValue((n, i) -> states[i] = new MutableBasicState(i, n, i));
             return Lists.immutable.of(states);
         }
 

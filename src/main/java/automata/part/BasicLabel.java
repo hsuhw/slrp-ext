@@ -1,17 +1,17 @@
 package automata.part;
 
-public class LabelImpl implements Label
+public class BasicLabel implements Label
 {
     private final String displayValue;
     protected int hashCode;
 
-    public LabelImpl(String displayValue)
+    public BasicLabel(String displayValue)
     {
         this.displayValue = displayValue;
         this.hashCode = displayValue.hashCode();
     }
 
-    public LabelImpl(Label other)
+    public BasicLabel(Label other)
     {
         this.displayValue = String.valueOf(other);
         this.hashCode = other.hashCode();

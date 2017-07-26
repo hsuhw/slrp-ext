@@ -6,7 +6,7 @@ import org.eclipse.collections.impl.list.primitive.IntInterval;
 import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
 
-public abstract class SatSolverTest
+public abstract class AbstractSatSolverTest
 {
     SatSolver solver;
 

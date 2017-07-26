@@ -4,15 +4,15 @@ import automata.part.State;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableBooleanList;
 
-public abstract class AutomatonAbst implements Automaton
+public abstract class AbstractAutomaton implements Automaton
 {
     protected final ImmutableList<State> states;
     protected final ImmutableBooleanList startStateTable;
     protected final ImmutableBooleanList acceptStateTable;
     protected final boolean isDeterministic;
 
-    public AutomatonAbst(ImmutableList<State> states, ImmutableBooleanList startStateTable,
-                         ImmutableBooleanList acceptStateTable)
+    public AbstractAutomaton(ImmutableList<State> states, ImmutableBooleanList startStateTable,
+                             ImmutableBooleanList acceptStateTable)
     {
         this.states = states;
         this.startStateTable = startStateTable;

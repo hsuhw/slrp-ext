@@ -4,7 +4,7 @@ import com.mscharhag.oleaster.runner.OleasterRunner;
 import org.junit.runner.RunWith;
 
 @RunWith(OleasterRunner.class)
-public class Sat4jSolverAdapterTest extends SatSolverTest
+public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
 {
     {
         solver = new Sat4jSolverAdapter();
