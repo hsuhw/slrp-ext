@@ -10,5 +10,9 @@ interface FSAEncoding
 
     void ensureNoDeadEndStates();
 
-    void ensureAcceptingWord(ImmutableIntList word);
+    void ensureAcceptWord(ImmutableIntList word);
+
+    void ensureNotAcceptWord(ImmutableIntList word);
+
+    void whetherAcceptWord(int indicator, ImmutableIntList word);
 }

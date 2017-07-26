@@ -91,7 +91,7 @@ class BasicFSAEncoding implements FSAEncoding
 
     private IntInterval[] prepareDistanceIndicators()
     {
-        IntInterval[] distanceIndicators = new IntInterval[stateNumber];
+        final IntInterval[] distanceIndicators = new IntInterval[stateNumber];
         for (int state = 0; state < stateNumber; state++) {
             final IntInterval possibleDistance = solver.newFreeVariables(stateNumber);
             distanceIndicators[state] = possibleDistance; // from 0 to n - 1
@@ -113,7 +113,7 @@ class BasicFSAEncoding implements FSAEncoding
             final int currBeNum = distanceIndicators[curr].get(distNum);
 
             // ifTransCauseDistNum <--> transBeAvailable && prevBeNumMinusOne && currBeNum
-            solver.addImplication(ifTransCauseDistNum, transBeAvailable, prevBeNumMinusOne, currBeNum);
+            solver.addImplications(ifTransCauseDistNum, transBeAvailable, prevBeNumMinusOne, currBeNum);
             solver.addClause(-transBeAvailable, -prevBeNumMinusOne, -currBeNum, ifTransCauseDistNum);
         }
     }
@@ -136,7 +136,7 @@ class BasicFSAEncoding implements FSAEncoding
             return;
         }
 
-        IntInterval[] distFromStartIndicators = prepareDistanceIndicators();
+        final IntInterval[] distFromStartIndicators = prepareDistanceIndicators();
         final int startStateDistBeZero = distFromStartIndicators[startStateIndex].get(0);
         solver.setLiteralTruthy(startStateDistBeZero);
 
@@ -184,8 +184,7 @@ class BasicFSAEncoding implements FSAEncoding
         for (int state = 0; state < stateNumber; state++) {
             final int takenAsAcceptState = acceptStateIndicators.get(state);
             final int distBeZero = distFromAcceptIndicators[state].get(0);
-            solver.addImplication(takenAsAcceptState, distBeZero);
-            solver.addImplication(distBeZero, takenAsAcceptState);
+            solver.markAsEquivalent(takenAsAcceptState, distBeZero);
         }
 
         if (epsilonSymbolIndex == DEFAULT_EPSILON_SYMBOL_INDEX) {
@@ -207,18 +206,17 @@ class BasicFSAEncoding implements FSAEncoding
         noDeadEndStatesEnsured = true;
     }
 
-    @Override
-    public void ensureAcceptingWord(ImmutableIntList word)
+    private IntInterval[] encodeEachPossibleStepsOnInputRead(int activated, ImmutableIntList word)
     {
         // define each possible step over states on input consuming
-        IntInterval[] stepIndicators = new IntInterval[word.size() + 1];
+        final IntInterval[] stepIndicators = new IntInterval[word.size() + 1];
         for (int readHead = 0; readHead < word.size() + 1; readHead++) {
             final IntInterval possibleStateStepping = solver.newFreeVariables(stateNumber);
             stepIndicators[readHead] = possibleStateStepping;
-            solver.addClauseAtMost(1, possibleStateStepping);
+            solver.addClauseExactlyIf(activated, 1, possibleStateStepping);
         }
         final int initialStepBeStartState = stepIndicators[0].get(startStateIndex);
-        solver.setLiteralTruthy(initialStepBeStartState);
+        solver.addImplication(activated, initialStepBeStartState);
 
         // make the taken steps to represent the given word
         for (int readHead = 0; readHead < word.size(); readHead++) {
@@ -228,17 +226,60 @@ class BasicFSAEncoding implements FSAEncoding
                     final int takenQjAsNextStep = stepIndicators[readHead + 1].get(qj);
                     final int symbol = word.get(readHead);
                     final int transBeAvailable = transitionIndicators[qi][symbol].get(qj);
-                    solver.addClause(-takenQiAsCurrentStep, -takenQjAsNextStep, transBeAvailable);
+                    solver.addClause(-activated, -takenQiAsCurrentStep, -takenQjAsNextStep, transBeAvailable);
                 }
             }
         }
 
-        // make the taken steps to form an accepting path
-        IntInterval takableLastStep = stepIndicators[word.size()];
+        return stepIndicators;
+    }
+
+    private void ensureAcceptWordIf(int activated, ImmutableIntList word)
+    {
+        final IntInterval[] stepIndicators = encodeEachPossibleStepsOnInputRead(activated, word);
+
+        // make the taken steps form an accepting path
+        final IntInterval takableLastStep = stepIndicators[word.size()];
         for (int state = 0; state < stateNumber; state++) {
             final int ifTakenAsLastStep = takableLastStep.get(state);
             final int beAcceptState = acceptStateIndicators.get(state);
-            solver.addImplication(ifTakenAsLastStep, beAcceptState);
+            solver.addImplicationIf(activated, ifTakenAsLastStep, beAcceptState);
         }
+    }
+
+    @Override
+    public void ensureAcceptWord(ImmutableIntList word)
+    {
+        final int activated = solver.newFreeVariables(1).getFirst();
+        ensureAcceptWordIf(activated, word);
+        solver.setLiteralTruthy(activated);
+    }
+
+    private void ensureNotAcceptWordIf(int activated, ImmutableIntList word)
+    {
+        final IntInterval[] stepIndicators = encodeEachPossibleStepsOnInputRead(activated, word);
+
+        // make the taken steps form an non-accepting path
+        final IntInterval takableLastStep = stepIndicators[word.size()];
+        for (int state = 0; state < stateNumber; state++) {
+            final int ifTakenAsLastStep = takableLastStep.get(state);
+            final int beNonAcceptState = -acceptStateIndicators.get(state);
+            solver.addImplicationIf(activated, ifTakenAsLastStep, beNonAcceptState);
+        }
+    }
+
+    @Override
+    public void ensureNotAcceptWord(ImmutableIntList word)
+    {
+        final int activated = solver.newFreeVariables(1).getFirst();
+        ensureNotAcceptWordIf(activated, word);
+        solver.setLiteralTruthy(activated);
+    }
+
+    @Override
+    public void whetherAcceptWord(int indicator, ImmutableIntList word)
+    {
+        ensureAcceptWordIf(indicator, word);
+        ensureNotAcceptWordIf(-indicator, word);
     }
 }
