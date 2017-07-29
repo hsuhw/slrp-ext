@@ -178,16 +178,14 @@ public abstract class AbstractSatSolverTest
 
         describe("#markAsEquivalent(int, int)", () -> {
 
-            it("should ensure the literals always be assigned the same value in the model", () -> {
-                // same as true
+            it("should ensure the literals be assigned the same value (the true case)", () -> {
                 solver.addClause(-1, -2);
                 solver.markAsEquivalent(1, 2);
                 solver.addClause(1);
                 expectNoSolutionExists();
+            });
 
-                solver.reset();
-
-                // same as false
+            it("should ensure the literals be assigned the same value (the false case)", () -> {
                 solver.addClause(1, 2);
                 solver.markAsEquivalent(1, 2);
                 solver.addClause(-1);
@@ -204,16 +202,15 @@ public abstract class AbstractSatSolverTest
 
         describe("#markEachAsEquivalent(int...)", () -> {
 
-            it("should ensure the literals always be assigned the same value in the model", () -> {
+            it("should ensure the literals be assigned the same value (the true case)", () -> {
                 // same as true
                 solver.addClause(-1, -2, -3);
                 solver.markEachAsEquivalent(1, 2, 3);
                 solver.addClause(1);
                 expectNoSolutionExists();
+            });
 
-                solver.reset();
-
-                // same as false
+            it("should ensure the literals be assigned the same value (the false case)", () -> {
                 solver.addClause(1, 2, 3);
                 solver.markEachAsEquivalent(1, 2, 3);
                 solver.addClause(-1);
@@ -229,9 +226,9 @@ public abstract class AbstractSatSolverTest
 
         });
 
-        describe("#addClauseAtLeast(IntInterval)", () -> {
+        describe("#addClauseAtLeast(int, IntInterval)", () -> {
 
-            it("should work the same as #addClauseAtLeast(int...)", () -> {
+            it("should work the same as #addClauseAtLeast(int, int...)", () -> {
                 solver.addClauseAtLeast(2, solver.newFreeVariables(4));
                 solver.addClause(-1);
                 solver.addClause(-2);
@@ -239,7 +236,6 @@ public abstract class AbstractSatSolverTest
                 expect(model().containsAll(3, 4)).toBeTrue();
 
                 solver.addClause(-3);
-                solver.addClause(-4);
                 expectNoSolutionExists();
             });
 
@@ -257,7 +253,7 @@ public abstract class AbstractSatSolverTest
 
             describe("when activated", () -> {
 
-                it("should work the same as #addClauseAtLeast(IntInterval)", () -> {
+                it("should work the same as #addClauseAtLeast(int, IntInterval)", () -> {
                     final int yes = solver.newFreeVariables(1).getFirst();
                     solver.addClause(yes);
                     solver.addClauseAtLeastIf(yes, 2, solver.newFreeVariables(4));
@@ -267,7 +263,6 @@ public abstract class AbstractSatSolverTest
                     expect(model().containsAll(4, 5)).toBeTrue();
 
                     solver.addClause(-4);
-                    solver.addClause(-5);
                     expectNoSolutionExists();
                 });
 
@@ -334,6 +329,16 @@ public abstract class AbstractSatSolverTest
                 expectNoSolutionExists();
             });
 
+            it("should allow zero true assignments in the given clause", () -> {
+                solver.addClauseAtMost(2, solver.newFreeVariables(4));
+                solver.addClause(-1);
+                solver.addClause(-2);
+                solver.addClause(-3);
+                solver.addClause(-4);
+                expectSolutionExists();
+                expect(model().containsAll(-1, -2, -3, -4)).toBeTrue();
+            });
+
             it("should not affect the established unsatisfiability", () -> {
                 solver.addClause(solver.newFreeVariables(2));
                 solver.addClause(-1);
@@ -348,7 +353,7 @@ public abstract class AbstractSatSolverTest
 
             describe("when activated", () -> {
 
-                it("should work the same as #addClauseAtMost(IntInterval)", () -> {
+                it("should work the same as #addClauseAtMost(int, IntInterval)", () -> {
                     final int yes = solver.newFreeVariables(1).getFirst();
                     solver.addClause(yes);
                     solver.addClauseAtMostIf(yes, 2, solver.newFreeVariables(4));
@@ -359,6 +364,18 @@ public abstract class AbstractSatSolverTest
 
                     solver.addClause(4);
                     expectNoSolutionExists();
+                });
+
+                it("should allow zero true assignments in the given clause", () -> {
+                    final int yes = solver.newFreeVariables(1).getFirst();
+                    solver.addClause(yes);
+                    solver.addClauseAtMostIf(yes, 2, solver.newFreeVariables(4));
+                    solver.addClause(-2);
+                    solver.addClause(-3);
+                    solver.addClause(-4);
+                    solver.addClause(-5);
+                    expectSolutionExists();
+                    expect(model().containsAll(-2, -3, -4, -5)).toBeTrue();
                 });
 
                 it("should not affect the established unsatisfiability", () -> {
@@ -411,8 +428,7 @@ public abstract class AbstractSatSolverTest
 
         describe("#addClauseExactly(int, IntInterval)", () -> {
 
-            it("should work the same as #addClauseExactly(int, int...)", () -> {
-                // no more
+            it("should ensure no more than the given degree", () -> {
                 solver.addClauseExactly(2, solver.newFreeVariables(4));
                 solver.addClause(1);
                 solver.addClause(2);
@@ -421,10 +437,9 @@ public abstract class AbstractSatSolverTest
 
                 solver.addClause(3);
                 expectNoSolutionExists();
+            });
 
-                solver.reset();
-
-                // nor less
+            it("should ensure no less than the given degree", () -> {
                 solver.addClauseExactly(2, solver.newFreeVariables(4));
                 solver.addClause(-1);
                 solver.addClause(-2);
@@ -451,9 +466,8 @@ public abstract class AbstractSatSolverTest
 
             describe("when activated", () -> {
 
-                it("should work the same as #addClauseExactly(int, int, int...)", () -> {
-                    // no more
-                    int yes = solver.newFreeVariables(1).getFirst();
+                it("should ensure no more than the given degree", () -> {
+                    final int yes = solver.newFreeVariables(1).getFirst();
                     solver.addClause(yes);
                     solver.addClauseExactlyIf(yes, 2, solver.newFreeVariables(4));
                     solver.addClause(2);
@@ -463,11 +477,10 @@ public abstract class AbstractSatSolverTest
 
                     solver.addClause(4);
                     expectNoSolutionExists();
+                });
 
-                    solver.reset();
-
-                    // nor less
-                    yes = solver.newFreeVariables(1).getFirst();
+                it("should ensure no less than the given degree", () -> {
+                    final int yes = solver.newFreeVariables(1).getFirst();
                     solver.addClause(yes);
                     solver.addClauseExactlyIf(yes, 2, solver.newFreeVariables(4));
                     solver.addClause(-2);
@@ -612,8 +625,7 @@ public abstract class AbstractSatSolverTest
 
         describe("#addImplications(int, int...)", () -> {
 
-            it("should add the implication as expected", () -> {
-                // antecedent is true
+            it("should add the implication as expected (true antecedent)", () -> {
                 solver.addClause(1, 2, 3, 4);
                 solver.addImplications(1, 2, 3);
                 solver.addClause(1);
@@ -622,10 +634,9 @@ public abstract class AbstractSatSolverTest
 
                 solver.addClause(-2);
                 expectNoSolutionExists();
+            });
 
-                solver.reset();
-
-                // antecedent is false
+            it("should add the implication as expected (false antecedent)", () -> {
                 solver.addClause(1, 2, 3, 4);
                 solver.addImplications(1, 2, 3);
                 solver.addClause(-1);
@@ -661,21 +672,19 @@ public abstract class AbstractSatSolverTest
 
             describe("when activated", () -> {
 
-                it("should add the implication as expected", () -> {
-                    // antecedent is true
-                    solver.addClause(1);
-                    solver.addClause(2, 3, 4, 5);
-                    solver.addImplicationsIf(1, 2, 3, 4);
-                    solver.addClause(2);
-                    expectSolutionExists();
-                    expect(model().containsAll(3, 4)).toBeTrue();
+                it("should add the implication as expected (true antecedent)", () -> {
+                   solver.addClause(1);
+                   solver.addClause(2, 3, 4, 5);
+                   solver.addImplicationsIf(1, 2, 3, 4);
+                   solver.addClause(2);
+                   expectSolutionExists();
+                   expect(model().containsAll(3, 4)).toBeTrue();
 
-                    solver.addClause(-3);
-                    expectNoSolutionExists();
+                   solver.addClause(-3);
+                   expectNoSolutionExists();
+                });
 
-                    solver.reset();
-
-                    // antecedent is false
+                it("should add the implication as expected (false antecedent)", () -> {
                     solver.addClause(1);
                     solver.addClause(2, 3, 4, 5);
                     solver.addImplicationsIf(1, 2, 3, 4);
