@@ -10,17 +10,17 @@ public abstract class AbstractSatSolverTest
 {
     SatSolver solver;
 
-    private void expectSolutionExists()
+    void expectSolutionExists()
     {
         expect(solver.findModel().isPresent()).toBeTrue();
     }
 
-    private void expectNoSolutionExists()
+    void expectNoSolutionExists()
     {
         expect(solver.findModel().isPresent()).toBeFalse();
     }
 
-    private ImmutableIntSet model()
+    ImmutableIntSet model()
     {
         return solver.getModel();
     }

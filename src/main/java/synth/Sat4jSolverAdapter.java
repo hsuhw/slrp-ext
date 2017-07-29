@@ -2,6 +2,7 @@ package synth;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.eclipse.collections.api.collection.primitive.MutableIntCollection;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.impl.block.factory.primitive.IntPredicates;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
@@ -179,7 +180,9 @@ public class Sat4jSolverAdapter extends AbstractSatSolver implements SatSolver
     public ImmutableIntSet getModelFalsyVariables() throws UnsupportedOperationException
     {
         assertModelValid();
-        return model.select(IntPredicates.lessThan(0));
+        ImmutableIntSet falsyVariablesAsSet = model.select(IntPredicates.lessThan(0));
+        MutableIntCollection falsyVariables = IntSets.mutable.empty();
+        return falsyVariablesAsSet.collectInt(x -> -x, falsyVariables).toSet().toImmutable();
     }
 
     @Override
