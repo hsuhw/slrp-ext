@@ -65,8 +65,7 @@ public abstract class AbstractSatSolverTest
                 expectSolutionExists();
                 expect(model().contains(1)).toBeTrue();
 
-                solver.addClause(-1, 3);
-                solver.addClause(-3);
+                solver.addClause(-1);
                 expectNoSolutionExists();
             });
 
@@ -85,14 +84,80 @@ public abstract class AbstractSatSolverTest
                 expectSolutionExists();
                 expect(model().contains(1)).toBeTrue();
 
-                solver.addClause(-1, 3);
-                solver.addClause(-3);
+                solver.addClause(-1);
                 expectNoSolutionExists();
             });
 
             it("should throw an exception when the clause causes an immediate contradiction", () -> {
                 solver.addClause(-1);
                 expect(() -> solver.addClause(solver.newFreeVariables(1))).toThrow(UnsupportedOperationException.class);
+            });
+
+        });
+
+        describe("#addClauseIf(int, IntInterval)", () -> {
+
+            describe("when activated", () -> {
+
+                it("should work the same as #addClause(IntInterval)", () -> {
+                    final int yes = solver.newFreeVariables(1).getFirst();
+                    solver.addClause(yes);
+                    solver.addClauseIf(yes, solver.newFreeVariables(2));
+                    solver.addClause(-3);
+                    expectSolutionExists();
+                    expect(model().contains(2)).toBeTrue();
+
+                    solver.addClause(-2);
+                    expectNoSolutionExists();
+                });
+
+                it("should throw an exception when the clause causes an immediate contradiction", () -> {
+                    expect(() -> {
+                        final int yes = solver.newFreeVariables(1).getFirst();
+                        solver.addClause(yes);
+                        solver.addClause(-2);
+                        solver.addClauseIf(yes, solver.newFreeVariables(1));
+                    }).toThrow(UnsupportedOperationException.class);
+                });
+
+            });
+
+            describe("when not activated", () -> {
+
+                it("should not affect the established satisfiability", () -> {
+                    solver.addClause(solver.newFreeVariables(2));
+                    solver.addClause(-1);
+                    expectSolutionExists();
+                    expect(model().contains(2)).toBeTrue();
+
+                    final int wellNeverMind = solver.newFreeVariables(1).getFirst();
+                    solver.addClause(-wellNeverMind);
+                    solver.addClauseIf(wellNeverMind, solver.newFreeVariables(2));
+                    solver.addClause(-4);
+                    solver.addClause(-5);
+                    expectSolutionExists();
+                    expect(model().contains(2)).toBeTrue();
+                });
+
+                it("should not affect the established unsatisfiability", () -> {
+                    solver.addClause(solver.newFreeVariables(2));
+                    solver.addClause(-1);
+                    solver.addClause(-2);
+                    expectNoSolutionExists();
+
+                    final int wellNeverMind = solver.newFreeVariables(1).getFirst();
+                    solver.addClause(-wellNeverMind);
+                    solver.addClauseIf(wellNeverMind, solver.newFreeVariables(2));
+                    expectNoSolutionExists();
+                });
+
+                it("should not throw an exception when the clause causes an immediate contradiction", () -> {
+                    final int wellNeverMind = solver.newFreeVariables(1).getFirst();
+                    solver.addClause(-wellNeverMind);
+                    solver.addClause(-2);
+                    solver.addClauseIf(wellNeverMind, solver.newFreeVariables(1));
+                });
+
             });
 
         });
@@ -105,8 +170,7 @@ public abstract class AbstractSatSolverTest
                 expectSolutionExists();
                 expect(model().contains(1)).toBeTrue();
 
-                solver.addClause(-1, 3);
-                solver.setLiteralTruthy(-3);
+                solver.addClause(-1);
                 expectNoSolutionExists();
             });
 
@@ -125,8 +189,7 @@ public abstract class AbstractSatSolverTest
                 expectSolutionExists();
                 expect(model().contains(1)).toBeTrue();
 
-                solver.addClause(-1, 4, 5);
-                solver.setLiteralsTruthy(-4, -5);
+                solver.addClause(-1);
                 expectNoSolutionExists();
             });
 
@@ -144,8 +207,7 @@ public abstract class AbstractSatSolverTest
                 expectSolutionExists();
                 expect(model().contains(1)).toBeTrue();
 
-                solver.addClause(-1, 3);
-                solver.setLiteralFalsy(3);
+                solver.addClause(-1);
                 expectNoSolutionExists();
             });
 
@@ -164,8 +226,7 @@ public abstract class AbstractSatSolverTest
                 expectSolutionExists();
                 expect(model().contains(1)).toBeTrue();
 
-                solver.addClause(-1, 4, 5);
-                solver.setLiteralsFalsy(4, 5);
+                solver.addClause(-1);
                 expectNoSolutionExists();
             });
 

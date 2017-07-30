@@ -55,6 +55,16 @@ public interface SatSolver
     void addClause(IntInterval clause);
 
     /**
+     * Behaves the same as {@link #addClause(IntInterval)} if the given
+     * {@code indicator} is valuated true.  If not activated, the given clause
+     * has no any effects as if it were never mentioned.
+     *
+     * @param indicator whether to activate the clause
+     * @param clause    the clause to be added
+     */
+    void addClauseIf(int indicator, IntInterval clause);
+
+    /**
      * Ensures the given clause having at least the number ({@code degree}) of
      * the literals being assigned true in the model.
      *

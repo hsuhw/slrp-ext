@@ -1,5 +1,6 @@
 package synth;
 
+import org.eclipse.collections.api.collection.primitive.MutableIntCollection;
 import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntLists;
@@ -87,6 +88,14 @@ public abstract class AbstractSatSolver implements SatSolver
     public void addClause(IntInterval clause)
     {
         addClause(clause.toArray());
+    }
+
+    @Override
+    public void addClauseIf(int indicator, IntInterval clause)
+    {
+        MutableIntList clauseAsList = clause.toList();
+        clauseAsList.add(-indicator);
+        addClause(clauseAsList.toArray());
     }
 
     @Override
