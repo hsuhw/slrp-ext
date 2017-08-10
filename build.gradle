@@ -29,10 +29,10 @@ dependencies {
 }
 
 generateGrammarSource {
-    exclude 'parser/generated/Automaton.g4'
-    exclude 'parser/generated/Transducer.g4'
-    exclude 'parser/generated/Tokens.g4'
-    arguments += ["-lib", "src/main/antlr/parser/generated"]
+    exclude 'generated/Automaton.g4'
+    exclude 'generated/Transducer.g4'
+    exclude 'generated/Tokens.g4'
+    arguments += ["-lib", "src/main/antlr/generated"]
 }
 
 test {
