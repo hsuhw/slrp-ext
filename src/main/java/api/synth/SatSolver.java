@@ -1,9 +1,7 @@
 package api.synth;
 
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
-import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
-import org.eclipse.collections.impl.factory.primitive.IntLists;
 
 /**
  * The API definition for the SAT solver functionalities we use in programs.

@@ -181,6 +181,7 @@ public abstract class AbstractSatSolverTest
             });
 
         });
+
         describe("#setLiteralFalsy(int)", () -> {
 
             it("should ensure the given literal be assigned true in the model", () -> {

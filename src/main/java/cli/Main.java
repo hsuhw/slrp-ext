@@ -1,5 +1,7 @@
 package cli;
 
+import generated.ProblemLexer;
+import generated.ProblemParser;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -9,8 +11,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
 import org.apache.logging.log4j.core.config.Configuration;
-import generated.ProblemLexer;
-import generated.ProblemParser;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
