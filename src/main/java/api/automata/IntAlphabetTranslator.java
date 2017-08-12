@@ -4,6 +4,7 @@ import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
+import org.eclipse.collections.impl.factory.primitive.IntLists;
 
 /**
  * The alphabet translating class that uses {@code int} values to represent
@@ -43,5 +44,10 @@ public interface IntAlphabetTranslator<S>
     default ImmutableList<S> translateBack(ImmutableIntList word)
     {
         return word.collect(this::originSymbolOf);
+    }
+
+    default ImmutableList<S> translateBack(int... word)
+    {
+        return translateBack(IntLists.immutable.of(word));
     }
 }

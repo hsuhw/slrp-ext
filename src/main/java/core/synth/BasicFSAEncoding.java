@@ -24,8 +24,7 @@ public class BasicFSAEncoding<S extends Symbol> implements FSAEncoding<S>
     private final IntAlphabetTranslator<S> alphabetEncoding;
     private ImmutableIntList[][] transitionIndicators;
     private ImmutableIntList acceptStateIndicators;
-    private boolean determinismEnsured;
-    private boolean noDanglingStatesEnsured;
+    private boolean noUnreachableStatesEnsured;
     private boolean noDeadEndStatesEnsured;
 
     private void prepareTransitionIndicators()
@@ -44,6 +43,32 @@ public class BasicFSAEncoding<S extends Symbol> implements FSAEncoding<S>
         solver.addClause(acceptStateIndicators); // at least one accept state
     }
 
+    private void ensureDeterminism()
+    {
+        for (int dept = 0; dept < stateNumber; dept++) {
+            transitionIndicators[dept][0].forEach(solver::setLiteralFalsy);
+            for (int symbol = 1; symbol < alphabetEncoding.size(); symbol++) {
+                final ImmutableIntList possibleDest = transitionIndicators[dept][symbol];
+                solver.addClauseAtMost(1, possibleDest); // can be zero
+            }
+        }
+    }
+
+    private void ensureNoSymmetricInstances()
+    {
+        final int symbolNumber = alphabetEncoding.size();
+        final int[][] stateStructuralOrder = new int[stateNumber][symbolNumber + 1];
+        for (int state = 0; state < stateNumber; state++) {
+            stateStructuralOrder[state][0] = acceptStateIndicators.get(state);
+            for (int symbol = 0; symbol < symbolNumber; symbol++) {
+                stateStructuralOrder[state][symbol + 1] = transitionIndicators[state][symbol].get(state);
+            }
+        }
+        for (int i = stateNumber - 1; i > 0; i--) {
+            solver.markAsGreaterEqualThan(stateStructuralOrder[i], stateStructuralOrder[i - 1]);
+        }
+    }
+
     public BasicFSAEncoding(SatSolver solver, int stateNumber, IntAlphabetTranslator<S> alphabetEncoding)
     {
         this.solver = solver;
@@ -52,22 +77,8 @@ public class BasicFSAEncoding<S extends Symbol> implements FSAEncoding<S>
 
         prepareTransitionIndicators();
         prepareAcceptStateIndicators();
-    }
-
-    @Override
-    public void ensureDeterminism()
-    {
-        if (determinismEnsured) {
-            return;
-        }
-        for (int dept = 0; dept < stateNumber; dept++) {
-            transitionIndicators[dept][0].forEach(solver::setLiteralFalsy);
-            for (int symbol = 1; symbol < alphabetEncoding.size(); symbol++) {
-                final ImmutableIntList possibleDest = transitionIndicators[dept][symbol];
-                solver.addClauseAtMost(1, possibleDest); // can be zero
-            }
-        }
-        determinismEnsured = true;
+        ensureDeterminism();
+        ensureNoSymmetricInstances();
     }
 
     private ImmutableIntList[] prepareDistanceIndicators()
@@ -99,9 +110,9 @@ public class BasicFSAEncoding<S extends Symbol> implements FSAEncoding<S>
     }
 
     @Override
-    public void ensureNoDanglingStates()
+    public void ensureNoUnreachableStates()
     {
-        if (noDanglingStatesEnsured) {
+        if (noUnreachableStatesEnsured) {
             return;
         }
         final ImmutableIntList[] distFromStartIndicators = prepareDistanceIndicators();
@@ -114,7 +125,7 @@ public class BasicFSAEncoding<S extends Symbol> implements FSAEncoding<S>
                 }
             }
         }
-        noDanglingStatesEnsured = true;
+        noUnreachableStatesEnsured = true;
     }
 
     @Override
@@ -157,7 +168,7 @@ public class BasicFSAEncoding<S extends Symbol> implements FSAEncoding<S>
                 for (int qj = 0; qj < stateNumber; qj++) {
                     final int takenQjAsNextStep = stepIndicators[readHead + 1].get(qj);
                     final int transBeAvailable = transitionIndicators[qi][symbol].get(qj);
-                    solver.addClause(-activated, -takenQiAsCurrStep, -takenQjAsNextStep, transBeAvailable);
+                    solver.addClauseIf(activated, -takenQiAsCurrStep, -takenQjAsNextStep, transBeAvailable);
                 }
             }
         }
@@ -207,8 +218,8 @@ public class BasicFSAEncoding<S extends Symbol> implements FSAEncoding<S>
                 for (int qj = 0; qj < stateNumber; qj++) {
                     final int takenQjAsNextStep = stepIndicators[readHead + 1].get(qj);
                     final int transAvailable = transitionIndicators[qi][symbol].get(qj);
-                    solver.addClause(-activated, alreadyFailed, -takenQiAsCurrStep, -transAvailable,
-                                     stillNotFailedAtNext);
+                    solver.addClauseIf(activated, alreadyFailed, -takenQiAsCurrStep, -transAvailable,
+                                       stillNotFailedAtNext);
                     solver.addImplicationIf(activated, transAvailable, takenQjAsNextStep);
                 }
             }
@@ -218,7 +229,7 @@ public class BasicFSAEncoding<S extends Symbol> implements FSAEncoding<S>
         for (int state = 0; state < stateNumber; state++) {
             final int takenAsLastStep = possibleLastStep.get(state);
             final int notAcceptState = -acceptStateIndicators.get(state);
-            solver.addClause(-activated, alreadyFailed, -takenAsLastStep, notAcceptState);
+            solver.addClauseIf(activated, alreadyFailed, -takenAsLastStep, notAcceptState);
         }
     }
 
@@ -244,26 +255,31 @@ public class BasicFSAEncoding<S extends Symbol> implements FSAEncoding<S>
     {
         final ImmutableIntList encodedSymbols = alphabetEncoding.translate(symbols.toList().toImmutable());
 
-        final ImmutableIntList canBePurelyMadeUntil = solver.newFreeVariables(stateNumber);
-        final int startStateAlwaysPossible = canBePurelyMadeUntil.get(START_STATE_INDEX);
-        solver.setLiteralTruthy(startStateAlwaysPossible);
+        final ImmutableIntList canBePurelyMadeUntil = solver.newFreeVariables(stateNumber + 1);
+        final int initialStepAlwaysPossible = canBePurelyMadeUntil.get(START_STATE_INDEX);
+        solver.setLiteralTruthy(initialStepAlwaysPossible);
 
+        final int startStatePurityBroken = -canBePurelyMadeUntil.get(stateNumber);
         for (int qi = 0; qi < stateNumber; qi++) {
             final int purityAlreadyBroken = -canBePurelyMadeUntil.get(qi);
             final int ifIsAcceptState = acceptStateIndicators.get(qi);
-            solver.addImplication(ifIsAcceptState, purityAlreadyBroken);
+            if (qi == 0) {
+                solver.addImplication(ifIsAcceptState, startStatePurityBroken);
+            } else {
+                solver.addImplication(ifIsAcceptState, purityAlreadyBroken);
+            }
             for (int qj = 0; qj < stateNumber; qj++) {
-                final int stillPossibleAtQj = canBePurelyMadeUntil.get(qj);
+                final int stillPossibleAtQj = qj == 0 ? -startStatePurityBroken : canBePurelyMadeUntil.get(qj);
                 for (int s = 0; s < encodedSymbols.size(); s++) {
                     final int transAvailable = transitionIndicators[qi][encodedSymbols.get(s)].get(qj);
-                    solver.addClause(purityAlreadyBroken, -transAvailable, stillPossibleAtQj);
+                    solver.addImplicationIf(-purityAlreadyBroken, transAvailable, stillPossibleAtQj);
                 }
             }
         }
     }
 
     @Override
-    public void blockCurrentSolution()
+    public void blockCurrentInstance()
     {
         // get solution (if any)
         if (!solver.findItSatisfiable()) {

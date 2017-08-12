@@ -9,6 +9,7 @@ import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.block.factory.Functions;
+import org.eclipse.collections.impl.block.factory.Predicates;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
@@ -67,7 +68,7 @@ public class DoubleMapDelta<S extends Symbol> implements Deterministic, Transiti
     @Override
     public int size()
     {
-        return delta.size();
+        return delta.collect(trans -> trans.count(Predicates.notNull())).injectInto(0, Integer::sum);
     }
 
     @Override

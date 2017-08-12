@@ -1,15 +1,14 @@
 package api.synth;
 
+import api.automata.Deterministic;
 import api.automata.Symbol;
 import api.automata.fsa.FSA;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.set.ImmutableSet;
 
-public interface FSAEncoding<S extends Symbol>
+public interface FSAEncoding<S extends Symbol> extends Deterministic
 {
-    void ensureDeterminism();
-
-    void ensureNoDanglingStates();
+    void ensureNoUnreachableStates();
 
     void ensureNoDeadEndStates();
 
@@ -21,7 +20,7 @@ public interface FSAEncoding<S extends Symbol>
 
     void ensureNoWordsPurelyMadeOf(ImmutableSet<S> symbols);
 
-    void blockCurrentSolution();
+    void blockCurrentInstance();
 
     FSA<S> toFSA();
 }
