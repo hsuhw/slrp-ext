@@ -3,6 +3,7 @@ package core.synth;
 import api.synth.SatSolver;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
+import org.eclipse.collections.impl.factory.primitive.IntSets;
 
 import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
@@ -57,25 +58,6 @@ public abstract class AbstractSatSolverTest
 
         });
 
-        describe("#addClause(int...)", () -> {
-
-            it("should add a DIMACS-CNF format clause correctly", () -> {
-                solver.addClause(1, 2);
-                solver.addClause(-2);
-                expectSolutionExists();
-                expect(model().contains(1)).toBeTrue();
-
-                solver.addClause(-1);
-                expectNoSolutionExists();
-            });
-
-            it("should throw an exception when the clause causes an immediate contradiction", () -> {
-                solver.addClause(1);
-                expect(() -> solver.addClause(-1)).toThrow(IllegalArgumentException.class);
-            });
-
-        });
-
         describe("#addClause(ImmutableIntList)", () -> {
 
             it("should work the same as #addClause(int...)", () -> {
@@ -99,7 +81,7 @@ public abstract class AbstractSatSolverTest
 
             describe("when activated", () -> {
 
-                it("should work the same as #addClause(ImmutableIntList)", () -> {
+                it("should work the same as #addClauseIf(int, int...)", () -> {
                     final int yes = solver.newFreeVariables(1).getFirst();
                     solver.addClause(yes);
                     solver.addClauseIf(yes, solver.newFreeVariables(2));
@@ -283,6 +265,75 @@ public abstract class AbstractSatSolverTest
                 solver.addClause(-2);
                 solver.addClause(3);
                 expect(() -> solver.markEachAsEquivalent(1, 2, 3)).toThrow(IllegalArgumentException.class);
+            });
+
+        });
+
+        describe("#markAsGreaterEqualThan(ImmutableIntList, ImmutableIntList)", () -> {
+
+            it("should encode the greater situation correctly (case 1)", () -> {
+                final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
+                final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
+                solver.markAsGreaterEqualThan(bitArray1, bitArray2);
+                solver.setLiteralFalsy(bitArray1.get(1));
+                solver.setLiteralTruthy(bitArray2.get(1));
+                expectSolutionExists();
+                expect(model().contains(bitArray1.get(0))).toBeTrue();
+                expect(model().contains(bitArray2.get(0))).toBeFalse();
+            });
+
+            it("should encode the greater situation correctly (case 2)", () -> {
+                final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
+                final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
+                solver.markAsGreaterEqualThan(bitArray1, bitArray2);
+                solver.setLiteralTruthy(bitArray2.get(0));
+                expectSolutionExists();
+                expect(model().contains(bitArray1.get(0))).toBeTrue();
+            });
+
+            it("should encode the greater situation correctly (case 3)", () -> {
+                final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
+                final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
+                solver.markAsGreaterEqualThan(bitArray1, bitArray2);
+                solver.setLiteralFalsy(bitArray1.get(0));
+                solver.setLiteralTruthy(bitArray2.get(0));
+                expectNoSolutionExists();
+            });
+
+            it("should encode the equal situation correctly", () -> {
+                final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
+                final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
+                solver.markAsGreaterEqualThan(bitArray1, bitArray2);
+                solver.markAsGreaterEqualThan(bitArray2, bitArray1);
+                while (solver.findModel() != null) {
+                    expect(model().contains(bitArray1.get(0))).toEqual(model().contains(bitArray2.get(0)));
+                    expect(model().contains(bitArray1.get(1))).toEqual(model().contains(bitArray2.get(1)));
+                    solver.addClauseBlocking(model());
+                }
+                expectNoSolutionExists();
+            });
+
+            it("should handle array1 longer than array2 correctly", () -> {
+                final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
+                final ImmutableIntList bitArray2 = solver.newFreeVariables(1);
+                solver.markAsGreaterEqualThan(bitArray1, bitArray2);
+                while (solver.findModel() != null) {
+                    expect(model().containsAll(-bitArray1.get(0), -bitArray1.get(1), bitArray2.get(0))).toBeFalse();
+                    solver.addClauseBlocking(model());
+                }
+                expectNoSolutionExists();
+            });
+
+            it("should handle array1 shorter than array2 correctly", () -> {
+                final ImmutableIntList bitArray1 = solver.newFreeVariables(1);
+                final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
+                solver.markAsGreaterEqualThan(bitArray1, bitArray2);
+                while (solver.findModel() != null) {
+                    expect(model().contains(bitArray2.get(0))).toBeFalse();
+                    expect(model().containsAll(-bitArray1.get(0), bitArray2.get(1))).toBeFalse();
+                    solver.addClauseBlocking(model());
+                }
+                expectNoSolutionExists();
             });
 
         });
@@ -600,12 +651,12 @@ public abstract class AbstractSatSolverTest
 
         });
 
-        describe("#addClauseBlocking(int...)", () -> {
+        describe("#addClauseBlocking(ImmutableIntSet)", () -> {
 
             it("should prevent the given clause showing up as an model", () -> {
                 solver.addClause(1, 2);
-                solver.addClauseBlocking(1, 2);
-                solver.addClauseBlocking(-1, 2);
+                solver.addClauseBlocking(IntSets.immutable.of(1, 2));
+                solver.addClauseBlocking(IntSets.immutable.of(-1, 2));
                 expectSolutionExists();
                 expect(model().containsAll(1, -2)).toBeTrue();
 
@@ -614,24 +665,24 @@ public abstract class AbstractSatSolverTest
             });
 
             it("can loop to keep blocking a problem until it is made unsatisfiable", () -> {
-                solver.addClause(1, 2, 3, 4);
+                solver.addClause(1, 2, 3);
                 while (solver.findModel() != null) {
-                    solver.addClauseBlocking(model().toArray());
+                    solver.addClauseBlocking(model());
                 }
                 expectNoSolutionExists();
             });
 
         });
 
-        describe("#addClauseBlockingIf(int, int...)", () -> {
+        describe("#addClauseBlockingIf(int, ImmutableIntSet)", () -> {
 
             describe("when activated", () -> {
 
-                it("should work the same as #addClauseBlocking(int...)", () -> {
+                it("should work the same as #addClauseBlocking(ImmutableIntSet)", () -> {
                     solver.addClause(1);
                     solver.addClause(2, 3);
-                    solver.addClauseBlockingIf(1, 2, 3);
-                    solver.addClauseBlockingIf(1, -2, 3);
+                    solver.addClauseBlockingIf(1, IntSets.immutable.of(2, 3));
+                    solver.addClauseBlockingIf(1, IntSets.immutable.of(-2, 3));
                     expectSolutionExists();
                     expect(model().containsAll(2, -3)).toBeTrue();
 
@@ -646,7 +697,7 @@ public abstract class AbstractSatSolverTest
                     expectNoSolutionExists();
 
                     solver.addClause(3);
-                    solver.addClauseBlockingIf(3, 4, 5);
+                    solver.addClauseBlockingIf(3, IntSets.immutable.of(4, 5));
                     expectNoSolutionExists();
                 });
 
@@ -661,7 +712,7 @@ public abstract class AbstractSatSolverTest
                     expect(model().contains(2)).toBeTrue();
 
                     solver.addClause(-3);
-                    solver.addClauseBlockingIf(3, 4, 5);
+                    solver.addClauseBlockingIf(3, IntSets.immutable.of(4, 5));
                     solver.addClause(4);
                     solver.addClause(5);
                     expectSolutionExists();
@@ -675,7 +726,7 @@ public abstract class AbstractSatSolverTest
                     expectNoSolutionExists();
 
                     solver.addClause(-3);
-                    solver.addClauseBlockingIf(3, 4, 5);
+                    solver.addClauseBlockingIf(3, IntSets.immutable.of(4, 5));
                     expectNoSolutionExists();
                 });
 

@@ -5,8 +5,9 @@ import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntLists;
 
-import java.util.Optional;
-
+/**
+ * The API definition for the SAT solver functionalities we use in programs.
+ */
 public interface SatSolver
 {
     int MAX_VARIABLE_NUMBER = 1000000;
@@ -26,51 +27,35 @@ public interface SatSolver
 
     ImmutableIntList newFreeVariables(int howMany);
 
-    default void setLiteralTruthy(int literal)
-    {
-        addClause(literal);
-    }
+    void setLiteralTruthy(int literal);
 
-    default void setLiteralsTruthy(int... literals)
-    {
-        for (int literal : literals) {
-            setLiteralTruthy(literal);
-        }
-    }
+    void setLiteralsTruthy(int... literals);
 
-    default void setLiteralFalsy(int literal)
-    {
-        addClause(-literal);
-    }
+    void setLiteralFalsy(int literal);
 
-    default void setLiteralsFalsy(int... literals)
-    {
-        for (int literal : literals) {
-            setLiteralFalsy(literal);
-        }
-    }
+    void setLiteralsFalsy(int... literals);
 
-    default void markAsEquivalent(int literal1, int literal2)
-    {
-        addClause(-literal1, literal2);
-        addClause(literal1, -literal2);
-    }
+    void markAsEquivalent(int literal1, int literal2);
 
-    default void markEachAsEquivalent(int... literals)
-    {
-        for (int i = 0; i < literals.length - 1; i++) {
-            addClause(-literals[i], literals[i + 1]);
-        }
-        addClause(-literals[literals.length - 1], literals[0]);
-    }
+    void markEachAsEquivalent(int... literals);
 
     /**
      * Behaves the same as {@link #markEachAsEquivalent(int...)}.
      */
-    default void syncLiterals(int... literals)
-    {
-        markEachAsEquivalent(literals);
-    }
+    void syncLiterals(int... literals);
+
+    /**
+     * Makes the first given array of literals, if taken as a bit vector (zero
+     * cell as the highiest digit), have binary value greater equal than the
+     * second given array.
+     */
+    void markAsGreaterEqualThan(int[] bitArray1, int[] bitArray2);
+
+    /**
+     * Behaves the same as {@link #markAsGreaterEqualThan(int[], int[])}, but
+     * accepting {@link ImmutableIntList} as the given bit arrays.
+     */
+    void markAsGreaterEqualThan(ImmutableIntList bitArray1, ImmutableIntList bitArray2);
 
     /**
      * Adds a DIMACS-CNF format clause to the problem.
@@ -83,25 +68,23 @@ public interface SatSolver
      * Behaves the same as {@link #addClause(int...)}, but accepting an
      * {@link ImmutableIntList} as the given clause.
      */
-    default void addClause(ImmutableIntList clause)
-    {
-        addClause(clause.toArray());
-    }
+    void addClause(ImmutableIntList clause);
 
     /**
-     * Behaves the same as {@link #addClause(ImmutableIntList)} if the given
+     * Behaves the same as {@link #addClause(int...)} if the given
      * {@code indicator} is valuated true.  If not activated, the given clause
      * has no any effects as if it were never mentioned.
      *
      * @param indicator whether to activate the clause
      * @param clause    the clause to be added
      */
-    default void addClauseIf(int indicator, ImmutableIntList clause)
-    {
-        MutableIntList clauseAsList = clause.toList();
-        clauseAsList.add(-indicator);
-        addClause(clauseAsList.toArray());
-    }
+    void addClauseIf(int indicator, int... clause);
+
+    /**
+     * Behaves the same as {@link #addClauseIf(int, int...)}, but accepting an
+     * {@link ImmutableIntList} as the given clause.
+     */
+    void addClauseIf(int indicator, ImmutableIntList clause);
 
     /**
      * Ensures the given clause having at least the number ({@code degree}) of
@@ -116,10 +99,7 @@ public interface SatSolver
      * Behaves the same as {@link #addClauseAtLeast(int, int...)}, but
      * accepting an {@link ImmutableIntList} as the given clause.
      */
-    default void addClauseAtLeast(int degree, ImmutableIntList clause)
-    {
-        addClauseAtLeast(degree, clause.toArray());
-    }
+    void addClauseAtLeast(int degree, ImmutableIntList clause);
 
     /**
      * Behaves the same as {@link #addClauseAtLeast(int, int...)} if the given
@@ -130,27 +110,13 @@ public interface SatSolver
      * @param degree    the lower bound of the number of the true literals
      * @param clause    the clause to be added
      */
-    default void addClauseAtLeastIf(int indicator, int degree, int... clause)
-    {
-        final MutableIntList paddingAsList = newFreeVariables(degree).toList();
-        final MutableIntList clauseAsList = IntLists.mutable.of(clause);
-        clauseAsList.addAll(paddingAsList);
-        final int[] paddedClause = clauseAsList.toArray();
-        addClauseAtLeast(degree, paddedClause);
-
-        paddingAsList.add(-indicator);
-        final int[] switches = paddingAsList.toArray();
-        syncLiterals(switches);
-    }
+    void addClauseAtLeastIf(int indicator, int degree, int... clause);
 
     /**
      * Behaves the same as {@link #addClauseAtLeastIf(int, int, int...)}, but
      * accepting an {@link ImmutableIntList} as the given clause.
      */
-    default void addClauseAtLeastIf(int indicator, int degree, ImmutableIntList clause)
-    {
-        addClauseAtLeastIf(indicator, degree, clause.toArray());
-    }
+    void addClauseAtLeastIf(int indicator, int degree, ImmutableIntList clause);
 
     /**
      * Ensures the given clause having at most the number ({@code degree}) of
@@ -165,10 +131,7 @@ public interface SatSolver
      * Behaves the same as {@link #addClauseAtMost(int, int...)}, but accepting
      * an {@link ImmutableIntList} as the given clause.
      */
-    default void addClauseAtMost(int degree, ImmutableIntList clause)
-    {
-        addClauseAtMost(degree, clause.toArray());
-    }
+    void addClauseAtMost(int degree, ImmutableIntList clause);
 
     /**
      * Behaves the same as {@link #addClauseAtMost(int, int...)} if the given
@@ -179,27 +142,13 @@ public interface SatSolver
      * @param degree    the upper bound of the number of the true literals
      * @param clause    the clause to be added
      */
-    default void addClauseAtMostIf(int indicator, int degree, int... clause)
-    {
-        final MutableIntList paddingAsList = newFreeVariables(clause.length - degree).toList();
-        final MutableIntList clauseAsList = IntLists.mutable.of(clause);
-        clauseAsList.addAll(paddingAsList);
-        final int[] paddedClause = clauseAsList.toArray();
-        addClauseAtMost(clause.length, paddedClause);
-
-        paddingAsList.add(indicator);
-        final int[] switches = paddingAsList.toArray();
-        syncLiterals(switches);
-    }
+    void addClauseAtMostIf(int indicator, int degree, int... clause);
 
     /**
      * Behaves the same as {@link #addClauseAtMostIf(int, int, int...)}, but
      * accepting an {@link ImmutableIntList} as the given clause.
      */
-    default void addClauseAtMostIf(int indicator, int degree, ImmutableIntList clause)
-    {
-        addClauseAtMostIf(indicator, degree, clause.toArray());
-    }
+    void addClauseAtMostIf(int indicator, int degree, ImmutableIntList clause);
 
     /**
      * Ensures exactly the number ({@code degree}) of the given literals being
@@ -214,10 +163,7 @@ public interface SatSolver
      * Behaves the same as {@link #addClauseExactly(int, int...)}, but
      * accepting an {@link ImmutableIntList} as the given clause.
      */
-    default void addClauseExactly(int degree, ImmutableIntList clause)
-    {
-        addClauseExactly(degree, clause.toArray());
-    }
+    void addClauseExactly(int degree, ImmutableIntList clause);
 
     /**
      * Behaves the same as {@link #addClauseExactly(int, int...)} if the given
@@ -228,20 +174,13 @@ public interface SatSolver
      * @param degree    the exact number the true literals
      * @param clause    the clause to be added
      */
-    default void addClauseExactlyIf(int indicator, int degree, int... clause)
-    {
-        addClauseAtLeastIf(indicator, degree, clause);
-        addClauseAtMostIf(indicator, degree, clause);
-    }
+    void addClauseExactlyIf(int indicator, int degree, int... clause);
 
     /**
      * Behaves the same as {@link #addClauseExactlyIf(int, int, int...)}, but
      * accepting an {@link ImmutableIntList} as the given clause.
      */
-    default void addClauseExactlyIf(int indicator, int degree, ImmutableIntList clause)
-    {
-        addClauseExactlyIf(indicator, degree, clause.toArray());
-    }
+    void addClauseExactlyIf(int indicator, int degree, ImmutableIntList clause);
 
     /**
      * Prevents the given clause (with all its literals assigned true) showing
@@ -249,28 +188,29 @@ public interface SatSolver
      *
      * @param clause the clause to be blocked
      */
-    default void addClauseBlocking(int... clause)
-    {
-        final int[] blockingClause = new int[clause.length];
-        for (int i = 0; i < clause.length; i++) {
-            blockingClause[i] = -clause[i];
-        }
-        addClause(blockingClause);
-    }
+    void addClauseBlocking(int... clause);
 
     /**
      * Behaves the same as {@link #addClauseBlocking(int...)}, but accepting an
-     * {@link ImmutableIntList} as the given clause.
+     * {@link ImmutableIntSet} as the given clause.
      */
-    default void addClauseBlockingIf(int indicator, int... clause)
-    {
-        final int[] blockingClause = new int[clause.length + 1];
-        for (int i = 0; i < clause.length; i++) {
-            blockingClause[i] = -clause[i];
-        }
-        blockingClause[clause.length] = -indicator;
-        addClause(blockingClause);
-    }
+    void addClauseBlocking(ImmutableIntSet clause);
+
+    /**
+     * Behaves the same as {@link #addClauseBlocking(int...)} if the given
+     * {@code indicator} is valuated true.  If not activated, the given clause
+     * has no any effects as if it were never mentioned.
+     *
+     * @param indicator whether to activate the blocking clause
+     * @param clause    the clause to be added
+     */
+    void addClauseBlockingIf(int indicator, int... clause);
+
+    /**
+     * Behaves the same as {@link #addClauseBlockingIf(int, int...)}, but
+     * accepting an {@link ImmutableIntSet} as the given clause.
+     */
+    void addClauseBlockingIf(int indicator, ImmutableIntSet clause);
 
     /**
      * Adds the given implication as a clause.
@@ -278,10 +218,7 @@ public interface SatSolver
      * @param antecedent the antecedent of the implication
      * @param consequent the consequent of the implication
      */
-    default void addImplication(int antecedent, int consequent)
-    {
-        addClause(-antecedent, consequent);
-    }
+    void addImplication(int antecedent, int consequent);
 
     /**
      * Behaves the same as {@link #addImplication(int, int)} if the given
@@ -292,49 +229,59 @@ public interface SatSolver
      * @param antecedent the antecedent of the implication
      * @param consequent the consequent of the implication
      */
-    default void addImplicationIf(int indicator, int antecedent, int consequent)
-    {
-        addClause(-indicator, -antecedent, consequent);
-    }
+    void addImplicationIf(int indicator, int antecedent, int consequent);
 
     /**
      * Behaves the same as {@link #addImplication(int, int)}, but accepting
      * multiple consequents.
      */
-    default void addImplications(int antecedent, int... consequents)
-    {
-        for (int consequent : consequents) {
-            addImplication(antecedent, consequent);
-        }
-    }
+    void addImplications(int antecedent, int... consequents);
 
     /**
      * Behaves the same as {@link #addImplicationIf(int, int, int)}, but
      * accepting multiple consequents.
      */
-    default void addImplicationsIf(int indicator, int antecedent, int... consequents)
-    {
-        for (int consequent : consequents) {
-            addImplicationIf(indicator, antecedent, consequent);
-        }
-    }
+    void addImplicationsIf(int indicator, int antecedent, int... consequents);
 
+    /**
+     * Returns {@link Boolean} for whether the given constraints can be
+     * satisfied; {@code null} when the solver is not sure.
+     */
     Boolean findItSatisfiable();
 
-    default ImmutableIntSet findModel()
-    {
-        final Boolean satisfiable = findItSatisfiable();
-        if (satisfiable == null || !satisfiable) {
-            return null;
-        }
-        return getModel();
-    }
+    /**
+     * Determines the satisfiability and returns the model if found any.
+     */
+    ImmutableIntSet findModel();
 
+    /**
+     * Returns the model of the given constraints after the satisfiability has
+     * been determined.
+     *
+     * @return an {@link ImmutableIntSet} containing the true variable IDs in
+     * positive {@code int} and the false variable IDs in negative {@code int}
+     */
     ImmutableIntSet getModel();
 
+    /**
+     * Returns the variables in the model that have been assigned true of the
+     * given constraints after the satisfiability has been determined.
+     *
+     * @return an {@link ImmutableIntSet} containing the true variable IDs
+     */
     ImmutableIntSet getModelTruthyVariables();
 
+    /**
+     * Returns the variables in the model that have been assigned false of the
+     * given constraints after the satisfiability has been determined.
+     *
+     * @return an {@link ImmutableIntSet} containing the false variable IDs
+     */
     ImmutableIntSet getModelFalsyVariables();
 
+    /**
+     * Resets the internal states of the solver instance, making it like one
+     * newly created.
+     */
     void reset();
 }
