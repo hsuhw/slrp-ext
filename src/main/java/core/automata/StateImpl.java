@@ -1,10 +1,12 @@
 package core.automata;
 
-public class State implements api.automata.State
+import api.automata.State;
+
+public class StateImpl implements State
 {
     private final String name;
 
-    public State(String name)
+    public StateImpl(String name)
     {
         this.name = name;
     }

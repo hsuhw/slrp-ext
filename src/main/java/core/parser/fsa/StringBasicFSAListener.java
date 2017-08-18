@@ -1,9 +1,12 @@
 package core.parser.fsa;
 
 import api.automata.State;
+import api.automata.StringSymbol;
 import api.automata.fsa.FSA;
-import core.automata.StringSymbol;
+import core.automata.States;
+import core.automata.StringSymbols;
 import core.automata.fsa.BasicFSABuilder;
+import core.automata.fsa.FSABuilders;
 import generated.AutomatonListBaseListener;
 import generated.AutomatonListParser;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -25,7 +28,7 @@ public class StringBasicFSAListener extends AutomatonListBaseListener
     public StringBasicFSAListener(MutableBiMap<String, StringSymbol> symbolTable, String epsilonSymbol)
     {
         if (!symbolTable.contains(epsilonSymbol)) {
-            symbolTable.put(epsilonSymbol, new StringSymbol(epsilonSymbol));
+            symbolTable.put(epsilonSymbol, StringSymbols.createOne(epsilonSymbol));
         }
         this.symbolTable = symbolTable;
         this.epsilonSymbol = epsilonSymbol;
@@ -51,7 +54,7 @@ public class StringBasicFSAListener extends AutomatonListBaseListener
     {
         final int heuristic = estimateCapacityFactor(ctx);
         stateTable = UnifiedMap.newMap(heuristic);
-        bookkeeper = new BasicFSABuilder<>(heuristic, symbolTable.get(epsilonSymbol), heuristic);
+        bookkeeper = FSABuilders.createBasic(heuristic, symbolTable.get(epsilonSymbol), heuristic);
     }
 
     @Override
@@ -64,12 +67,12 @@ public class StringBasicFSAListener extends AutomatonListBaseListener
 
     private StringSymbol getSymbol(String name)
     {
-        return symbolTable.getIfAbsentPut(name, new StringSymbol(name));
+        return symbolTable.getIfAbsentPut(name, StringSymbols.createOne(name));
     }
 
     private State getState(String name)
     {
-        return stateTable.getIfAbsentPut(name, new core.automata.State(name));
+        return stateTable.getIfAbsentPut(name, States.createOne(name));
     }
 
     @Override

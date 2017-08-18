@@ -1,17 +1,18 @@
 package core.automata;
 
 import api.automata.Alphabet;
+import api.automata.AlphabetTranslator;
 import api.automata.Symbol;
 import org.eclipse.collections.api.bimap.ImmutableBiMap;
 import org.eclipse.collections.api.set.ImmutableSet;
 
-public class AlphabetTranslator<O, T extends Symbol> implements api.automata.AlphabetTranslator<O, T>
+public class BiMapAlphabetTranslator<O, T extends Symbol> implements AlphabetTranslator<O, T>
 {
     private final ImmutableBiMap<O, T> encoder;
     private final ImmutableBiMap<T, O> decoder;
     private final O originEpsilonSymbol;
 
-    public AlphabetTranslator(ImmutableBiMap<O, T> definition, O epsilonSymbol)
+    public BiMapAlphabetTranslator(ImmutableBiMap<O, T> definition, O epsilonSymbol)
     {
         if (!definition.containsKey(epsilonSymbol)) {
             throw new IllegalArgumentException("epsilon symbol not found in the definition");
@@ -54,7 +55,7 @@ public class AlphabetTranslator<O, T extends Symbol> implements api.automata.Alp
     @Override
     public Alphabet<T> getTargetAlphabet()
     {
-        return new core.automata.Alphabet<>(encoder.valuesView().toSet().toImmutable(), getTargetEpsilonSymbol());
+        return Alphabets.createOne(encoder.valuesView().toSet(), getTargetEpsilonSymbol());
     }
 
     @Override

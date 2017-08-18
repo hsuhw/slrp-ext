@@ -1,32 +1,29 @@
 package core.synth;
 
 import api.automata.IntAlphabetTranslator;
+import api.automata.StringSymbol;
 import api.automata.fsa.FSA;
 import api.synth.SatSolver;
 import com.mscharhag.oleaster.runner.OleasterRunner;
-import core.automata.StringSymbol;
+import core.automata.AlphabetTranslators;
+import core.automata.StringSymbols;
 import org.eclipse.collections.api.list.ImmutableList;
-import org.eclipse.collections.impl.factory.Lists;
 import org.junit.runner.RunWith;
 
 import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
 
 @RunWith(OleasterRunner.class)
-public class BasicFSAEncodingTest
+public class ReferenceFSAEncodingTest
 {
     private final SatSolver solver = new Sat4jSolverAdapter();
     private IntAlphabetTranslator<StringSymbol> alphabetEncoding;
-    private BasicFSAEncoding<StringSymbol> encoding;
+    private ReferenceFSAEncoding<StringSymbol> encoding;
 
     private void prepareAlphabet()
     {
-        final StringSymbol[] symbols = new StringSymbol[4];
-        for (int i = 0; i < symbols.length; i++) {
-            symbols[i] = new StringSymbol("a" + i);
-        }
-        final ImmutableList<StringSymbol> definition = Lists.immutable.of(symbols);
-        alphabetEncoding = new core.automata.IntAlphabetTranslator<>(definition, symbols[0]);
+        final ImmutableList<StringSymbol> definition = StringSymbols.of("e", "a1", "a2", "a3");
+        alphabetEncoding = AlphabetTranslators.createIntOne(definition, definition.get(0));
     }
 
     {
@@ -36,7 +33,7 @@ public class BasicFSAEncodingTest
 
             beforeEach(() -> {
                 solver.reset();
-                encoding = new BasicFSAEncoding<>(solver, 2, alphabetEncoding);
+                encoding = new ReferenceFSAEncoding<>(solver, 2, alphabetEncoding);
                 encoding.ensureNoUnreachableStates();
                 encoding.ensureNoDeadEndStates();
             });

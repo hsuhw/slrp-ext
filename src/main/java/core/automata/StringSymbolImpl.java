@@ -1,14 +1,20 @@
 package core.automata;
 
-import api.automata.Symbol;
+import api.automata.StringSymbol;
 
-public class StringSymbol implements Symbol
+public class StringSymbolImpl implements StringSymbol
 {
     private final String displayValue;
 
-    public StringSymbol(String displayValue)
+    public StringSymbolImpl(String displayValue)
     {
         this.displayValue = displayValue;
+    }
+
+    @Override
+    public String getDisplayValue()
+    {
+        return displayValue;
     }
 
     @Override

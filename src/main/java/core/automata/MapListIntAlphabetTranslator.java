@@ -1,17 +1,18 @@
 package core.automata;
 
+import api.automata.IntAlphabetTranslator;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.map.primitive.ImmutableObjectIntMap;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 
-public class IntAlphabetTranslator<S> implements api.automata.IntAlphabetTranslator<S>
+public class MapListIntAlphabetTranslator<S> implements IntAlphabetTranslator<S>
 {
     private final ImmutableObjectIntMap<S> encoder;
     private final ImmutableList<S> decoder;
 
-    public IntAlphabetTranslator(ImmutableList<S> definition, S epsilonSymbol)
+    public MapListIntAlphabetTranslator(ImmutableList<S> definition, S epsilonSymbol)
     {
         if (!definition.contains(epsilonSymbol) || definition.get(EPSILON) != epsilonSymbol) {
             throw new IllegalArgumentException("epsilon symbol should be mapped to zero");

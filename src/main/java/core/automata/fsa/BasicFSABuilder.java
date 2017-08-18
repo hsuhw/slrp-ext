@@ -4,6 +4,7 @@ import api.automata.Alphabet;
 import api.automata.State;
 import api.automata.Symbol;
 import api.automata.fsa.FSA;
+import core.automata.Alphabets;
 import core.automata.DoubleMapDelta;
 import core.automata.DoubleMapSetDelta;
 import org.eclipse.collections.api.list.ImmutableList;
@@ -44,7 +45,7 @@ public class BasicFSABuilder<S extends Symbol> implements FSA.Builder<S>
     @Override
     public Alphabet<S> getCurrentAlphabet()
     {
-        return new core.automata.Alphabet<>(usedSymbols.toImmutable(), epsilonSymbol);
+        return Alphabets.createOne(usedSymbols, epsilonSymbol);
     }
 
     @Override

@@ -1,13 +1,15 @@
 package core.synth;
 
+import api.automata.Alphabet;
 import api.automata.IntAlphabetTranslator;
+import api.automata.State;
 import api.automata.Symbol;
 import api.automata.fsa.FSA;
 import api.synth.FSAEncoding;
 import api.synth.SatSolver;
-import core.automata.Alphabet;
-import core.automata.State;
-import core.automata.fsa.BasicFSABuilder;
+import core.automata.Alphabets;
+import core.automata.States;
+import core.automata.fsa.FSABuilders;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.set.ImmutableSet;
@@ -15,7 +17,7 @@ import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 
-public class BasicFSAEncoding<S extends Symbol> implements FSAEncoding<S>
+public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
 {
     private static final int START_STATE_INDEX = 0;
 
@@ -69,7 +71,7 @@ public class BasicFSAEncoding<S extends Symbol> implements FSAEncoding<S>
         }
     }
 
-    public BasicFSAEncoding(SatSolver solver, int stateNumber, IntAlphabetTranslator<S> alphabetEncoding)
+    public ReferenceFSAEncoding(SatSolver solver, int stateNumber, IntAlphabetTranslator<S> alphabetEncoding)
     {
         this.solver = solver;
         this.stateNumber = stateNumber;
@@ -321,12 +323,12 @@ public class BasicFSAEncoding<S extends Symbol> implements FSAEncoding<S>
         // prepare FSA builder
         final int symbolNumber = alphabetEncoding.size();
         final S epsilonSymbol = alphabetEncoding.getOriginEpsilonSymbol();
-        final FSA.Builder<S> builder = new BasicFSABuilder<>(symbolNumber, epsilonSymbol, stateNumber);
+        final FSA.Builder<S> builder = FSABuilders.createBasic(symbolNumber, epsilonSymbol, stateNumber);
 
         // prepare state objects
         final State[] states = new State[stateNumber];
         for (int i = 0; i < stateNumber; i++) {
-            states[i] = new State("s" + i);
+            states[i] = States.createOne("s" + i);
         }
 
         // decode start & accept states
@@ -349,8 +351,8 @@ public class BasicFSAEncoding<S extends Symbol> implements FSAEncoding<S>
         }
 
         // build
-        final Alphabet<S> originalAlphabet = new Alphabet<>(alphabetEncoding.getOriginAlphabet(),
-                                                            alphabetEncoding.getOriginEpsilonSymbol());
+        final Alphabet<S> originalAlphabet = Alphabets
+            .createOne(alphabetEncoding.getOriginAlphabet(), alphabetEncoding.getOriginEpsilonSymbol());
         return builder.settleRecords(originalAlphabet);
     }
 }

@@ -1,9 +1,11 @@
 package core.parser.fsa;
 
 import api.automata.AlphabetTranslator;
+import api.automata.StringSymbol;
 import api.automata.fsa.FSA;
 import api.parser.ParserWithAlphabet;
-import core.automata.StringSymbol;
+import core.automata.AlphabetTranslators;
+import core.automata.StringSymbols;
 import generated.AutomatonListLexer;
 import generated.AutomatonListParser;
 import org.antlr.v4.runtime.CharStream;
@@ -16,7 +18,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.list.ImmutableList;
-import org.eclipse.collections.impl.factory.BiMaps;
 import util.Misc;
 
 import java.io.IOException;
@@ -33,7 +34,7 @@ public class StringBasicFSAListParser
     public StringBasicFSAListParser(MutableBiMap<String, StringSymbol> symbolTable)
     {
         if (!symbolTable.contains(EPSILON_SYMBOL)) {
-            symbolTable.put(EPSILON_SYMBOL, new StringSymbol(EPSILON_SYMBOL));
+            symbolTable.put(EPSILON_SYMBOL, StringSymbols.createOne(EPSILON_SYMBOL));
         }
         this.symbolTable = symbolTable;
     }
@@ -41,7 +42,7 @@ public class StringBasicFSAListParser
     @Override
     public AlphabetTranslator<String, StringSymbol> getAlphabetMapping()
     {
-        return new core.automata.AlphabetTranslator<>(BiMaps.immutable.ofAll(symbolTable), EPSILON_SYMBOL);
+        return AlphabetTranslators.createOne(symbolTable, EPSILON_SYMBOL);
     }
 
     private ImmutableList<FSA<StringSymbol>> parse(CharStream charStream)
