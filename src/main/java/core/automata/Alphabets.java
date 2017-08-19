@@ -7,6 +7,10 @@ import org.eclipse.collections.api.set.MutableSet;
 
 public final class Alphabets
 {
+    private Alphabets()
+    {
+    }
+
     public static <S extends Symbol> Alphabet<S> createOne(ImmutableSet<S> definition, S epsilonSymbol)
     {
         return new SetAlphabet<>(definition, epsilonSymbol);

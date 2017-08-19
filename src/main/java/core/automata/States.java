@@ -6,6 +6,10 @@ import org.eclipse.collections.impl.factory.Lists;
 
 public final class States
 {
+    private States()
+    {
+    }
+
     public static State createOne(String name)
     {
         return new StateImpl(name);

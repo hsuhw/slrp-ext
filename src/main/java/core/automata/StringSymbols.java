@@ -6,6 +6,10 @@ import org.eclipse.collections.impl.factory.Lists;
 
 public final class StringSymbols
 {
+    private StringSymbols()
+    {
+    }
+
     public static StringSymbol createOne(String displayValue)
     {
         return new StringSymbolImpl(displayValue);

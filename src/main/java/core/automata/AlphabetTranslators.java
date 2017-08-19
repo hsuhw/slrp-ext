@@ -11,6 +11,10 @@ import org.eclipse.collections.impl.factory.BiMaps;
 
 public final class AlphabetTranslators
 {
+    private AlphabetTranslators()
+    {
+    }
+
     public static <O, T extends Symbol> AlphabetTranslator<O, T> createOne(ImmutableBiMap<O, T> definition,
                                                                            O epsilonSymbol)
     {
