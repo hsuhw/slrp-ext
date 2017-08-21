@@ -3,9 +3,13 @@ package core.automata;
 import api.automata.StringSymbol;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.factory.Lists;
+import util.Misc;
 
 public final class StringSymbols
 {
+    public static final String EPSILON_DISPLAY_VALUE = Misc.EPSILON_SYMBOL_DISPLAY_VALUE;
+    public static final StringSymbol EPSILON = new StringSymbolImpl(Misc.EPSILON_SYMBOL_DISPLAY_VALUE);
+
     private StringSymbols()
     {
     }

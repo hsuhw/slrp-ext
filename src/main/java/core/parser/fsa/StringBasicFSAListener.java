@@ -20,18 +20,16 @@ import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 public class StringBasicFSAListener extends AutomatonListBaseListener
 {
     private final MutableBiMap<String, StringSymbol> symbolTable;
-    private final String epsilonSymbol;
     private final MutableList<FSA<StringSymbol>> builtAutomata;
     private MutableMap<String, State> stateTable;
     private BasicFSABuilder<StringSymbol> bookkeeper;
 
-    public StringBasicFSAListener(MutableBiMap<String, StringSymbol> symbolTable, String epsilonSymbol)
+    public StringBasicFSAListener(MutableBiMap<String, StringSymbol> symbolTable)
     {
-        if (!symbolTable.contains(epsilonSymbol)) {
-            symbolTable.put(epsilonSymbol, StringSymbols.createOne(epsilonSymbol));
+        if (!symbolTable.containsValue(StringSymbols.EPSILON_DISPLAY_VALUE)) {
+            symbolTable.put(StringSymbols.EPSILON_DISPLAY_VALUE, StringSymbols.EPSILON);
         }
         this.symbolTable = symbolTable;
-        this.epsilonSymbol = epsilonSymbol;
         builtAutomata = FastList.newList();
     }
 
@@ -54,7 +52,7 @@ public class StringBasicFSAListener extends AutomatonListBaseListener
     {
         final int heuristic = estimateCapacityFactor(ctx);
         stateTable = UnifiedMap.newMap(heuristic);
-        bookkeeper = FSABuilders.createBasic(heuristic, symbolTable.get(epsilonSymbol), heuristic);
+        bookkeeper = FSABuilders.createBasic(heuristic, StringSymbols.EPSILON, heuristic);
     }
 
     @Override
@@ -87,7 +85,7 @@ public class StringBasicFSAListener extends AutomatonListBaseListener
         final State dept = stateTable.get(ctx.ID(0).getText());
         final State dest = stateTable.get(ctx.ID(1).getText());
         final StringSymbol symbol = ctx.transitionLabel().epsilonTransitionLabel() != null
-                                    ? getSymbol(epsilonSymbol)
+                                    ? StringSymbols.EPSILON
                                     : getSymbol(ctx.transitionLabel().monadTransitionLabel().getText());
         bookkeeper.addTransition(dept, dest, symbol);
     }

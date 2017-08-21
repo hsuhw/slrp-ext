@@ -14,18 +14,18 @@ import org.eclipse.collections.impl.factory.primitive.IntLists;
  */
 public interface IntAlphabetTranslator<S>
 {
-    int EPSILON = 0;
+    int INT_EPSILON = 0;
 
     int size();
 
     default int getTargetEpsilonSymbol()
     {
-        return EPSILON;
+        return INT_EPSILON;
     }
 
     default S getOriginEpsilonSymbol()
     {
-        return originSymbolOf(EPSILON);
+        return originSymbolOf(INT_EPSILON);
     }
 
     int intSymbolOf(S symbol);

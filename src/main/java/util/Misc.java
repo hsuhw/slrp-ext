@@ -6,7 +6,7 @@ public final class Misc
 {
     public static final String NIY = "not implemented yet";
     public static final String NMI = "no matched implementation found";
-    public static final String EPSILON_SYMBOL = "(epsilon)";
+    public static final String EPSILON_SYMBOL_DISPLAY_VALUE = "(epsilon)";
 
     private Misc()
     {

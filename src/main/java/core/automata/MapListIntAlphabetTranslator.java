@@ -14,7 +14,7 @@ public class MapListIntAlphabetTranslator<S> implements IntAlphabetTranslator<S>
 
     public MapListIntAlphabetTranslator(ImmutableList<S> definition, S epsilonSymbol)
     {
-        if (!definition.contains(epsilonSymbol) || definition.get(EPSILON) != epsilonSymbol) {
+        if (!definition.contains(epsilonSymbol) || definition.get(INT_EPSILON) != epsilonSymbol) {
             throw new IllegalArgumentException("epsilon symbol should be mapped to zero");
         }
         decoder = definition;

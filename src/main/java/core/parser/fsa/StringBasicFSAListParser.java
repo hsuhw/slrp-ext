@@ -18,7 +18,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.list.ImmutableList;
-import util.Misc;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,22 +26,18 @@ public class StringBasicFSAListParser
     implements ParserWithAlphabet<FSA<StringSymbol>, AlphabetTranslator<String, StringSymbol>>
 {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final String EPSILON_SYMBOL = Misc.EPSILON_SYMBOL;
 
     private final MutableBiMap<String, StringSymbol> symbolTable;
 
     public StringBasicFSAListParser(MutableBiMap<String, StringSymbol> symbolTable)
     {
-        if (!symbolTable.contains(EPSILON_SYMBOL)) {
-            symbolTable.put(EPSILON_SYMBOL, StringSymbols.createOne(EPSILON_SYMBOL));
-        }
         this.symbolTable = symbolTable;
     }
 
     @Override
     public AlphabetTranslator<String, StringSymbol> getAlphabetMapping()
     {
-        return AlphabetTranslators.createOne(symbolTable, EPSILON_SYMBOL);
+        return AlphabetTranslators.createOne(symbolTable, StringSymbols.EPSILON_DISPLAY_VALUE);
     }
 
     private ImmutableList<FSA<StringSymbol>> parse(CharStream charStream)
@@ -57,7 +52,7 @@ public class StringBasicFSAListParser
         final ParseTree tree = parser.automata();
 
         final ParseTreeWalker walker = new ParseTreeWalker();
-        final StringBasicFSAListener automatonCollector = new StringBasicFSAListener(symbolTable, EPSILON_SYMBOL);
+        final StringBasicFSAListener automatonCollector = new StringBasicFSAListener(symbolTable);
         walker.walk(automatonCollector, tree);
 
         final long endTime = System.currentTimeMillis();
