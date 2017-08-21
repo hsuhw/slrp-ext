@@ -23,6 +23,7 @@ dependencies {
     compile 'org.apache.logging.log4j:log4j-core:2.8.2'
     compile 'org.eclipse.collections:eclipse-collections-api:8.2.0'
     compile 'org.eclipse.collections:eclipse-collections:8.2.0'
+    compile 'org.apache.commons:commons-text:1.1'
     testCompile 'com.mscharhag.oleaster:oleaster-runner:0.2.0'
     testCompile 'com.mscharhag.oleaster:oleaster-matcher:0.2.0'
     testCompile 'junit:junit:4.12'

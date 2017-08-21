@@ -2,11 +2,11 @@ package core.automata;
 
 import api.automata.State;
 
-public class StateImpl implements State
+public class ParsedState implements State
 {
     private final String name;
 
-    public StateImpl(String name)
+    public ParsedState(String name)
     {
         this.name = name;
     }
