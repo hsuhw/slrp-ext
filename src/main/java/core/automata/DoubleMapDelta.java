@@ -20,14 +20,14 @@ public class DoubleMapDelta<S extends Symbol> implements Deterministic, Transiti
     private final ImmutableMap<State, ImmutableMap<S, State>> delta;
     private final ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> deltaInversed;
 
-    public DoubleMapDelta(ImmutableMap<State, ImmutableMap<S, State>> definition,
+    private DoubleMapDelta(ImmutableMap<State, ImmutableMap<S, State>> definition,
                           ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> definitionInversed)
     {
         delta = definition;
         deltaInversed = definitionInversed;
     }
 
-    private ImmutableMap<State, ImmutableMap<S, State>> toImmutableSimple(
+    private static <S extends Symbol> ImmutableMap<State, ImmutableMap<S, State>> immutableDefinition(
         MutableMap<State, MutableMap<S, State>> definition)
     {
         return definition.collect((dept, transes) -> {
@@ -35,7 +35,7 @@ public class DoubleMapDelta<S extends Symbol> implements Deterministic, Transiti
         }).toImmutable();
     }
 
-    private ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> toImmutable(
+    private static <S extends Symbol> ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> immutableInversedDefinition(
         MutableMap<State, MutableMap<S, MutableSet<State>>> definition)
     {
         return definition.collect((dept, transes) -> {
@@ -45,24 +45,46 @@ public class DoubleMapDelta<S extends Symbol> implements Deterministic, Transiti
         }).toImmutable();
     }
 
-    private MutableMap<State, MutableMap<S, MutableSet<State>>> computeInverse(
+    private static <S extends Symbol> MutableMap<State, MutableMap<S, MutableSet<State>>> computeInverse(
         MutableMap<State, MutableMap<S, State>> definition)
     {
         final MutableMap<State, MutableMap<S, MutableSet<State>>> inverse = UnifiedMap.newMap(definition.size());
         definition.forEach((dept, transes) -> {
             transes.forEach((sym, dest) -> {
-                inverse.getIfAbsentPut(dest, UnifiedMap.newMap(definition.size())) // heuristic sizing
-                       .getIfAbsentPut(sym, UnifiedSet.newSet(definition.size())) // heuristic sizing
+                inverse.getIfAbsentPut(dest, UnifiedMap.newMap(definition.size()))
+                       .getIfAbsentPut(sym, UnifiedSet.newSet(definition.size())) // upper bound
                        .add(dept);
             });
         });
         return inverse;
     }
 
+    public DoubleMapDelta(MutableMap<State, MutableMap<S, State>> definition,
+                          MutableMap<State, MutableMap<S, MutableSet<State>>> definitionInversed)
+    {
+        // TODO: decide whether to check the validity of `definitionInversed`
+        this(immutableDefinition(definition), immutableInversedDefinition(definitionInversed));
+    }
+
     public DoubleMapDelta(MutableMap<State, MutableMap<S, State>> definition)
     {
-        delta = toImmutableSimple(definition);
-        deltaInversed = toImmutable(computeInverse(definition));
+        this(definition, computeInverse(definition));
+    }
+
+    public MutableMap<State, MutableMap<S, State>> getMutableDefinition()
+    {
+        return delta.collect((dept, transes) -> {
+            return Tuples.pair(dept, transes.toMap());
+        }).toMap();
+    }
+
+    public MutableMap<State, MutableMap<S, MutableSet<State>>> getMutableInversedDefinition()
+    {
+        return deltaInversed.collect((dept, transes) -> {
+            return Tuples.pair(dept, transes.collect((sym, dests) -> {
+                return Tuples.pair(sym, dests.toSet());
+            }).toMap());
+        }).toMap();
     }
 
     @Override

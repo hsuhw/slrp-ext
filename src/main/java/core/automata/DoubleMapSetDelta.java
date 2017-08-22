@@ -18,14 +18,14 @@ public class DoubleMapSetDelta<S extends Symbol> implements Nondeterministic, Tr
     private final ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> delta;
     private final ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> deltaInversed;
 
-    public DoubleMapSetDelta(ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> definition,
-                             ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> definitionInversed)
+    private DoubleMapSetDelta(ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> definition,
+                              ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> definitionInversed)
     {
         delta = definition;
         deltaInversed = definitionInversed;
     }
 
-    private ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> toImmutable(
+    private static <S extends Symbol> ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> immutableDefinition(
         MutableMap<State, MutableMap<S, MutableSet<State>>> definition)
     {
         return definition.collect((dept, transes) -> {
@@ -35,15 +35,15 @@ public class DoubleMapSetDelta<S extends Symbol> implements Nondeterministic, Tr
         }).toImmutable();
     }
 
-    private MutableMap<State, MutableMap<S, MutableSet<State>>> computeInverse(
+    private static <S extends Symbol> MutableMap<State, MutableMap<S, MutableSet<State>>> computeInverse(
         MutableMap<State, MutableMap<S, MutableSet<State>>> definition)
     {
         final MutableMap<State, MutableMap<S, MutableSet<State>>> inverse = UnifiedMap.newMap(definition.size());
         definition.forEach((dept, transes) -> {
             transes.forEach((sym, dests) -> {
                 dests.forEach(dest -> {
-                    inverse.getIfAbsentPut(dest, UnifiedMap.newMap(definition.size())) // heuristic sizing
-                           .getIfAbsentPut(sym, UnifiedSet.newSet(definition.size())) // heuristic sizing
+                    inverse.getIfAbsentPut(dest, UnifiedMap.newMap(definition.size()))
+                           .getIfAbsentPut(sym, UnifiedSet.newSet(definition.size())) // upper bound
                            .add(dept);
                 });
             });
@@ -51,10 +51,16 @@ public class DoubleMapSetDelta<S extends Symbol> implements Nondeterministic, Tr
         return inverse;
     }
 
+    public DoubleMapSetDelta(MutableMap<State, MutableMap<S, MutableSet<State>>> definition,
+                             MutableMap<State, MutableMap<S, MutableSet<State>>> definitionInversed)
+    {
+        // TODO: decide whether to check the validity of `definitionInversed`
+        this(immutableDefinition(definition), immutableDefinition(definitionInversed));
+    }
+
     public DoubleMapSetDelta(MutableMap<State, MutableMap<S, MutableSet<State>>> definition)
     {
-        delta = toImmutable(definition);
-        deltaInversed = toImmutable(computeInverse(definition));
+        this(definition, computeInverse(definition));
     }
 
     @Override
