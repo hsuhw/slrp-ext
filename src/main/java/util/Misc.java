@@ -4,6 +4,8 @@ import org.apache.commons.text.RandomStringGenerator;
 
 import java.lang.reflect.Array;
 
+import static java.lang.Character.isLetter;
+import static java.lang.Character.isLowerCase;
 import static org.apache.commons.text.CharacterPredicates.DIGITS;
 import static org.apache.commons.text.CharacterPredicates.LETTERS;
 
@@ -25,7 +27,7 @@ public final class Misc
     }
 
     private static final RandomStringGenerator lowerCasedAlphanumericRSG = new RandomStringGenerator.Builder()
-        .withinRange('0', 'z').filteredBy(LETTERS, DIGITS, Character::isLowerCase).build();
+        .withinRange('0', 'z').filteredBy(c -> (isLetter(c) && isLowerCase(c)), DIGITS).build();
     private static final RandomStringGenerator alphanumericRSG = new RandomStringGenerator.Builder()
         .withinRange('0', 'z').filteredBy(LETTERS, DIGITS).build();
 
