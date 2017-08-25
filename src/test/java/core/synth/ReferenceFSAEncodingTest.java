@@ -75,10 +75,7 @@ public class ReferenceFSAEncodingTest
 
             it("should find correct FSAs with no-words-purely-made-of constraints", () -> {
                 encoding.ensureNoWordsPurelyMadeOf(alphabetEncoding.getOriginAlphabet());
-                while (solver.findModel() != null) {
-                    expect(encoding.toFSA().getTransitionFunction().size()).toEqual(0);
-                    encoding.blockCurrentInstance();
-                }
+                expect(solver.findItSatisfiable()).toEqual(Boolean.FALSE);
             });
 
             it("should find no FSAs with unsatisfiable constraints", () -> {

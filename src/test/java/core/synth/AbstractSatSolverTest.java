@@ -14,12 +14,12 @@ public abstract class AbstractSatSolverTest
 
     protected void expectSolutionExists()
     {
-        expect(solver.findModel()).toBeNotNull();
+        expect(solver.findItSatisfiable()).toEqual(Boolean.TRUE);
     }
 
     protected void expectNoSolutionExists()
     {
-        expect(solver.findModel()).toBeNull();
+        expect(solver.findItSatisfiable()).toEqual(Boolean.FALSE);
     }
 
     protected ImmutableIntSet model()

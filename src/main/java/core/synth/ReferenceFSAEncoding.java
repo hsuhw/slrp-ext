@@ -16,11 +16,13 @@ import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
+import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 
 public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
 {
     private static final int START_STATE_INDEX = 0;
+    private static final int EPSILON_SYMBOL_INDEX = IntAlphabetTranslator.INT_EPSILON;
 
     private final SatSolver solver;
     private final int stateNumber;
@@ -32,12 +34,16 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
 
     private void prepareTransitionIndicators()
     {
-        transitionIndicators = new ImmutableIntList[stateNumber][alphabetEncoding.size()];
+        final int symbolNumber = alphabetEncoding.size();
+        transitionIndicators = new ImmutableIntList[stateNumber][symbolNumber];
         for (int state = 0; state < stateNumber; state++) {
-            for (int symbol = 0; symbol < alphabetEncoding.size(); symbol++) {
+            for (int symbol = 0; symbol < symbolNumber; symbol++) {
                 transitionIndicators[state][symbol] = solver.newFreeVariables(stateNumber);
             }
         }
+        final int transIndBegin = transitionIndicators[0][0].getFirst();
+        final int transIndEnd = transitionIndicators[stateNumber - 1][symbolNumber - 1].getLast();
+        solver.addClause(IntInterval.from(transIndBegin).to(transIndEnd)); // at least one transition overall
     }
 
     private void prepareAcceptStateIndicators()
@@ -49,10 +55,11 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
     private void ensureDeterminism()
     {
         for (int dept = 0; dept < stateNumber; dept++) {
-            transitionIndicators[dept][0].forEach(solver::setLiteralFalsy);
+            final ImmutableIntList destsReachedByEpsilon = transitionIndicators[dept][EPSILON_SYMBOL_INDEX];
+            destsReachedByEpsilon.forEach(solver::setLiteralFalsy); // no epsilon transition
             for (int symbol = 1; symbol < alphabetEncoding.size(); symbol++) {
                 final ImmutableIntList possibleDest = transitionIndicators[dept][symbol];
-                solver.addClauseAtMost(1, possibleDest); // can be zero
+                solver.addClauseAtMost(1, possibleDest); // at most one transition, can be zero
             }
         }
     }
@@ -60,15 +67,17 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
     private void ensureNoSymmetricInstances()
     {
         final int symbolNumber = alphabetEncoding.size();
-        final int[][] stateStructuralOrder = new int[stateNumber][symbolNumber + 1];
+        final int[][] structuralOrder = new int[stateNumber][symbolNumber + 1];
         for (int state = 0; state < stateNumber; state++) {
-            stateStructuralOrder[state][0] = acceptStateIndicators.get(state);
+            final int beAcceptState = acceptStateIndicators.get(state);
+            structuralOrder[state][0] = beAcceptState; // highest digit (affect the most)
             for (int symbol = 0; symbol < symbolNumber; symbol++) {
-                stateStructuralOrder[state][symbol + 1] = transitionIndicators[state][symbol].get(state);
+                final int hasLoopSymbol = transitionIndicators[state][symbol].get(state);
+                structuralOrder[state][symbol + 1] = hasLoopSymbol;
             }
         }
         for (int i = stateNumber - 1; i > 0; i--) {
-            solver.markAsGreaterEqualThan(stateStructuralOrder[i], stateStructuralOrder[i - 1]);
+            solver.markAsGreaterEqualThan(structuralOrder[i], structuralOrder[i - 1]);
         }
     }
 
@@ -90,26 +99,36 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
         for (int state = 0; state < stateNumber; state++) {
             final ImmutableIntList possibleDistance = solver.newFreeVariables(stateNumber);
             distanceIndicators[state] = possibleDistance; // from 0 to n - 1
-            solver.addClause(possibleDistance);
+            solver.addClauseExactly(1, possibleDistance);
         }
         return distanceIndicators;
     }
 
-    private void encodePossibleDistByTrans(int prev, int curr, int sym, ImmutableIntList[] distanceIndicators)
+    private void encodePossibleDistByTransIf(int required, int currState, ImmutableIntList[] distanceIndicators)
     {
-        final ImmutableIntList possibleDistByGivenTrans = solver.newFreeVariables(stateNumber);
-        final int transCanCauseNoDist = possibleDistByGivenTrans.get(0);
-        solver.setLiteralFalsy(transCanCauseNoDist);
-        for (int distNum = 1; distNum < stateNumber; distNum++) {
-            final int transCauseDistNum = possibleDistByGivenTrans.get(distNum);
-            final int transBeAvailable = transitionIndicators[prev][sym].get(curr);
-            final int prevBeNumMinusOne = distanceIndicators[prev].get(distNum - 1);
-            final int currBeNum = distanceIndicators[curr].get(distNum);
+        final int symbolNumber = alphabetEncoding.size();
+        final ImmutableIntList[][] possibleDistByTrans = new ImmutableIntList[stateNumber][symbolNumber];
+        for (int prevState = 0; prevState < stateNumber; prevState++) {
+            for (int symbol = 0; symbol < symbolNumber; symbol++) {
+                possibleDistByTrans[prevState][symbol] = solver.newFreeVariables(stateNumber);
+                final int transCanCauseNoDist = possibleDistByTrans[prevState][symbol].get(0);
+                solver.setLiteralFalsy(transCanCauseNoDist);
+                for (int distNum = 1; distNum < stateNumber; distNum++) {
+                    final int transCauseDistNum = possibleDistByTrans[prevState][symbol].get(distNum);
+                    final int transBeAvailable = transitionIndicators[prevState][symbol].get(currState);
+                    final int prevBeNumMinusOne = distanceIndicators[prevState].get(distNum - 1);
+                    final int currBeNum = distanceIndicators[currState].get(distNum);
 
-            // transCauseDistNum <--> transBeAvailable && prevBeNumMinusOne && currBeNum
-            solver.addImplications(transCauseDistNum, transBeAvailable, prevBeNumMinusOne, currBeNum);
-            solver.addClause(-transBeAvailable, -prevBeNumMinusOne, -currBeNum, transCauseDistNum);
+                    // transCauseDistNum <--> transBeAvailable && prevBeNumMinusOne && currBeNum
+                    solver.addImplications(transCauseDistNum, transBeAvailable, prevBeNumMinusOne, currBeNum);
+                    solver.addClause(-transBeAvailable, -prevBeNumMinusOne, -currBeNum, transCauseDistNum);
+                }
+            }
         }
+        // if required, at least one valid distance caused by the transitions
+        final int distByTransBegin = possibleDistByTrans[0][0].getFirst();
+        final int distByTransEnd = possibleDistByTrans[stateNumber - 1][symbolNumber - 1].getLast();
+        solver.addClauseIf(required, IntInterval.from(distByTransBegin).to(distByTransEnd));
     }
 
     @Override
@@ -121,12 +140,10 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
         final ImmutableIntList[] distFromStartIndicators = prepareDistanceIndicators();
         final int startStateDistBeZero = distFromStartIndicators[START_STATE_INDEX].get(0);
         solver.setLiteralTruthy(startStateDistBeZero);
-        for (int qi = 0; qi < stateNumber; qi++) {
-            for (int qj = 1; qj < stateNumber; qj++) {
-                for (int symbol = 1; symbol < alphabetEncoding.size(); symbol++) {
-                    encodePossibleDistByTrans(qi, qj, symbol, distFromStartIndicators);
-                }
-            }
+        final int notStartState = solver.newFreeVariables(1).getFirst();
+        solver.setLiteralTruthy(notStartState);
+        for (int state = 1; state < stateNumber; state++) { // skip the start state
+            encodePossibleDistByTransIf(notStartState, state, distFromStartIndicators);
         }
         noUnreachableStatesEnsured = true;
     }
@@ -138,15 +155,11 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
             return;
         }
         ImmutableIntList[] distFromAcceptIndicators = prepareDistanceIndicators();
-        for (int qi = 0; qi < stateNumber; qi++) {
-            final int takenAsAcceptState = acceptStateIndicators.get(qi);
-            final int distBeZero = distFromAcceptIndicators[qi].get(0);
+        for (int state = 0; state < stateNumber; state++) {
+            final int takenAsAcceptState = acceptStateIndicators.get(state);
+            final int distBeZero = distFromAcceptIndicators[state].get(0);
             solver.markAsEquivalent(takenAsAcceptState, distBeZero);
-            for (int qj = 0; qj < stateNumber; qj++) {
-                for (int symbol = 1; symbol < alphabetEncoding.size(); symbol++) {
-                    encodePossibleDistByTrans(qi, qj, symbol, distFromAcceptIndicators);
-                }
-            }
+            encodePossibleDistByTransIf(-takenAsAcceptState, state, distFromAcceptIndicators);
         }
         noDeadEndStatesEnsured = true;
     }
