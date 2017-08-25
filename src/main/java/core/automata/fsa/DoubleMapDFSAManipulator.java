@@ -3,6 +3,7 @@ package core.automata.fsa;
 import api.automata.*;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAManipulator;
+import api.automata.fsa.FSAManipulatorDecorator;
 import core.automata.DoubleMapDelta;
 import core.automata.States;
 import org.eclipse.collections.api.bimap.MutableBiMap;
@@ -23,7 +24,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.function.BiFunction;
 
-public class DoubleMapDFSAManipulator implements FSAManipulator.Decorator
+public class DoubleMapDFSAManipulator implements FSAManipulatorDecorator
 {
     private final FSAManipulator decoratee;
 

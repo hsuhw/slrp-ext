@@ -4,6 +4,7 @@ import api.automata.Alphabet;
 import api.automata.State;
 import api.automata.Symbol;
 import api.automata.fsa.FSA;
+import api.automata.fsa.FSABuilder;
 import core.automata.Alphabets;
 import core.automata.DoubleMapDelta;
 import core.automata.DoubleMapSetDelta;
@@ -18,7 +19,7 @@ import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.eclipse.collections.impl.tuple.Tuples;
 
-public class BasicFSABuilder<S extends Symbol> implements FSA.Builder<S>
+public class BasicFSABuilder<S extends Symbol> implements FSABuilder<S>
 {
     private static final int NONDETERMINISTIC_TRANSITION_CAPACITY = 3;
 

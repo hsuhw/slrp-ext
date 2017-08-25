@@ -13,7 +13,7 @@ import util.Predicates;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
-public interface Manipulator
+public interface AutomatonManipulator
 {
     default ImmutableBooleanList makeStatePredicateTableWith(ImmutableList<State> targetStates,
                                                              ImmutableBiMap<State, Twin<State>> stateMapping,

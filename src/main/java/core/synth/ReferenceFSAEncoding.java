@@ -5,6 +5,7 @@ import api.automata.IntAlphabetTranslator;
 import api.automata.State;
 import api.automata.Symbol;
 import api.automata.fsa.FSA;
+import api.automata.fsa.FSABuilder;
 import api.synth.FSAEncoding;
 import api.synth.SatSolver;
 import core.automata.Alphabets;
@@ -323,7 +324,7 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
         // prepare FSA builder
         final int symbolNumber = alphabetEncoding.size();
         final S epsilonSymbol = alphabetEncoding.getOriginEpsilonSymbol();
-        final FSA.Builder<S> builder = FSABuilders.createBasic(symbolNumber, epsilonSymbol, stateNumber);
+        final FSABuilder<S> builder = FSABuilders.createBasic(symbolNumber, epsilonSymbol, stateNumber);
 
         // prepare state objects
         final State[] states = new State[stateNumber];

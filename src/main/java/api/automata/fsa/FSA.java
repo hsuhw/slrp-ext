@@ -58,16 +58,4 @@ public interface FSA<S extends Symbol> extends Automaton<S>
         }
         return isAcceptState(currState);
     }
-
-    interface Builder<S extends Symbol> extends Automaton.Builder<S>
-    {
-        Alphabet<S> getCurrentAlphabet();
-
-        void addSymbol(S symbol);
-
-        @Override
-        FSA<S> build();
-
-        FSA<S> build(Alphabet<S> alphabetOverride);
-    }
 }
