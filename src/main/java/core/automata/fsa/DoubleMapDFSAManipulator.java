@@ -187,7 +187,8 @@ public class DoubleMapDFSAManipulator implements FSAManipulatorDecorator
         }
 
         // complete the ignored transitions of those states
-        final DoubleMapDelta<S> delta = addDeadEndStateToDelta(alphabet.toSet(), states, transes, incompleteStates);
+        final ImmutableSet<S> noEpsilonAlphabet = alphabet.toSet().newWithout(alphabet.getEpsilonSymbol());
+        final DoubleMapDelta<S> delta = addDeadEndStateToDelta(noEpsilonAlphabet, states, transes, incompleteStates);
         final MutableBooleanList startStateTable = targetDFSA.getStartStateTable().toList();
         startStateTable.add(false); // the dead end state shouldn't be a start state
         final MutableBooleanList acceptStateTable = targetDFSA.getAcceptStateTable().toList();
