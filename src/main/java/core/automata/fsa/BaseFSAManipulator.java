@@ -1,5 +1,6 @@
 package core.automata.fsa;
 
+import api.automata.Alphabet;
 import api.automata.Automaton;
 import api.automata.Symbol;
 import api.automata.fsa.FSA;
@@ -17,8 +18,11 @@ public class BaseFSAManipulator implements FSAManipulator
     }
 
     @Override
-    public <S extends Symbol, T extends Symbol, R extends Symbol> FSA<S> compose(Automaton<S> first, Automaton<T> after,
-                                                                                 BiFunction<S, T, R> composer)
+    public <S extends Symbol, T extends Symbol, R extends Symbol> Automaton<R> makeProduct(Automaton<S> first,
+                                                                                           Automaton<T> after,
+                                                                                           Alphabet<R> targetAlphabet,
+                                                                                           BiFunction<S, T, R> transitionDecider,
+                                                                                           StateAttributeDecider<S, T, R> stateAttributeDecider)
     {
         throw new UnsupportedOperationException(Misc.NMI);
     }
@@ -42,7 +46,19 @@ public class BaseFSAManipulator implements FSAManipulator
     }
 
     @Override
-    public <S extends Symbol> FSA<S> getComplement(FSA<S> target)
+    public <S extends Symbol> FSA<S> makeComplement(FSA<S> target)
+    {
+        throw new UnsupportedOperationException(Misc.NMI);
+    }
+
+    @Override
+    public <S extends Symbol> FSA<S> makeIntersection(FSA<S> one, FSA<S> two)
+    {
+        throw new UnsupportedOperationException(Misc.NMI);
+    }
+
+    @Override
+    public <S extends Symbol> FSA<S> makeUnion(FSA<S> one, FSA<S> two)
     {
         throw new UnsupportedOperationException(Misc.NMI);
     }

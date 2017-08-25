@@ -5,15 +5,22 @@ import api.automata.fsa.FSA;
 import api.automata.fsa.FSAManipulator;
 import core.automata.DoubleMapDelta;
 import core.automata.States;
+import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.list.primitive.ImmutableBooleanList;
 import org.eclipse.collections.api.list.primitive.MutableBooleanList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.api.tuple.Twin;
+import org.eclipse.collections.impl.factory.BiMaps;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
+import org.eclipse.collections.impl.tuple.Tuples;
 
+import java.util.LinkedList;
+import java.util.Queue;
 import java.util.function.BiFunction;
 
 public class DoubleMapDFSAManipulator implements FSAManipulator.Decorator
@@ -45,12 +52,64 @@ public class DoubleMapDFSAManipulator implements FSAManipulator.Decorator
         return null;
     }
 
-    @Override
-    public <S extends Symbol, T extends Symbol, R extends Symbol> FSA<S> composeDelegated(Automaton<S> first,
-                                                                                          Automaton<T> after,
-                                                                                          BiFunction<S, T, R> composer)
+    private <S extends Symbol, T extends Symbol, R extends Symbol> DoubleMapDelta<R> computeProductDelta(
+        DoubleMapDFSA<S> dfsaA, DoubleMapDFSA<T> dfsaB, MutableBiMap<State, Twin<State>> stateMapping,
+        BiFunction<S, T, R> transitionDecider)
     {
-        return null;
+        final TransitionFunction<S> deltaA = dfsaA.getTransitionFunction();
+        final TransitionFunction<T> deltaB = dfsaB.getTransitionFunction();
+        final int symbolNumberUpperBound = dfsaA.getAlphabetSize() * dfsaB.getAlphabetSize();
+        final Queue<Twin<State>> pendingProductStates = new LinkedList<>();
+        final MutableMap<State, MutableMap<R, State>> newDeltaDefinition = UnifiedMap
+            .newMap(dfsaA.getStateNumber() * dfsaB.getStateNumber()); // upper bound
+
+        final Twin<State> startStatePair = Tuples.twin(dfsaA.getStartState(), dfsaB.getStartState());
+        stateMapping.put(States.generateOne(), startStatePair);
+        pendingProductStates.add(startStatePair);
+        Twin<State> tgtStatePair;
+        while ((tgtStatePair = pendingProductStates.poll()) != null) {
+            final State newDept = stateMapping.inverse().get(tgtStatePair);
+            final State tgtStateA = tgtStatePair.getOne();
+            final State tgtStateB = tgtStatePair.getTwo();
+            deltaA.enabledSymbolsOn(tgtStateA).forEach(symbolA -> {
+                deltaB.enabledSymbolsOn(tgtStateB).forEach(symbolB -> {
+                    final R newTransSymbol = transitionDecider.apply(symbolA, symbolB);
+                    if (newTransSymbol != null) {
+                        final State tgtDestA = deltaA.successorOf(tgtStateA, symbolA);
+                        final State tgtDestB = deltaB.successorOf(tgtStateB, symbolB);
+                        final State newDest = States.generateOne();
+                        stateMapping.getIfAbsentPut(newDest, () -> {
+                            final Twin<State> nextStatePair = Tuples.twin(tgtDestA, tgtDestB);
+                            pendingProductStates.add(nextStatePair);
+                            return nextStatePair;
+                        });
+                        newDeltaDefinition.getIfAbsentPut(newDept, UnifiedMap.newMap(symbolNumberUpperBound))
+                                          .putIfAbsent(newTransSymbol, newDest);
+                    }
+                });
+            });
+        }
+
+        return new DoubleMapDelta<>(newDeltaDefinition);
+    }
+
+    @Override
+    public <S extends Symbol, T extends Symbol, R extends Symbol> DoubleMapDFSA<R> makeProductDelegated(
+        Automaton<S> one, Automaton<T> two, Alphabet<R> targetAlphabet, BiFunction<S, T, R> transitionDecider,
+        StateAttributeDecider<S, T, R> stateAttributeDecider)
+    {
+        if (!isImplementationTarget(one) || !isImplementationTarget(two)) {
+            return null;
+        }
+        final DoubleMapDFSA<S> dfsaA = (DoubleMapDFSA<S>) one;
+        final DoubleMapDFSA<T> dfsaB = (DoubleMapDFSA<T>) two;
+        final MutableBiMap<State, Twin<State>> stateMapping = BiMaps.mutable.empty();
+        final DoubleMapDelta<R> newDelta = computeProductDelta(dfsaA, dfsaB, stateMapping, transitionDecider);
+        final StateAttributes stateAttributes = stateAttributeDecider.decide(one, two, stateMapping, newDelta);
+
+        return new DoubleMapDFSA<>(targetAlphabet, stateAttributes.getDefinitionOfStates(),
+                                   stateAttributes.getStartStateTable(), stateAttributes.getAcceptStateTable(),
+                                   newDelta);
     }
 
     @Override
@@ -85,7 +144,7 @@ public class DoubleMapDFSAManipulator implements FSAManipulator.Decorator
         final MutableMap<State, MutableMap<S, MutableSet<State>>> deltaInversed = transes
             .getMutableInversedDefinition();
 
-        // create the dead end state
+        // create a dead end state
         final State deadEndState = States.generateOne();
         states.add(deadEndState);
         delta.put(deadEndState, UnifiedMap.newMap(alphabetSet.size()));
@@ -98,7 +157,7 @@ public class DoubleMapDFSAManipulator implements FSAManipulator.Decorator
                              .add(deadEndState);
         });
 
-        // make incomplete states complete
+        // add the ignored dead end transitions of those incomplete states back
         incompleteStates.forEach(state -> {
             alphabetSet.forEach(symbol -> {
                 delta.get(state).putIfAbsent(symbol, deadEndState);
@@ -115,6 +174,8 @@ public class DoubleMapDFSAManipulator implements FSAManipulator.Decorator
         if (!isImplementationTarget(target)) {
             return null;
         }
+
+        // collect the incomplete states
         final DoubleMapDFSA<S> targetDFSA = (DoubleMapDFSA<S>) target;
         final Alphabet<S> alphabet = targetDFSA.getAlphabet();
         final MutableList<State> states = targetDFSA.getStates().toList();
@@ -123,11 +184,13 @@ public class DoubleMapDFSAManipulator implements FSAManipulator.Decorator
         if (incompleteStates.isEmpty()) {
             return targetDFSA;
         }
+
+        // complete the ignored transitions of those states
         final DoubleMapDelta<S> delta = addDeadEndStateToDelta(alphabet.toSet(), states, transes, incompleteStates);
         final MutableBooleanList startStateTable = targetDFSA.getStartStateTable().toList();
-        startStateTable.add(false); // the dead end state is not a start state
+        startStateTable.add(false); // the dead end state shouldn't be a start state
         final MutableBooleanList acceptStateTable = targetDFSA.getAcceptStateTable().toList();
-        acceptStateTable.add(false); // the dead end state is not an accept state
+        acceptStateTable.add(false); // the dead end state shouldn't be an accept state
 
         return new DoubleMapDFSA<>(alphabet, states, startStateTable, acceptStateTable, delta);
     }
@@ -142,17 +205,15 @@ public class DoubleMapDFSAManipulator implements FSAManipulator.Decorator
     }
 
     @Override
-    public <S extends Symbol> DoubleMapDFSA<S> getComplementDelegated(FSA<S> target)
+    public <S extends Symbol> DoubleMapDFSA<S> makeComplementDelegated(FSA<S> target)
     {
         if (!isImplementationTarget(target)) {
             return null;
         }
         final DoubleMapDFSA<S> targetDFSA = makeCompleteDelegated(target);
-        final MutableBooleanList acceptStateTable = targetDFSA.getAcceptStateTable().toList();
-        for (int i = 0; i < acceptStateTable.size(); i++) {
-            acceptStateTable.set(i, !acceptStateTable.get(i));
-        }
+        final ImmutableBooleanList originalAcceptStateTable = targetDFSA.getAcceptStateTable();
+        final ImmutableBooleanList acceptStateTableComplement = makeAcceptStateComplement(originalAcceptStateTable);
         return new DoubleMapDFSA<>(targetDFSA.getAlphabet(), targetDFSA.getStates(), targetDFSA.getStartStateTable(),
-                                   acceptStateTable.toImmutable(), targetDFSA.getTransitionFunction());
+                                   acceptStateTableComplement, targetDFSA.getTransitionFunction());
     }
 }

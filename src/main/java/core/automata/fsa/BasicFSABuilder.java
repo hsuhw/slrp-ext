@@ -134,13 +134,13 @@ public class BasicFSABuilder<S extends Symbol> implements FSA.Builder<S>
     }
 
     @Override
-    public FSA<S> settleRecords()
+    public FSA<S> build()
     {
         return settleRecordsHelper(getCurrentAlphabet());
     }
 
     @Override
-    public FSA<S> settleRecords(Alphabet<S> alphabetOverride)
+    public FSA<S> build(Alphabet<S> alphabetOverride)
     {
         if (!alphabetOverride.toSet().containsAll(usedSymbols)) {
             throw new IllegalArgumentException("given alphabet does not contain all the symbols");

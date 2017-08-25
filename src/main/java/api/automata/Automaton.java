@@ -10,6 +10,11 @@ public interface Automaton<S extends Symbol>
 
     ImmutableObjectIntMap<State> getStateIndexTable();
 
+    default int getStateNumber()
+    {
+        return getStates().size();
+    }
+
     default State getState(int stateIndex)
     {
         return getStates().get(stateIndex);
@@ -56,6 +61,6 @@ public interface Automaton<S extends Symbol>
 
         void addTransition(State dept, State dest, S symbol);
 
-        Automaton<S> settleRecords();
+        Automaton<S> build();
     }
 }

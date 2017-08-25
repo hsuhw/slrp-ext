@@ -314,7 +314,7 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
     @Override
     public FSA<S> toFSA()
     {
-        // get solution (if any)
+        // get the solution (if any)
         if (!solver.findItSatisfiable()) {
             return null;
         }
@@ -351,8 +351,10 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
         }
 
         // build
-        final Alphabet<S> originalAlphabet = Alphabets
-            .createOne(alphabetEncoding.getOriginAlphabet(), alphabetEncoding.getOriginEpsilonSymbol());
-        return builder.settleRecords(originalAlphabet);
+        final ImmutableSet<S> originAlphabetSet = alphabetEncoding.getOriginAlphabet();
+        final S originEpsilonSymbol = alphabetEncoding.getOriginEpsilonSymbol();
+        final Alphabet<S> originalAlphabet = Alphabets.createOne(originAlphabetSet, originEpsilonSymbol);
+
+        return builder.build(originalAlphabet);
     }
 }

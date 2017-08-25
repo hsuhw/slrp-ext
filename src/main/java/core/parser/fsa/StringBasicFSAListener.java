@@ -58,7 +58,7 @@ public class StringBasicFSAListener extends AutomatonListBaseListener
     @Override
     public void exitAutomaton(AutomatonListParser.AutomatonContext ctx)
     {
-        builtAutomata.add(bookkeeper.settleRecords()); // TODO: might need alphabet overriding
+        builtAutomata.add(bookkeeper.build()); // TODO: might need alphabet overriding
         stateTable = null;
         bookkeeper = null;
     }

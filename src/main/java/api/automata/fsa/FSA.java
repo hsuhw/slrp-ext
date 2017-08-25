@@ -27,6 +27,11 @@ public interface FSA<S extends Symbol> extends Automaton<S>
 
     Alphabet<S> getAlphabet();
 
+    default int getAlphabetSize()
+    {
+        return getAlphabet().size();
+    }
+
     default State getStartState()
     {
         for (State s : getStates()) {
@@ -61,8 +66,8 @@ public interface FSA<S extends Symbol> extends Automaton<S>
         void addSymbol(S symbol);
 
         @Override
-        FSA<S> settleRecords();
+        FSA<S> build();
 
-        FSA<S> settleRecords(Alphabet<S> alphabetOverride);
+        FSA<S> build(Alphabet<S> alphabetOverride);
     }
 }
