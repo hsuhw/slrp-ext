@@ -1,6 +1,7 @@
 package core.synth;
 
 import api.synth.SatSolver;
+import api.synth.SatSolverTimeoutException;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
@@ -12,14 +13,19 @@ public abstract class AbstractSatSolverTest
 {
     protected SatSolver solver;
 
-    protected void expectSolutionExists()
+    protected boolean modelExists() throws SatSolverTimeoutException
     {
-        expect(solver.findItSatisfiable()).toEqual(Boolean.TRUE);
+        return solver.findItSatisfiable();
     }
 
-    protected void expectNoSolutionExists()
+    protected void expectModelExists() throws SatSolverTimeoutException
     {
-        expect(solver.findItSatisfiable()).toEqual(Boolean.FALSE);
+        expect(solver.findItSatisfiable()).toBeTrue();
+    }
+
+    protected void expectNoModelExists() throws SatSolverTimeoutException
+    {
+        expect(solver.findItSatisfiable()).toBeFalse();
     }
 
     protected ImmutableIntSet model()
@@ -63,11 +69,11 @@ public abstract class AbstractSatSolverTest
             it("should work the same as #addClause(int...)", () -> {
                 solver.addClause(solver.newFreeVariables(2));
                 solver.addClause(-2);
-                expectSolutionExists();
+                expectModelExists();
                 expect(model().contains(1)).toBeTrue();
 
                 solver.addClause(-1);
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
             it("should throw an exception when the clause causes an immediate contradiction", () -> {
@@ -86,11 +92,11 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(yes);
                     solver.addClauseIf(yes, solver.newFreeVariables(2));
                     solver.addClause(-3);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().contains(2)).toBeTrue();
 
                     solver.addClause(-2);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
                 it("should throw an exception when the clause causes an immediate contradiction", () -> {
@@ -109,7 +115,7 @@ public abstract class AbstractSatSolverTest
                 it("should not affect the established satisfiability", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().contains(2)).toBeTrue();
 
                     final int wellNeverMind = solver.newFreeVariables(1).getFirst();
@@ -117,7 +123,7 @@ public abstract class AbstractSatSolverTest
                     solver.addClauseIf(wellNeverMind, solver.newFreeVariables(2));
                     solver.addClause(-4);
                     solver.addClause(-5);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().contains(2)).toBeTrue();
                 });
 
@@ -125,12 +131,12 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     solver.addClause(-2);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
 
                     final int wellNeverMind = solver.newFreeVariables(1).getFirst();
                     solver.addClause(-wellNeverMind);
                     solver.addClauseIf(wellNeverMind, solver.newFreeVariables(2));
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
                 it("should not throw an exception when the clause causes an immediate contradiction", () -> {
@@ -149,11 +155,11 @@ public abstract class AbstractSatSolverTest
             it("should ensure the given literal be assigned true in the model", () -> {
                 solver.addClause(1, 2);
                 solver.setLiteralTruthy(-2);
-                expectSolutionExists();
+                expectModelExists();
                 expect(model().contains(1)).toBeTrue();
 
                 solver.addClause(-1);
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
             it("should throw an exception when the setting causes an immediate contradiction", () -> {
@@ -168,11 +174,11 @@ public abstract class AbstractSatSolverTest
             it("should ensure the given literals be assigned true in the model", () -> {
                 solver.addClause(1, 2, 3);
                 solver.setLiteralsTruthy(-2, -3);
-                expectSolutionExists();
+                expectModelExists();
                 expect(model().contains(1)).toBeTrue();
 
                 solver.addClause(-1);
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
             it("should throw an exception when the setting causes an immediate contradiction", () -> {
@@ -187,11 +193,11 @@ public abstract class AbstractSatSolverTest
             it("should ensure the given literal be assigned true in the model", () -> {
                 solver.addClause(1, 2);
                 solver.setLiteralFalsy(2);
-                expectSolutionExists();
+                expectModelExists();
                 expect(model().contains(1)).toBeTrue();
 
                 solver.addClause(-1);
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
             it("should throw an exception when the setting causes an immediate contradiction", () -> {
@@ -206,11 +212,11 @@ public abstract class AbstractSatSolverTest
             it("should ensure the given literals be assigned true in the model", () -> {
                 solver.addClause(1, 2, 3);
                 solver.setLiteralsFalsy(2, 3);
-                expectSolutionExists();
+                expectModelExists();
                 expect(model().contains(1)).toBeTrue();
 
                 solver.addClause(-1);
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
             it("should throw an exception when the setting causes an immediate contradiction", () -> {
@@ -226,14 +232,14 @@ public abstract class AbstractSatSolverTest
                 solver.addClause(-1, -2);
                 solver.markAsEquivalent(1, 2);
                 solver.addClause(1);
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
             it("should ensure the literals be assigned the same value (the false case)", () -> {
                 solver.addClause(1, 2);
                 solver.markAsEquivalent(1, 2);
                 solver.addClause(-1);
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
             it("should throw an exception when the setting causes an immediate contradiction", () -> {
@@ -251,14 +257,14 @@ public abstract class AbstractSatSolverTest
                 solver.addClause(-1, -2, -3);
                 solver.markEachAsEquivalent(1, 2, 3);
                 solver.addClause(1);
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
             it("should ensure the literals be assigned the same value (the false case)", () -> {
                 solver.addClause(1, 2, 3);
                 solver.markEachAsEquivalent(1, 2, 3);
                 solver.addClause(-1);
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
             it("should throw an exception when the setting causes an immediate contradiction", () -> {
@@ -278,7 +284,7 @@ public abstract class AbstractSatSolverTest
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
                 solver.setLiteralFalsy(bitArray1.get(1));
                 solver.setLiteralTruthy(bitArray2.get(1));
-                expectSolutionExists();
+                expectModelExists();
                 expect(model().contains(bitArray1.get(0))).toBeTrue();
                 expect(model().contains(bitArray2.get(0))).toBeFalse();
             });
@@ -288,7 +294,7 @@ public abstract class AbstractSatSolverTest
                 final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
                 solver.setLiteralTruthy(bitArray2.get(0));
-                expectSolutionExists();
+                expectModelExists();
                 expect(model().contains(bitArray1.get(0))).toBeTrue();
             });
 
@@ -298,7 +304,7 @@ public abstract class AbstractSatSolverTest
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
                 solver.setLiteralFalsy(bitArray1.get(0));
                 solver.setLiteralTruthy(bitArray2.get(0));
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
             it("should encode the equal situation correctly", () -> {
@@ -306,35 +312,32 @@ public abstract class AbstractSatSolverTest
                 final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
                 solver.markAsGreaterEqualInBinary(bitArray2, bitArray1);
-                while (solver.findModel() != null) {
+                while (modelExists()) {
                     expect(model().contains(bitArray1.get(0))).toEqual(model().contains(bitArray2.get(0)));
                     expect(model().contains(bitArray1.get(1))).toEqual(model().contains(bitArray2.get(1)));
                     solver.addClauseBlocking(model());
                 }
-                expectNoSolutionExists();
             });
 
             it("should handle array1 longer than array2 correctly", () -> {
                 final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
                 final ImmutableIntList bitArray2 = solver.newFreeVariables(1);
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
-                while (solver.findModel() != null) {
+                while (modelExists()) {
                     expect(model().containsAll(-bitArray1.get(0), -bitArray1.get(1), bitArray2.get(0))).toBeFalse();
                     solver.addClauseBlocking(model());
                 }
-                expectNoSolutionExists();
             });
 
             it("should handle array1 shorter than array2 correctly", () -> {
                 final ImmutableIntList bitArray1 = solver.newFreeVariables(1);
                 final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
-                while (solver.findModel() != null) {
+                while (modelExists()) {
                     expect(model().contains(bitArray2.get(0))).toBeFalse();
                     expect(model().containsAll(-bitArray1.get(0), bitArray2.get(1))).toBeFalse();
                     solver.addClauseBlocking(model());
                 }
-                expectNoSolutionExists();
             });
 
         });
@@ -345,11 +348,11 @@ public abstract class AbstractSatSolverTest
                 solver.addClauseAtLeast(2, solver.newFreeVariables(4));
                 solver.addClause(-1);
                 solver.addClause(-2);
-                expectSolutionExists();
+                expectModelExists();
                 expect(model().containsAll(3, 4)).toBeTrue();
 
                 solver.addClause(-3);
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
             it("should not affect the established unsatisfiability", () -> {
@@ -357,7 +360,7 @@ public abstract class AbstractSatSolverTest
                 solver.addClause(-1);
                 solver.addClause(-2);
                 solver.addClauseAtLeast(2, solver.newFreeVariables(4));
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
         });
@@ -372,23 +375,23 @@ public abstract class AbstractSatSolverTest
                     solver.addClauseAtLeastIf(yes, 2, solver.newFreeVariables(4));
                     solver.addClause(-2);
                     solver.addClause(-3);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().containsAll(4, 5)).toBeTrue();
 
                     solver.addClause(-4);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
                 it("should not affect the established unsatisfiability", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     solver.addClause(-2);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
 
                     final int yes = solver.newFreeVariables(1).getFirst();
                     solver.addClause(yes);
                     solver.addClauseAtLeastIf(yes, 2, solver.newFreeVariables(4));
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
             });
@@ -398,7 +401,7 @@ public abstract class AbstractSatSolverTest
                 it("should not affect the established satisfiability", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().contains(2)).toBeTrue();
 
                     final int wellNeverMind = solver.newFreeVariables(1).getFirst();
@@ -408,7 +411,7 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(-5);
                     solver.addClause(-6);
                     solver.addClause(-7);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().contains(2)).toBeTrue();
                 });
 
@@ -416,12 +419,12 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     solver.addClause(-2);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
 
                     final int wellNeverMind = solver.newFreeVariables(1).getFirst();
                     solver.addClause(-wellNeverMind);
                     solver.addClauseAtLeastIf(wellNeverMind, 2, solver.newFreeVariables(4));
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
             });
@@ -434,11 +437,11 @@ public abstract class AbstractSatSolverTest
                 solver.addClauseAtMost(2, solver.newFreeVariables(4));
                 solver.addClause(1);
                 solver.addClause(2);
-                expectSolutionExists();
+                expectModelExists();
                 expect(model().containsAll(-3, -4)).toBeTrue();
 
                 solver.addClause(3);
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
             it("should allow zero true assignments in the given clause", () -> {
@@ -447,7 +450,7 @@ public abstract class AbstractSatSolverTest
                 solver.addClause(-2);
                 solver.addClause(-3);
                 solver.addClause(-4);
-                expectSolutionExists();
+                expectModelExists();
                 expect(model().containsAll(-1, -2, -3, -4)).toBeTrue();
             });
 
@@ -456,7 +459,7 @@ public abstract class AbstractSatSolverTest
                 solver.addClause(-1);
                 solver.addClause(-2);
                 solver.addClauseAtMost(2, solver.newFreeVariables(4));
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
         });
@@ -471,11 +474,11 @@ public abstract class AbstractSatSolverTest
                     solver.addClauseAtMostIf(yes, 2, solver.newFreeVariables(4));
                     solver.addClause(2);
                     solver.addClause(3);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().containsAll(-4, -5)).toBeTrue();
 
                     solver.addClause(4);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
                 it("should allow zero true assignments in the given clause", () -> {
@@ -486,7 +489,7 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(-3);
                     solver.addClause(-4);
                     solver.addClause(-5);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().containsAll(-2, -3, -4, -5)).toBeTrue();
                 });
 
@@ -494,12 +497,12 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     solver.addClause(-2);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
 
                     final int yes = solver.newFreeVariables(1).getFirst();
                     solver.addClause(yes);
                     solver.addClauseAtMostIf(yes, 2, solver.newFreeVariables(4));
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
             });
@@ -509,7 +512,7 @@ public abstract class AbstractSatSolverTest
                 it("should not affect the established satisfiability", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().contains(2)).toBeTrue();
 
                     final int wellNeverMind = solver.newFreeVariables(1).getFirst();
@@ -518,7 +521,7 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(4);
                     solver.addClause(5);
                     solver.addClause(6);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().contains(2)).toBeTrue();
                 });
 
@@ -526,12 +529,12 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     solver.addClause(-2);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
 
                     final int wellNeverMind = solver.newFreeVariables(1).getFirst();
                     solver.addClause(-wellNeverMind);
                     solver.addClauseAtMostIf(wellNeverMind, 2, solver.newFreeVariables(4));
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
             });
@@ -544,32 +547,32 @@ public abstract class AbstractSatSolverTest
                 solver.addClauseExactly(2, solver.newFreeVariables(4));
                 solver.addClause(1);
                 solver.addClause(2);
-                expectSolutionExists();
+                expectModelExists();
                 expect(model().containsAll(-3, -4)).toBeTrue();
 
                 solver.addClause(3);
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
             it("should ensure no less than the given degree", () -> {
                 solver.addClauseExactly(2, solver.newFreeVariables(4));
                 solver.addClause(-1);
                 solver.addClause(-2);
-                expectSolutionExists();
+                expectModelExists();
                 expect(model().containsAll(3, 4)).toBeTrue();
 
                 solver.addClause(-3);
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
             it("should not affect the established unsatisfiability", () -> {
                 solver.addClause(1, 2);
                 solver.addClause(-1);
                 solver.addClause(-2);
-                expectNoSolutionExists();
+                expectNoModelExists();
 
                 solver.addClauseExactly(2, solver.newFreeVariables(4));
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
         });
@@ -584,11 +587,11 @@ public abstract class AbstractSatSolverTest
                     solver.addClauseExactlyIf(yes, 2, solver.newFreeVariables(4));
                     solver.addClause(2);
                     solver.addClause(3);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().containsAll(-4, -5)).toBeTrue();
 
                     solver.addClause(4);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
                 it("should ensure no less than the given degree", () -> {
@@ -597,23 +600,23 @@ public abstract class AbstractSatSolverTest
                     solver.addClauseExactlyIf(yes, 2, solver.newFreeVariables(4));
                     solver.addClause(-2);
                     solver.addClause(-3);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().containsAll(4, 5)).toBeTrue();
 
                     solver.addClause(-4);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
                 it("should not affect the established unsatisfiability", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     solver.addClause(-2);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
 
                     final int yes = solver.newFreeVariables(1).getFirst();
                     solver.addClause(yes);
                     solver.addClauseExactlyIf(yes, 2, solver.newFreeVariables(4));
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
             });
@@ -623,7 +626,7 @@ public abstract class AbstractSatSolverTest
                 it("should not affect the established satisfiability", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().contains(2)).toBeTrue();
 
                     final int wellNeverMind = solver.newFreeVariables(1).getFirst();
@@ -632,7 +635,7 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(4);
                     solver.addClause(5);
                     solver.addClause(6);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().contains(2)).toBeTrue();
                 });
 
@@ -640,12 +643,12 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     solver.addClause(-2);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
 
                     final int wellNeverMind = solver.newFreeVariables(1).getFirst();
                     solver.addClause(-wellNeverMind);
                     solver.addClauseExactlyIf(wellNeverMind, 2, solver.newFreeVariables(4));
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
             });
@@ -658,19 +661,18 @@ public abstract class AbstractSatSolverTest
                 solver.addClause(1, 2);
                 solver.addClauseBlocking(IntSets.immutable.of(1, 2));
                 solver.addClauseBlocking(IntSets.immutable.of(-1, 2));
-                expectSolutionExists();
+                expectModelExists();
                 expect(model().containsAll(1, -2)).toBeTrue();
 
                 solver.addClause(2);
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
             it("can loop to keep blocking a problem until it is made unsatisfiable", () -> {
                 solver.addClause(1, 2, 3);
-                while (solver.findModel() != null) {
+                while (modelExists()) {
                     solver.addClauseBlocking(model());
                 }
-                expectNoSolutionExists();
             });
 
         });
@@ -684,22 +686,22 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(2, 3);
                     solver.addClauseBlockingIf(1, IntSets.immutable.of(2, 3));
                     solver.addClauseBlockingIf(1, IntSets.immutable.of(-2, 3));
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().containsAll(2, -3)).toBeTrue();
 
                     solver.addClause(3);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
                 it("should not affect the established unsatisfiability", () -> {
                     solver.addClause(1, 2);
                     solver.addClause(-1);
                     solver.addClause(-2);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
 
                     solver.addClause(3);
                     solver.addClauseBlockingIf(3, IntSets.immutable.of(4, 5));
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
             });
@@ -709,14 +711,14 @@ public abstract class AbstractSatSolverTest
                 it("should not affect the established satisfiability", () -> {
                     solver.addClause(1, 2);
                     solver.addClause(-1);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().contains(2)).toBeTrue();
 
                     solver.addClause(-3);
                     solver.addClauseBlockingIf(3, IntSets.immutable.of(4, 5));
                     solver.addClause(4);
                     solver.addClause(5);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().contains(2)).toBeTrue();
                 });
 
@@ -724,11 +726,11 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(1, 2);
                     solver.addClause(-1);
                     solver.addClause(-2);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
 
                     solver.addClause(-3);
                     solver.addClauseBlockingIf(3, IntSets.immutable.of(4, 5));
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
             });
@@ -741,11 +743,11 @@ public abstract class AbstractSatSolverTest
                 solver.addClause(1, 2, 3, 4);
                 solver.addImplications(1, 2, 3);
                 solver.addClause(1);
-                expectSolutionExists();
+                expectModelExists();
                 expect(model().containsAll(2, 3)).toBeTrue();
 
                 solver.addClause(-2);
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
             it("should add the implication as expected (false antecedent)", () -> {
@@ -754,17 +756,17 @@ public abstract class AbstractSatSolverTest
                 solver.addClause(-1);
                 solver.addClause(-2);
                 solver.addClause(3);
-                expectSolutionExists();
+                expectModelExists();
             });
 
             it("should not affect the established satisfiability", () -> {
                 solver.addClause(1, 2);
                 solver.addClause(-1);
-                expectSolutionExists();
+                expectModelExists();
                 expect(model().contains(2)).toBeTrue();
 
                 solver.addImplications(3, 4, 5);
-                expectSolutionExists();
+                expectModelExists();
                 expect(model().contains(2)).toBeTrue();
             });
 
@@ -772,10 +774,10 @@ public abstract class AbstractSatSolverTest
                 solver.addClause(1, 2);
                 solver.addClause(-1);
                 solver.addClause(-2);
-                expectNoSolutionExists();
+                expectNoModelExists();
 
                 solver.addImplications(3, 4, 5);
-                expectNoSolutionExists();
+                expectNoModelExists();
             });
 
         });
@@ -789,11 +791,11 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(2, 3, 4, 5);
                     solver.addImplicationsIf(1, 2, 3, 4);
                     solver.addClause(2);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().containsAll(3, 4)).toBeTrue();
 
                     solver.addClause(-3);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
                 it("should add the implication as expected (false antecedent)", () -> {
@@ -803,18 +805,18 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(-2);
                     solver.addClause(-3);
                     solver.addClause(4);
-                    expectSolutionExists();
+                    expectModelExists();
                 });
 
                 it("should not affect the established unsatisfiability", () -> {
                     solver.addClause(1, 2);
                     solver.addClause(-1);
                     solver.addClause(-2);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
 
                     solver.addClause(3);
                     solver.addImplicationsIf(3, 4, 5, 6);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
             });
@@ -824,7 +826,7 @@ public abstract class AbstractSatSolverTest
                 it("should not affect the established satisfiability", () -> {
                     solver.addClause(1, 2);
                     solver.addClause(-1);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().contains(2)).toBeTrue();
 
                     solver.addClause(-3);
@@ -832,7 +834,7 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(4);
                     solver.addClause(-5);
                     solver.addClause(6);
-                    expectSolutionExists();
+                    expectModelExists();
                     expect(model().contains(2)).toBeTrue();
                 });
 
@@ -840,11 +842,11 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(1, 2);
                     solver.addClause(-1);
                     solver.addClause(-2);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
 
                     solver.addClause(-3);
                     solver.addImplicationsIf(3, 4, 5, 6);
-                    expectNoSolutionExists();
+                    expectNoModelExists();
                 });
 
             });

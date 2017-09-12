@@ -50,8 +50,8 @@ public class DoubleMapDFSAManipulatorTest
                 encoding.ensureAcceptingWord(word2);
                 encoding.ensureNotAcceptingWord(word3);
 
-                while (solver.findModel() != null) {
-                    final FSA<StringSymbol> instance = manipulator.makeComplete(encoding.toFSA());
+                while (solver.findItSatisfiable()) {
+                    final FSA<StringSymbol> instance = manipulator.makeComplete(encoding.resolveToFSA());
                     expect(instance.isComplete()).toBeTrue();
                     expect(instance.accepts(word1)).toBeTrue();
                     expect(instance.accepts(word2)).toBeTrue();

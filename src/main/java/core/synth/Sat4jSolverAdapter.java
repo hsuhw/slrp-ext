@@ -1,6 +1,7 @@
 package core.synth;
 
 import api.synth.SatSolver;
+import api.synth.SatSolverTimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
@@ -19,6 +20,7 @@ import java.util.Arrays;
 public class Sat4jSolverAdapter implements SatSolver
 {
     private static final Logger LOGGER = LogManager.getLogger();
+    private static final ImmutableIntSet NONSOLUTION = IntSets.immutable.empty();
 
     private final ISolver solver;
     private int nextFreeVariableId = 1;
@@ -33,7 +35,7 @@ public class Sat4jSolverAdapter implements SatSolver
 
     private void assertModelValid()
     {
-        if (model == null) {
+        if (model == null || model == NONSOLUTION) {
             throw new IllegalStateException("try to get the valuation before a model found");
         }
     }
@@ -140,26 +142,30 @@ public class Sat4jSolverAdapter implements SatSolver
     }
 
     @Override
-    public Boolean findItSatisfiable()
+    public boolean findItSatisfiable() throws SatSolverTimeoutException
     {
         if (model != null) {
-            return Boolean.TRUE;
+            return model != NONSOLUTION;
         }
         LOGGER.debug("Invoke a solving on SAT4J.");
         final long startTime = System.currentTimeMillis();
+        long endTime;
         try {
             if (solver.isSatisfiable()) {
-                final long endTime = System.currentTimeMillis();
+                endTime = System.currentTimeMillis();
                 LOGGER.info("SAT4J found a solution in {}ms.", endTime - startTime);
                 model = IntSets.immutable.of(solver.model());
-                return Boolean.TRUE;
+                return true;
             }
         } catch (TimeoutException e) {
-            final long endTime = System.currentTimeMillis();
+            endTime = System.currentTimeMillis();
             LOGGER.warn("SAT4J failed to solve the problem within {}ms.", endTime - startTime);
-            return null;
+            throw new SatSolverTimeoutException();
         }
-        return Boolean.FALSE;
+        endTime = System.currentTimeMillis();
+        LOGGER.info("SAT4J found it unsatisfiable in {}ms.", endTime - startTime);
+        model = NONSOLUTION;
+        return false;
     }
 
     @Override

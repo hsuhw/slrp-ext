@@ -8,6 +8,7 @@ import api.automata.fsa.FSA;
 import api.automata.fsa.FSABuilder;
 import api.synth.FSAEncoding;
 import api.synth.SatSolver;
+import api.synth.SatSolverTimeoutException;
 import core.automata.Alphabets;
 import core.automata.States;
 import core.automata.fsa.FSABuilders;
@@ -295,7 +296,7 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
     }
 
     @Override
-    public void blockCurrentInstance()
+    public void blockCurrentInstance() throws SatSolverTimeoutException
     {
         // get solution (if any)
         if (!solver.findItSatisfiable()) {
@@ -326,7 +327,7 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
     }
 
     @Override
-    public FSA<S> toFSA()
+    public FSA<S> resolveToFSA() throws SatSolverTimeoutException
     {
         // get the solution (if any)
         if (!solver.findItSatisfiable()) {

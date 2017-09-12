@@ -20,7 +20,7 @@ public interface FSAEncoding<S extends Symbol> extends Deterministic
 
     void ensureNoWordsPurelyMadeOf(ImmutableSet<S> symbols);
 
-    void blockCurrentInstance();
+    void blockCurrentInstance() throws SatSolverTimeoutException;
 
-    FSA<S> toFSA();
+    FSA<S> resolveToFSA() throws SatSolverTimeoutException;
 }

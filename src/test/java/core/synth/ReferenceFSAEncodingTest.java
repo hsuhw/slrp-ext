@@ -46,8 +46,8 @@ public class ReferenceFSAEncodingTest
                 encoding.ensureAcceptingWord(word2);
                 encoding.ensureNotAcceptingWord(word3);
 
-                while (solver.findModel() != null) {
-                    final FSA<StringSymbol> instance = encoding.toFSA();
+                while (solver.findItSatisfiable()) {
+                    final FSA<StringSymbol> instance = encoding.resolveToFSA();
                     expect(instance.accepts(word1)).toBeTrue();
                     expect(instance.accepts(word2)).toBeTrue();
                     expect(instance.accepts(word3)).toBeFalse();
@@ -65,8 +65,8 @@ public class ReferenceFSAEncodingTest
                 encoding.whetherAcceptWord(yes, word1);
                 encoding.whetherAcceptWord(no, word2);
 
-                while (solver.findModel() != null) {
-                    final FSA<StringSymbol> instance = encoding.toFSA();
+                while (solver.findItSatisfiable()) {
+                    final FSA<StringSymbol> instance = encoding.resolveToFSA();
                     expect(instance.accepts(word1)).toBeTrue();
                     expect(instance.accepts(word2)).toBeFalse();
                     encoding.blockCurrentInstance();

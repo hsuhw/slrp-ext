@@ -2,8 +2,11 @@ package api.synth;
 
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.list.primitive.MutableIntList;
+import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
+import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.factory.primitive.IntLists;
+import org.eclipse.collections.impl.factory.primitive.IntSets;
 
 /**
  * The API definition for the SAT solver functionalities we use in programs.
@@ -428,22 +431,9 @@ public interface SatSolver
     }
 
     /**
-     * Returns {@link Boolean} for whether the given constraints can be
-     * satisfied; {@code null} when the solver is not sure.
+     * Determines whether the given constraints can be satisfied.
      */
-    Boolean findItSatisfiable();
-
-    /**
-     * Determines the satisfiability and returns the model if found any.
-     */
-    default ImmutableIntSet findModel()
-    {
-        final Boolean satisfiable = findItSatisfiable();
-        if (satisfiable == null || !satisfiable) {
-            return null;
-        }
-        return getModel();
-    }
+    boolean findItSatisfiable() throws SatSolverTimeoutException;
 
     /**
      * Returns the model of the given constraints after the satisfiability has

@@ -86,10 +86,9 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
 
             it("should return positive consistently when a problem is satisfiable", () -> {
                 solver.addClause(1, 2);
-                final Boolean satisfiable1 = solver.findItSatisfiable();
-                expect(satisfiable1).toBeNotNull();
-                expect(satisfiable1.booleanValue()).toBeTrue();
-                final Boolean satisfiable2 = solver.findItSatisfiable();
+                final boolean satisfiable1 = solver.findItSatisfiable();
+                expect(satisfiable1).toBeTrue();
+                final boolean satisfiable2 = solver.findItSatisfiable();
                 expect(satisfiable1).toEqual(satisfiable2);
             });
 
@@ -97,10 +96,9 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
                 solver.addClause(1, 2);
                 solver.addClause(-1);
                 solver.addClause(-2);
-                final Boolean satisfiable1 = solver.findItSatisfiable();
-                expect(satisfiable1).toBeNotNull();
-                expect(satisfiable1.booleanValue()).toBeFalse();
-                final Boolean satisfiable2 = solver.findItSatisfiable();
+                final boolean satisfiable1 = solver.findItSatisfiable();
+                expect(satisfiable1).toBeFalse();
+                final boolean satisfiable2 = solver.findItSatisfiable();
                 expect(satisfiable1).toEqual(satisfiable2);
             });
 
@@ -111,7 +109,7 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
             it("should provide the truthy variables in the model", () -> {
                 solver.addClause(1, 2);
                 solver.addClause(-1);
-                expectSolutionExists();
+                expectModelExists();
 
                 expect(solver.getModelTruthyVariables().contains(1)).toBeFalse();
                 expect(solver.getModelTruthyVariables().contains(2)).toBeTrue();
@@ -135,7 +133,7 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
             it("should provide the falsy variables in the model", () -> {
                 solver.addClause(1, 2);
                 solver.addClause(-1);
-                expectSolutionExists();
+                expectModelExists();
 
                 expect(solver.getModelFalsyVariables().contains(1)).toBeTrue();
                 expect(solver.getModelFalsyVariables().contains(2)).toBeFalse();
