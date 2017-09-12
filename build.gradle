@@ -43,6 +43,10 @@ test {
     }
 }
 
+jacoco {
+    toolVersion = '0.7.9'
+}
+
 jacocoTestReport {
     reports {
         xml.enabled = true
