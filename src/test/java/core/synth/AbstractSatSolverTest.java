@@ -270,12 +270,12 @@ public abstract class AbstractSatSolverTest
 
         });
 
-        describe("#markAsGreaterEqualThan(ImmutableIntList, ImmutableIntList)", () -> {
+        describe("#markAsGreaterEqualInBinary(ImmutableIntList, ImmutableIntList)", () -> {
 
             it("should encode the greater situation correctly (case 1)", () -> {
                 final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
                 final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
-                solver.markAsGreaterEqualThan(bitArray1, bitArray2);
+                solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
                 solver.setLiteralFalsy(bitArray1.get(1));
                 solver.setLiteralTruthy(bitArray2.get(1));
                 expectSolutionExists();
@@ -286,7 +286,7 @@ public abstract class AbstractSatSolverTest
             it("should encode the greater situation correctly (case 2)", () -> {
                 final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
                 final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
-                solver.markAsGreaterEqualThan(bitArray1, bitArray2);
+                solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
                 solver.setLiteralTruthy(bitArray2.get(0));
                 expectSolutionExists();
                 expect(model().contains(bitArray1.get(0))).toBeTrue();
@@ -295,7 +295,7 @@ public abstract class AbstractSatSolverTest
             it("should encode the greater situation correctly (case 3)", () -> {
                 final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
                 final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
-                solver.markAsGreaterEqualThan(bitArray1, bitArray2);
+                solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
                 solver.setLiteralFalsy(bitArray1.get(0));
                 solver.setLiteralTruthy(bitArray2.get(0));
                 expectNoSolutionExists();
@@ -304,8 +304,8 @@ public abstract class AbstractSatSolverTest
             it("should encode the equal situation correctly", () -> {
                 final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
                 final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
-                solver.markAsGreaterEqualThan(bitArray1, bitArray2);
-                solver.markAsGreaterEqualThan(bitArray2, bitArray1);
+                solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
+                solver.markAsGreaterEqualInBinary(bitArray2, bitArray1);
                 while (solver.findModel() != null) {
                     expect(model().contains(bitArray1.get(0))).toEqual(model().contains(bitArray2.get(0)));
                     expect(model().contains(bitArray1.get(1))).toEqual(model().contains(bitArray2.get(1)));
@@ -317,7 +317,7 @@ public abstract class AbstractSatSolverTest
             it("should handle array1 longer than array2 correctly", () -> {
                 final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
                 final ImmutableIntList bitArray2 = solver.newFreeVariables(1);
-                solver.markAsGreaterEqualThan(bitArray1, bitArray2);
+                solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
                 while (solver.findModel() != null) {
                     expect(model().containsAll(-bitArray1.get(0), -bitArray1.get(1), bitArray2.get(0))).toBeFalse();
                     solver.addClauseBlocking(model());
@@ -328,7 +328,7 @@ public abstract class AbstractSatSolverTest
             it("should handle array1 shorter than array2 correctly", () -> {
                 final ImmutableIntList bitArray1 = solver.newFreeVariables(1);
                 final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
-                solver.markAsGreaterEqualThan(bitArray1, bitArray2);
+                solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
                 while (solver.findModel() != null) {
                     expect(model().contains(bitArray2.get(0))).toBeFalse();
                     expect(model().containsAll(-bitArray1.get(0), bitArray2.get(1))).toBeFalse();

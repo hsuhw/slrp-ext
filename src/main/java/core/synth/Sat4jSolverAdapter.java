@@ -16,7 +16,7 @@ import org.sat4j.specs.TimeoutException;
 
 import java.util.Arrays;
 
-public class Sat4jSolverAdapter extends AbstractSatSolver implements SatSolver
+public class Sat4jSolverAdapter implements SatSolver
 {
     private static final Logger LOGGER = LogManager.getLogger();
 

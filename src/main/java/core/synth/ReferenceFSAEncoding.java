@@ -77,7 +77,7 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
             }
         }
         for (int i = stateNumber - 1; i > 0; i--) {
-            solver.markAsGreaterEqualThan(structuralOrder[i], structuralOrder[i - 1]);
+            solver.markAsGreaterEqualInBinary(structuralOrder[i], structuralOrder[i - 1]);
         }
     }
 
