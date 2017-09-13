@@ -30,6 +30,13 @@ public class DoubleMapDFSAManipulatorTest
         alphabetEncoding = AlphabetTranslators.createIntOne(definition, definition.get(0));
     }
 
+    private void prepareFSAEncoding()
+    {
+        encoding = new ReferenceFSAEncoding<>(solver, 2, alphabetEncoding);
+        encoding.ensureNoUnreachableStates();
+        encoding.ensureNoDeadEndStates();
+    }
+
     {
         prepareAlphabet();
 
@@ -37,9 +44,7 @@ public class DoubleMapDFSAManipulatorTest
 
             beforeEach(() -> {
                 solver.reset();
-                encoding = new ReferenceFSAEncoding<>(solver, 2, alphabetEncoding);
-                encoding.ensureNoUnreachableStates();
-                encoding.ensureNoDeadEndStates();
+                prepareFSAEncoding();
             });
 
             it("should handle complete-making correctly when delegated", () -> {
@@ -56,6 +61,24 @@ public class DoubleMapDFSAManipulatorTest
                     expect(instance.accepts(word1)).toBeTrue();
                     expect(instance.accepts(word2)).toBeTrue();
                     expect(instance.accepts(word3)).toBeFalse();
+                    encoding.blockCurrentInstance();
+                }
+            });
+
+            it("should handle complement-making correctly when delegated", () -> {
+                final ImmutableList<StringSymbol> word1 = alphabetEncoding.translateBack(1, 3);
+                final ImmutableList<StringSymbol> word2 = alphabetEncoding.translateBack(2, 2);
+                final ImmutableList<StringSymbol> word3 = alphabetEncoding.translateBack(3, 1);
+                encoding.ensureAcceptingWord(word1);
+                encoding.ensureAcceptingWord(word2);
+                encoding.ensureNotAcceptingWord(word3);
+
+                while (solver.findItSatisfiable()) {
+                    final FSA<StringSymbol> instance = manipulator.makeComplement(encoding.resolveToFSA());
+                    expect(instance.isComplete()).toBeTrue();
+                    expect(instance.accepts(word1)).toBeFalse();
+                    expect(instance.accepts(word2)).toBeFalse();
+                    expect(instance.accepts(word3)).toBeTrue();
                     encoding.blockCurrentInstance();
                 }
             });

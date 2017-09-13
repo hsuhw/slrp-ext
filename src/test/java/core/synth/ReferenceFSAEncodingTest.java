@@ -26,6 +26,13 @@ public class ReferenceFSAEncodingTest
         alphabetEncoding = AlphabetTranslators.createIntOne(definition, definition.get(0));
     }
 
+    private void prepareFSAEncoding()
+    {
+        encoding = new ReferenceFSAEncoding<>(solver, 2, alphabetEncoding);
+        encoding.ensureNoUnreachableStates();
+        encoding.ensureNoDeadEndStates();
+    }
+
     {
         prepareAlphabet();
 
@@ -33,9 +40,7 @@ public class ReferenceFSAEncodingTest
 
             beforeEach(() -> {
                 solver.reset();
-                encoding = new ReferenceFSAEncoding<>(solver, 2, alphabetEncoding);
-                encoding.ensureNoUnreachableStates();
-                encoding.ensureNoDeadEndStates();
+                prepareFSAEncoding();
             });
 
             it("should find correct FSAs with accepting (or not accepting) constraints", () -> {
@@ -75,14 +80,14 @@ public class ReferenceFSAEncodingTest
 
             it("should find correct FSAs with no-words-purely-made-of constraints", () -> {
                 encoding.ensureNoWordsPurelyMadeOf(alphabetEncoding.getOriginAlphabet());
-                expect(solver.findItSatisfiable()).toEqual(Boolean.FALSE);
+                expect(solver.findItSatisfiable()).toBeFalse();
             });
 
             it("should find no FSAs with unsatisfiable constraints", () -> {
                 final ImmutableList<StringSymbol> word1 = alphabetEncoding.translateBack(1, 3);
                 encoding.ensureAcceptingWord(word1);
                 encoding.ensureNotAcceptingWord(word1);
-                expect(solver.findItSatisfiable()).toEqual(Boolean.FALSE);
+                expect(solver.findItSatisfiable()).toBeFalse();
             });
 
         });
