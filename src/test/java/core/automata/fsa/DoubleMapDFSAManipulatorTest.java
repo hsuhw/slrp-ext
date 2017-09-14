@@ -83,6 +83,44 @@ public class DoubleMapDFSAManipulatorTest
                 }
             });
 
+            it("should handle intersection-making correctly when delegated", () -> {
+                final ImmutableList<StringSymbol> word1 = alphabetEncoding.translateBack(1, 3);
+                final ImmutableList<StringSymbol> word2 = alphabetEncoding.translateBack(2, 2);
+                final ImmutableList<StringSymbol> word3 = alphabetEncoding.translateBack(3, 1);
+                encoding.ensureAcceptingWord(word1);
+                encoding.ensureNotAcceptingWord(word2);
+                final FSA<StringSymbol> one = manipulator.makeComplement(encoding.resolveToFSA());
+                encoding.ensureAcceptingWord(word3);
+
+                while (solver.findItSatisfiable()) {
+                    final FSA<StringSymbol> two = encoding.resolveToFSA();
+                    final FSA<StringSymbol> instance = manipulator.makeIntersection(one, two);
+                    expect(instance.accepts(word1)).toBeFalse();
+                    expect(instance.accepts(word2)).toBeFalse();
+                    expect(instance.accepts(word3)).toBeTrue();
+                    encoding.blockCurrentInstance();
+                }
+            });
+
+            it("should handle union-making correctly when delegated", () -> {
+                final ImmutableList<StringSymbol> word1 = alphabetEncoding.translateBack(1, 3);
+                final ImmutableList<StringSymbol> word2 = alphabetEncoding.translateBack(2, 2);
+                final ImmutableList<StringSymbol> word3 = alphabetEncoding.translateBack(3, 1);
+                encoding.ensureAcceptingWord(word1);
+                encoding.ensureNotAcceptingWord(word2);
+                final FSA<StringSymbol> one = manipulator.makeComplement(encoding.resolveToFSA());
+                encoding.ensureAcceptingWord(word3);
+
+                while (solver.findItSatisfiable()) {
+                    final FSA<StringSymbol> two = encoding.resolveToFSA();
+                    final FSA<StringSymbol> instance = manipulator.makeUnion(one, two);
+                    expect(instance.accepts(word1)).toBeTrue();
+                    expect(instance.accepts(word2)).toBeTrue();
+                    expect(instance.accepts(word3)).toBeTrue();
+                    encoding.blockCurrentInstance();
+                }
+            });
+
         });
     }
 }

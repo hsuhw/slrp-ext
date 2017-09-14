@@ -67,25 +67,25 @@ public class DoubleMapDFSAManipulator implements FSAManipulatorDecorator
         final Twin<State> startStatePair = Tuples.twin(dfsaA.getStartState(), dfsaB.getStartState());
         stateMapping.put(States.generateOne(), startStatePair);
         pendingProductStates.add(startStatePair);
-        Twin<State> tgtStatePair;
-        while ((tgtStatePair = pendingProductStates.poll()) != null) {
-            final State newDept = stateMapping.inverse().get(tgtStatePair);
-            final State tgtStateA = tgtStatePair.getOne();
-            final State tgtStateB = tgtStatePair.getTwo();
-            deltaA.enabledSymbolsOn(tgtStateA).forEach(symbolA -> {
-                deltaB.enabledSymbolsOn(tgtStateB).forEach(symbolB -> {
-                    final R newTransSymbol = transitionDecider.apply(symbolA, symbolB);
-                    if (newTransSymbol != null) {
-                        final State tgtDestA = deltaA.successorOf(tgtStateA, symbolA);
-                        final State tgtDestB = deltaB.successorOf(tgtStateB, symbolB);
-                        final State newDest = States.generateOne();
-                        stateMapping.getIfAbsentPut(newDest, () -> {
-                            final Twin<State> nextStatePair = Tuples.twin(tgtDestA, tgtDestB);
-                            pendingProductStates.add(nextStatePair);
-                            return nextStatePair;
-                        });
-                        newDeltaDefinition.getIfAbsentPut(newDept, UnifiedMap.newMap(symbolNumberUpperBound))
-                                          .putIfAbsent(newTransSymbol, newDest);
+        Twin<State> currStatePair;
+        while ((currStatePair = pendingProductStates.poll()) != null) {
+            final State prodDept = stateMapping.inverse().get(currStatePair);
+            final State deptA = currStatePair.getOne();
+            final State deptB = currStatePair.getTwo();
+            deltaA.enabledSymbolsOn(deptA).forEach(symbolA -> {
+                deltaB.enabledSymbolsOn(deptB).forEach(symbolB -> {
+                    final R prodTransSymbol = transitionDecider.apply(symbolA, symbolB);
+                    if (prodTransSymbol != null) {
+                        final State destA = deltaA.successorOf(deptA, symbolA);
+                        final State destB = deltaB.successorOf(deptB, symbolB);
+                        final Twin<State> destStatePair = Tuples.twin(destA, destB);
+                        if (!stateMapping.containsValue(destStatePair)) {
+                            stateMapping.put(States.generateOne(), destStatePair);
+                            pendingProductStates.add(destStatePair);
+                        }
+                        State prodDest = stateMapping.inverse().get(destStatePair);
+                        newDeltaDefinition.getIfAbsentPut(prodDept, UnifiedMap.newMap(symbolNumberUpperBound))
+                                          .putIfAbsent(prodTransSymbol, prodDest);
                     }
                 });
             });

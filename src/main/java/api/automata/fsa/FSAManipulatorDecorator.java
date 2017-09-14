@@ -138,9 +138,11 @@ public interface FSAManipulatorDecorator extends FSAManipulator
     @Override
     default <S extends Symbol> FSA<S> makeUnion(FSA<S> one, FSA<S> two)
     {
-        final FSA<S> delegated = makeUnionDelegated(one, two);
+        final FSA<S> completeOne = makeComplete(one);
+        final FSA<S> completeTwo = makeComplete(two);
+        final FSA<S> delegated = makeUnionDelegated(completeOne, completeTwo);
         if (delegated == null) {
-            getDecoratee().makeUnion(one, two);
+            getDecoratee().makeUnion(completeOne, completeTwo);
         }
         return delegated;
     }
