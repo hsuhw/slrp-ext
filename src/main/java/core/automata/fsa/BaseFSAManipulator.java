@@ -22,7 +22,7 @@ public class BaseFSAManipulator implements FSAManipulator
                                                                                            Automaton<T> after,
                                                                                            Alphabet<R> targetAlphabet,
                                                                                            BiFunction<S, T, R> transitionDecider,
-                                                                                           StateAttributeDecider<S, T, R> stateAttributeDecider)
+                                                                                           StateAttributeDecider<R> stateAttributeDecider)
     {
         throw new UnsupportedOperationException(Misc.NMI);
     }

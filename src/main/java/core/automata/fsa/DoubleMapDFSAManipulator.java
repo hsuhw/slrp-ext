@@ -97,7 +97,7 @@ public class DoubleMapDFSAManipulator implements FSAManipulatorDecorator
     @Override
     public <S extends Symbol, T extends Symbol, R extends Symbol> DoubleMapDFSA<R> makeProductDelegated(
         Automaton<S> one, Automaton<T> two, Alphabet<R> targetAlphabet, BiFunction<S, T, R> transitionDecider,
-        StateAttributeDecider<S, T, R> stateAttributeDecider)
+        StateAttributeDecider<R> stateAttributeDecider)
     {
         if (!isImplementationTarget(one) || !isImplementationTarget(two)) {
             return null;
@@ -106,7 +106,7 @@ public class DoubleMapDFSAManipulator implements FSAManipulatorDecorator
         final DoubleMapDFSA<T> dfsaB = (DoubleMapDFSA<T>) two;
         final MutableBiMap<State, Twin<State>> stateMapping = BiMaps.mutable.empty();
         final DoubleMapDelta<R> newDelta = computeProductDelta(dfsaA, dfsaB, stateMapping, transitionDecider);
-        final StateAttributes stateAttributes = stateAttributeDecider.decide(one, two, stateMapping, newDelta);
+        final StateAttributes stateAttributes = stateAttributeDecider.decide(stateMapping, newDelta);
 
         return new DoubleMapDFSA<>(targetAlphabet, stateAttributes.getDefinitionOfStates(),
                                    stateAttributes.getStartStateTable(), stateAttributes.getAcceptStateTable(),

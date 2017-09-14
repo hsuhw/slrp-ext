@@ -67,7 +67,7 @@ public interface AutomatonManipulator
     <S extends Symbol, T extends Symbol, R extends Symbol> Automaton<R> makeProduct(Automaton<S> one, Automaton<T> two,
                                                                                     Alphabet<R> targetAlphabet,
                                                                                     BiFunction<S, T, R> transitionDecider,
-                                                                                    StateAttributeDecider<S, T, R> stateAttributeDecider);
+                                                                                    StateAttributeDecider<R> stateAttributeDecider);
 
     interface StateAttributes
     {
@@ -79,9 +79,8 @@ public interface AutomatonManipulator
     }
 
     @FunctionalInterface
-    interface StateAttributeDecider<S extends Symbol, T extends Symbol, R extends Symbol>
+    interface StateAttributeDecider<S extends Symbol>
     {
-        StateAttributes decide(Automaton<S> one, Automaton<T> two, MutableBiMap<State, Twin<State>> stateMapping,
-                               TransitionFunction<R> newDelta);
+        StateAttributes decide(MutableBiMap<State, Twin<State>> stateMapping, TransitionFunction<S> newDelta);
     }
 }

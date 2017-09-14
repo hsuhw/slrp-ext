@@ -33,14 +33,14 @@ public interface FSAManipulatorDecorator extends FSAManipulator
                                                                                        Automaton<T> two,
                                                                                        Alphabet<R> targetAlphabet,
                                                                                        BiFunction<S, T, R> transitionDecider,
-                                                                                       StateAttributeDecider<S, T, R> stateAttributeDecider);
+                                                                                       StateAttributeDecider<R> stateAttributeDecider);
 
     @Override
     default <S extends Symbol, T extends Symbol, R extends Symbol> FSA<R> makeProduct(Automaton<S> one,
                                                                                       Automaton<T> two,
                                                                                       Alphabet<R> targetAlphabet,
                                                                                       BiFunction<S, T, R> transitionDecider,
-                                                                                      StateAttributeDecider<S, T, R> stateAttributeDecider)
+                                                                                      StateAttributeDecider<R> stateAttributeDecider)
     {
         final FSA<R> delegated = makeProductDelegated(one, two, targetAlphabet, transitionDecider,
                                                       stateAttributeDecider);
@@ -105,11 +105,11 @@ public interface FSAManipulatorDecorator extends FSAManipulator
 
     default <S extends Symbol> FSA<S> makeIntersectionDelegated(FSA<S> one, FSA<S> two)
     {
-        return makeProductDelegated(one, two, one.getAlphabet(), this::matchedSymbol, (a, b, sm, skip) -> {
+        return makeProductDelegated(one, two, one.getAlphabet(), this::matchedSymbol, (sm, delta) -> {
             final ImmutableList<State> states = sm.keysView().toList().toImmutable();
             final ImmutableBiMap<State, Twin<State>> stateMapping = BiMaps.immutable.ofAll(sm);
-            final ImmutableBooleanList startStateTable = makeStartStateIntersection(states, stateMapping, a, b);
-            final ImmutableBooleanList acceptStateTable = makeAcceptStateIntersection(states, stateMapping, a, b);
+            final ImmutableBooleanList startStateTable = makeStartStateIntersection(states, stateMapping, one, two);
+            final ImmutableBooleanList acceptStateTable = makeAcceptStateIntersection(states, stateMapping, one, two);
             return new BasicFSAStateAttributes(states, startStateTable, acceptStateTable);
         });
     }
@@ -126,11 +126,11 @@ public interface FSAManipulatorDecorator extends FSAManipulator
 
     default <S extends Symbol> FSA<S> makeUnionDelegated(FSA<S> one, FSA<S> two)
     {
-        return makeProductDelegated(one, two, one.getAlphabet(), this::matchedSymbol, (a, b, sm, skip) -> {
+        return makeProductDelegated(one, two, one.getAlphabet(), this::matchedSymbol, (sm, delta) -> {
             final ImmutableList<State> states = sm.keysView().toList().toImmutable();
             final ImmutableBiMap<State, Twin<State>> stateMapping = BiMaps.immutable.ofAll(sm);
-            final ImmutableBooleanList startStateTable = makeStartStateIntersection(states, stateMapping, a, b);
-            final ImmutableBooleanList acceptStateTable = makeAcceptStateUnion(states, stateMapping, a, b);
+            final ImmutableBooleanList startStateTable = makeStartStateIntersection(states, stateMapping, one, two);
+            final ImmutableBooleanList acceptStateTable = makeAcceptStateUnion(states, stateMapping, one, two);
             return new BasicFSAStateAttributes(states, startStateTable, acceptStateTable);
         });
     }
