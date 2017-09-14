@@ -5,11 +5,8 @@ import api.automata.Automaton;
 import api.automata.State;
 import api.automata.Symbol;
 import core.automata.fsa.BasicFSAStateAttributes;
-import org.eclipse.collections.api.bimap.ImmutableBiMap;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableBooleanList;
-import org.eclipse.collections.api.tuple.Twin;
-import org.eclipse.collections.impl.factory.BiMaps;
 
 import java.util.function.BiFunction;
 
@@ -105,9 +102,8 @@ public interface FSAManipulatorDecorator extends FSAManipulator
 
     default <S extends Symbol> FSA<S> makeIntersectionDelegated(FSA<S> one, FSA<S> two)
     {
-        return makeProductDelegated(one, two, one.getAlphabet(), this::matchedSymbol, (sm, delta) -> {
-            final ImmutableList<State> states = sm.keysView().toList().toImmutable();
-            final ImmutableBiMap<State, Twin<State>> stateMapping = BiMaps.immutable.ofAll(sm);
+        return makeProductDelegated(one, two, one.getAlphabet(), this::matchedSymbol, (stateMapping, delta) -> {
+            final ImmutableList<State> states = stateMapping.keysView().toList().toImmutable();
             final ImmutableBooleanList startStateTable = makeStartStateIntersection(states, stateMapping, one, two);
             final ImmutableBooleanList acceptStateTable = makeAcceptStateIntersection(states, stateMapping, one, two);
             return new BasicFSAStateAttributes(states, startStateTable, acceptStateTable);
@@ -126,9 +122,8 @@ public interface FSAManipulatorDecorator extends FSAManipulator
 
     default <S extends Symbol> FSA<S> makeUnionDelegated(FSA<S> one, FSA<S> two)
     {
-        return makeProductDelegated(one, two, one.getAlphabet(), this::matchedSymbol, (sm, delta) -> {
-            final ImmutableList<State> states = sm.keysView().toList().toImmutable();
-            final ImmutableBiMap<State, Twin<State>> stateMapping = BiMaps.immutable.ofAll(sm);
+        return makeProductDelegated(one, two, one.getAlphabet(), this::matchedSymbol, (stateMapping, delta) -> {
+            final ImmutableList<State> states = stateMapping.keysView().toList().toImmutable();
             final ImmutableBooleanList startStateTable = makeStartStateIntersection(states, stateMapping, one, two);
             final ImmutableBooleanList acceptStateTable = makeAcceptStateUnion(states, stateMapping, one, two);
             return new BasicFSAStateAttributes(states, startStateTable, acceptStateTable);

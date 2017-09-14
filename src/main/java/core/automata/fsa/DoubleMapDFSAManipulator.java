@@ -6,6 +6,7 @@ import api.automata.fsa.FSAManipulator;
 import api.automata.fsa.FSAManipulatorDecorator;
 import core.automata.DoubleMapDelta;
 import core.automata.States;
+import org.eclipse.collections.api.bimap.ImmutableBiMap;
 import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableBooleanList;
@@ -104,8 +105,9 @@ public class DoubleMapDFSAManipulator implements FSAManipulatorDecorator
         }
         final DoubleMapDFSA<S> dfsaA = (DoubleMapDFSA<S>) one;
         final DoubleMapDFSA<T> dfsaB = (DoubleMapDFSA<T>) two;
-        final MutableBiMap<State, Twin<State>> stateMapping = BiMaps.mutable.empty();
-        final DoubleMapDelta<R> newDelta = computeProductDelta(dfsaA, dfsaB, stateMapping, transitionDecider);
+        final MutableBiMap<State, Twin<State>> stateBiMap = BiMaps.mutable.empty();
+        final DoubleMapDelta<R> newDelta = computeProductDelta(dfsaA, dfsaB, stateBiMap, transitionDecider);
+        final ImmutableBiMap<State, Twin<State>> stateMapping = BiMaps.immutable.ofAll(stateBiMap);
         final StateAttributes stateAttributes = stateAttributeDecider.decide(stateMapping, newDelta);
 
         return new DoubleMapDFSA<>(targetAlphabet, stateAttributes.getDefinitionOfStates(),

@@ -1,7 +1,6 @@
 package api.automata;
 
 import org.eclipse.collections.api.bimap.ImmutableBiMap;
-import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.block.predicate.primitive.BooleanBooleanPredicate;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableBooleanList;
@@ -81,6 +80,6 @@ public interface AutomatonManipulator
     @FunctionalInterface
     interface StateAttributeDecider<S extends Symbol>
     {
-        StateAttributes decide(MutableBiMap<State, Twin<State>> stateMapping, TransitionFunction<S> newDelta);
+        StateAttributes decide(ImmutableBiMap<State, Twin<State>> stateMapping, TransitionFunction<S> newDelta);
     }
 }
