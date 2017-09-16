@@ -22,6 +22,8 @@ import org.eclipse.collections.api.list.ImmutableList;
 import java.io.IOException;
 import java.io.InputStream;
 
+import static api.parser.ParserWithAlphabet.SymbolCollectingPolicy.SEPARATE;
+
 public class StringBasicFSAListParser
     implements ParserWithAlphabet<FSA<StringSymbol>, AlphabetTranslator<String, StringSymbol>>
 {
@@ -42,7 +44,7 @@ public class StringBasicFSAListParser
 
     private ImmutableList<FSA<StringSymbol>> parse(CharStream charStream)
     {
-        LOGGER.info("Invoke the IntLabelFSA parsing on a given source.");
+        LOGGER.info("Invoke the StringBasicFSA parsing on a given source.");
         final long startTime = System.currentTimeMillis();
 
         final AutomatonListLexer lexer = new AutomatonListLexer(charStream);
@@ -52,7 +54,7 @@ public class StringBasicFSAListParser
         final ParseTree tree = parser.automata();
 
         final ParseTreeWalker walker = new ParseTreeWalker();
-        final StringBasicFSAListener automatonCollector = new StringBasicFSAListener(symbolTable);
+        final StringBasicFSAListener automatonCollector = new StringBasicFSAListener(symbolTable, SEPARATE);
         walker.walk(automatonCollector, tree);
 
         final long endTime = System.currentTimeMillis();
