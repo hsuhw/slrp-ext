@@ -63,6 +63,8 @@ public interface AutomatonManipulator
 
     <S extends Symbol> Automaton<S> trimUnreachableStates(Automaton<S> target);
 
+    <S extends Symbol> Automaton<S> trimDeadEndStates(Automaton<S> target);
+
     <S extends Symbol, T extends Symbol, R extends Symbol> Automaton<R> makeProduct(Automaton<S> one, Automaton<T> two,
                                                                                     Alphabet<R> targetAlphabet,
                                                                                     BiFunction<S, T, R> transitionDecider,

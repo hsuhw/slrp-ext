@@ -18,6 +18,12 @@ public class BaseFSAManipulator implements FSAManipulator
     }
 
     @Override
+    public <S extends Symbol> Automaton<S> trimDeadEndStates(Automaton<S> target)
+    {
+        throw new UnsupportedOperationException(Misc.NMI);
+    }
+
+    @Override
     public <S extends Symbol, T extends Symbol, R extends Symbol> Automaton<R> makeProduct(Automaton<S> first,
                                                                                            Automaton<T> after,
                                                                                            Alphabet<R> targetAlphabet,

@@ -26,6 +26,18 @@ public interface FSAManipulatorDecorator extends FSAManipulator
         return delegated;
     }
 
+    <S extends Symbol> FSA<S> trimDeadEndStatesDelegated(Automaton<S> target);
+
+    @Override
+    default <S extends Symbol> FSA<S> trimDeadEndStates(Automaton<S> target)
+    {
+        final FSA<S> delegated = trimDeadEndStatesDelegated(target);
+        if (delegated == null) {
+            getDecoratee().trimDeadEndStates(target);
+        }
+        return delegated;
+    }
+
     <S extends Symbol, T extends Symbol, R extends Symbol> FSA<R> makeProductDelegated(Automaton<S> one,
                                                                                        Automaton<T> two,
                                                                                        Alphabet<R> targetAlphabet,

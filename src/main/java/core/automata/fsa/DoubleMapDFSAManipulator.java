@@ -8,6 +8,7 @@ import core.automata.DoubleMapDelta;
 import core.automata.States;
 import org.eclipse.collections.api.bimap.ImmutableBiMap;
 import org.eclipse.collections.api.bimap.MutableBiMap;
+import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableBooleanList;
 import org.eclipse.collections.api.list.primitive.MutableBooleanList;
@@ -16,6 +17,7 @@ import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.factory.BiMaps;
+import org.eclipse.collections.impl.factory.primitive.BooleanLists;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
@@ -45,13 +47,118 @@ public class DoubleMapDFSAManipulator implements FSAManipulatorDecorator
         return target instanceof DoubleMapDFSA<?>;
     }
 
+    private <S extends Symbol> FSA<S> remakeFSAWithSubsetDelta(DoubleMapDFSA<S> target,
+                                                               MutableMap<State, MutableMap<S, State>> delta,
+                                                               MutableMap<State, MutableMap<S, MutableSet<State>>> deltaInversed)
+    {
+        final State startState = target.getStartState();
+        final DoubleMapDelta<S> newDelta = new DoubleMapDelta<>(delta, deltaInversed);
+        final ImmutableList<State> stateDefinition = delta.keysView().toList().toImmutable();
+        final int reachableNumber = stateDefinition.size();
+        final MutableBooleanList startStateTable = BooleanLists.mutable.of(new boolean[reachableNumber]);
+        final MutableBooleanList acceptStateTable = BooleanLists.mutable.of(new boolean[reachableNumber]);
+        for (int index = 0; index < stateDefinition.size(); index++) {
+            if (stateDefinition.get(index) == startState) {
+                startStateTable.set(index, true);
+            }
+            if (target.isAcceptState(stateDefinition.get(index))) {
+                acceptStateTable.set(index, true);
+            }
+        }
+
+        return new DoubleMapDFSA<>(target.getAlphabet(), stateDefinition, startStateTable.toImmutable(),
+                                   acceptStateTable.toImmutable(), newDelta);
+    }
+
     @Override
     public <S extends Symbol> FSA<S> trimUnreachableStatesDelegated(Automaton<S> target)
     {
         if (!isImplementationTarget(target)) {
             return null;
         }
-        return null;
+        final DoubleMapDFSA<S> targetDFSA = (DoubleMapDFSA<S>) target;
+        final DoubleMapDelta<S> transes = targetDFSA.getTransitionFunction();
+
+        // mark all the reachable states by a forward BFS
+        final State startState = targetDFSA.getStartState();
+        final MutableBooleanList reachable = BooleanLists.mutable.of(new boolean[target.getStateNumber()]);
+        reachable.set(target.getStateIndex(startState), true);
+        final Queue<State> pendingChecks = new LinkedList<>();
+        pendingChecks.add(startState);
+        State currState;
+        while ((currState = pendingChecks.poll()) != null) {
+            transes.successorsOf(currState).forEach(state -> {
+                final int stateIndex = target.getStateIndex(state);
+                if (!reachable.get(stateIndex)) {
+                    reachable.set(stateIndex, true);
+                    pendingChecks.add(state);
+                }
+            });
+        }
+
+        // exclude the unreachable from the delta definition
+        final MutableMap<State, MutableMap<S, State>> delta = transes.getMutableDefinition();
+        final MutableMap<State, MutableMap<S, MutableSet<State>>> deltaInversed = transes
+            .getMutableInversedDefinition();
+        for (int index = 0; index < target.getStateNumber(); index++) {
+            if (!reachable.get(index)) {
+                final State unreachable = target.getState(index);
+                delta.get(unreachable).forEach((symbol, state) -> {
+                    deltaInversed.get(state).get(symbol).remove(unreachable);
+                });
+                delta.remove(unreachable);
+                deltaInversed.remove(unreachable); // only the unreachable will touch the unreachable
+            }
+        }
+
+        return remakeFSAWithSubsetDelta(targetDFSA, delta, deltaInversed);
+    }
+
+    @Override
+    public <S extends Symbol> FSA<S> trimDeadEndStatesDelegated(Automaton<S> target)
+    {
+        if (!isImplementationTarget(target)) {
+            return null;
+        }
+        final DoubleMapDFSA<S> targetDFSA = (DoubleMapDFSA<S>) target;
+        final DoubleMapDelta<S> transes = targetDFSA.getTransitionFunction();
+
+        // mark all the reachable states by a backward BFS
+        final MutableBooleanList reachable = BooleanLists.mutable.of(new boolean[target.getStateNumber()]);
+        final Queue<State> pendingChecks = new LinkedList<>();
+        target.getAcceptStateTable().forEachWithIndex((isAcceptState, index) -> {
+            if (isAcceptState) {
+                reachable.set(index, true);
+                pendingChecks.add(target.getState(index));
+            }
+        });
+        State currState;
+        while ((currState = pendingChecks.poll()) != null) {
+            transes.predecessorsOf(currState).forEach(state -> {
+                final int stateIndex = target.getStateIndex(state);
+                if (!reachable.get(stateIndex)) {
+                    reachable.set(stateIndex, true);
+                    pendingChecks.add(state);
+                }
+            });
+        }
+
+        // exclude the unreachable from the delta definition
+        final MutableMap<State, MutableMap<S, State>> delta = transes.getMutableDefinition();
+        final MutableMap<State, MutableMap<S, MutableSet<State>>> deltaInversed = transes
+            .getMutableInversedDefinition();
+        for (int index = 0; index < target.getStateNumber(); index++) {
+            if (!reachable.get(index)) {
+                final State unreachable = target.getState(index);
+                deltaInversed.get(unreachable).forEach((symbol, states) -> {
+                    states.forEach(state -> delta.get(state).remove(symbol));
+                });
+                deltaInversed.remove(unreachable);
+                delta.remove(unreachable); // the unreachable will only touch the unreachable
+            }
+        }
+
+        return remakeFSAWithSubsetDelta(targetDFSA, delta, deltaInversed);
     }
 
     private <S extends Symbol, T extends Symbol, R extends Symbol> DoubleMapDelta<R> computeProductDelta(
