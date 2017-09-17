@@ -11,6 +11,7 @@ import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableBooleanList;
 import org.eclipse.collections.api.list.primitive.MutableBooleanList;
+import org.eclipse.collections.impl.block.factory.primitive.BooleanPredicates;
 
 public class DoubleMapDFSA<S extends Symbol> extends AbstractAutomaton<S> implements Deterministic, FSA<S>
 {
@@ -20,6 +21,9 @@ public class DoubleMapDFSA<S extends Symbol> extends AbstractAutomaton<S> implem
                          ImmutableBooleanList acceptStateTable, DoubleMapDelta<S> transitionFunction)
     {
         super(states, startStateTable, acceptStateTable, transitionFunction);
+        if (startStateTable.count(BooleanPredicates.isTrue()) != 1) {
+            throw new IllegalArgumentException("more than one start states specified");
+        }
         this.alphabet = alphabet;
     }
 

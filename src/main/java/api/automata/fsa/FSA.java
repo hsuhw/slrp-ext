@@ -34,12 +34,20 @@ public interface FSA<S extends Symbol> extends Automaton<S>
 
     default State getStartState()
     {
-        for (State s : getStates()) {
-            if (isStartState(s)) {
-                return s; // the first start state
+        int count = 0;
+        int target = 0;
+        for (int index = 0; index < getStateNumber(); index++) {
+            if (isStartState(index)) {
+                count++;
+                target = index;
             }
         }
-        throw new UnsupportedOperationException("automaton with no start states");
+        if (count == 0) {
+            throw new UnsupportedOperationException("automaton with no start states");
+        } else if (count > 1) {
+            throw new UnsupportedOperationException("N/A on nondeterministic FSA");
+        }
+        return getState(target);
     }
 
     default boolean accepts(ImmutableList<S> word)
