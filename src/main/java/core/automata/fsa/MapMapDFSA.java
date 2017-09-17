@@ -6,19 +6,19 @@ import api.automata.State;
 import api.automata.Symbol;
 import api.automata.fsa.FSA;
 import core.automata.AbstractAutomaton;
-import core.automata.DoubleMapDelta;
+import core.automata.MapMapDelta;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableBooleanList;
 import org.eclipse.collections.api.list.primitive.MutableBooleanList;
 import org.eclipse.collections.impl.block.factory.primitive.BooleanPredicates;
 
-public class DoubleMapDFSA<S extends Symbol> extends AbstractAutomaton<S> implements Deterministic, FSA<S>
+public class MapMapDFSA<S extends Symbol> extends AbstractAutomaton<S> implements Deterministic, FSA<S>
 {
     private final Alphabet<S> alphabet;
 
-    public DoubleMapDFSA(Alphabet<S> alphabet, ImmutableList<State> states, ImmutableBooleanList startStateTable,
-                         ImmutableBooleanList acceptStateTable, DoubleMapDelta<S> transitionFunction)
+    public MapMapDFSA(Alphabet<S> alphabet, ImmutableList<State> states, ImmutableBooleanList startStateTable,
+                      ImmutableBooleanList acceptStateTable, MapMapDelta<S> transitionFunction)
     {
         super(states, startStateTable, acceptStateTable, transitionFunction);
         if (startStateTable.count(BooleanPredicates.isTrue()) != 1) {
@@ -27,8 +27,8 @@ public class DoubleMapDFSA<S extends Symbol> extends AbstractAutomaton<S> implem
         this.alphabet = alphabet;
     }
 
-    public DoubleMapDFSA(Alphabet<S> alphabet, MutableList<State> states, MutableBooleanList startStateTable,
-                         MutableBooleanList acceptStateTable, DoubleMapDelta<S> transitionFunction)
+    public MapMapDFSA(Alphabet<S> alphabet, MutableList<State> states, MutableBooleanList startStateTable,
+                      MutableBooleanList acceptStateTable, MapMapDelta<S> transitionFunction)
     {
         this(alphabet, states.toImmutable(), startStateTable.toImmutable(), acceptStateTable.toImmutable(),
              transitionFunction);
@@ -41,8 +41,8 @@ public class DoubleMapDFSA<S extends Symbol> extends AbstractAutomaton<S> implem
     }
 
     @Override
-    public DoubleMapDelta<S> getTransitionFunction()
+    public MapMapDelta<S> getTransitionFunction()
     {
-        return (DoubleMapDelta<S>) super.getTransitionFunction();
+        return (MapMapDelta<S>) super.getTransitionFunction();
     }
 }

@@ -15,13 +15,13 @@ import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.eclipse.collections.impl.tuple.Tuples;
 
-public class DoubleMapDelta<S extends Symbol> implements Deterministic, TransitionFunction<S>
+public class MapMapDelta<S extends Symbol> implements Deterministic, TransitionFunction<S>
 {
     private final ImmutableMap<State, ImmutableMap<S, State>> delta;
     private final ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> deltaInversed;
 
-    private DoubleMapDelta(ImmutableMap<State, ImmutableMap<S, State>> definition,
-                          ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> definitionInversed)
+    private MapMapDelta(ImmutableMap<State, ImmutableMap<S, State>> definition,
+                        ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> definitionInversed)
     {
         delta = definition;
         deltaInversed = definitionInversed;
@@ -59,14 +59,14 @@ public class DoubleMapDelta<S extends Symbol> implements Deterministic, Transiti
         return inverse;
     }
 
-    public DoubleMapDelta(MutableMap<State, MutableMap<S, State>> definition,
-                          MutableMap<State, MutableMap<S, MutableSet<State>>> definitionInversed)
+    public MapMapDelta(MutableMap<State, MutableMap<S, State>> definition,
+                       MutableMap<State, MutableMap<S, MutableSet<State>>> definitionInversed)
     {
         // TODO: decide whether to check the validity of `definitionInversed`
         this(immutableDefinition(definition), immutableInversedDefinition(definitionInversed));
     }
 
-    public DoubleMapDelta(MutableMap<State, MutableMap<S, State>> definition)
+    public MapMapDelta(MutableMap<State, MutableMap<S, State>> definition)
     {
         this(definition, computeInverse(definition));
     }

@@ -17,7 +17,7 @@ import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
 
 @RunWith(OleasterRunner.class)
-public class DoubleMapDFSAManipulatorTest
+public class MapMapDFSAManipulatorTest
 {
     private final SatSolver solver = new Sat4jSolverAdapter();
     private final FSAManipulator manipulator = FSAManipulators.getDefault();

@@ -18,7 +18,7 @@ public final class FSAManipulators
         private static final FSAManipulator INSTANCE;
 
         static {
-            INSTANCE = new DoubleMapDFSAManipulator(new BaseFSAManipulator());
+            INSTANCE = new MapMapDFSAManipulator(new BaseFSAManipulator());
         }
     }
 }

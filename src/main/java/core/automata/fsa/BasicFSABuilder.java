@@ -6,9 +6,8 @@ import api.automata.Symbol;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSABuilder;
 import core.automata.Alphabets;
-import core.automata.DoubleMapDelta;
-import core.automata.DoubleMapSetDelta;
-import core.automata.States;
+import core.automata.MapMapDelta;
+import core.automata.MapMapSetDelta;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableBooleanList;
@@ -103,9 +102,9 @@ public class BasicFSABuilder<S extends Symbol> implements FSABuilder<S>
         return transitionTable.anySatisfy(this::moreThanOnePossibleTrans);
     }
 
-    private DoubleMapDelta<S> buildDeterministicDelta()
+    private MapMapDelta<S> buildDeterministicDelta()
     {
-        return new DoubleMapDelta<>(transitionTable.collect((dept, stateTrans) -> {
+        return new MapMapDelta<>(transitionTable.collect((dept, stateTrans) -> {
             return Tuples.pair(dept, stateTrans.collect((sym, dest) -> {
                 return Tuples.pair(sym, dest.getOnly());
             }));
@@ -127,11 +126,11 @@ public class BasicFSABuilder<S extends Symbol> implements FSABuilder<S>
 
         // settle transition records
         if (!isNondeterministicTarget()) {
-            final DoubleMapDelta<S> delta = buildDeterministicDelta();
-            return new DoubleMapDFSA<>(alphabet, states, startStateTable, acceptStateTable, delta);
+            final MapMapDelta<S> delta = buildDeterministicDelta();
+            return new MapMapDFSA<>(alphabet, states, startStateTable, acceptStateTable, delta);
         } else {
-            final DoubleMapSetDelta<S> delta = new DoubleMapSetDelta<>(transitionTable);
-            return new DoubleMapSetNFSA<>(alphabet, states, startStateTable, acceptStateTable, delta);
+            final MapMapSetDelta<S> delta = new MapMapSetDelta<>(transitionTable);
+            return new MapMapSetNFSA<>(alphabet, states, startStateTable, acceptStateTable, delta);
         }
     }
 
