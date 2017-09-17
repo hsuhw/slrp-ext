@@ -63,6 +63,26 @@ public class MapMapSetDelta<S extends Symbol> implements Nondeterministic, Trans
         this(definition, computeInverse(definition));
     }
 
+    private static <S extends Symbol> MutableMap<State, MutableMap<S, MutableSet<State>>> mutableDefinition(
+        ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> definition)
+    {
+        return definition.collect((dept, transes) -> {
+            return Tuples.pair(dept, transes.collect((sym, dests) -> {
+                return Tuples.pair(sym, dests.toSet());
+            }).toMap());
+        }).toMap();
+    }
+
+    public MutableMap<State, MutableMap<S, MutableSet<State>>> getMutableDefinition()
+    {
+        return mutableDefinition(delta);
+    }
+
+    public MutableMap<State, MutableMap<S, MutableSet<State>>> getMutableInversedDefinition()
+    {
+        return mutableDefinition(deltaInversed);
+    }
+
     @Override
     public int size()
     {

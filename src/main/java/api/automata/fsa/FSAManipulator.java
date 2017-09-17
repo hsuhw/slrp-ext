@@ -11,6 +11,12 @@ import java.util.function.BiFunction;
 public interface FSAManipulator extends AutomatonManipulator
 {
     @Override
+    <S extends Symbol> FSA<S> trimUnreachableStates(Automaton<S> target);
+
+    @Override
+    <S extends Symbol> FSA<S> trimDeadEndStates(Automaton<S> target);
+
+    @Override
     <S extends Symbol, T extends Symbol, R extends Symbol> FSA<R> makeProduct(Automaton<S> one, Automaton<T> two,
                                                                               Alphabet<R> targetAlphabet,
                                                                               BiFunction<S, T, R> transitionDecider,

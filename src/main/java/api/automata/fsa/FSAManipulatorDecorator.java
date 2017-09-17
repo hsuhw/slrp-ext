@@ -17,7 +17,7 @@ public interface FSAManipulatorDecorator extends FSAManipulator
     {
         final FSA<S> delegated = trimUnreachableStatesDelegated(target);
         if (delegated == null) {
-            return (FSA<S>) getDecoratee().trimUnreachableStates(target);
+            return getDecoratee().trimUnreachableStates(target);
         }
         return delegated;
     }
@@ -29,7 +29,7 @@ public interface FSAManipulatorDecorator extends FSAManipulator
     {
         final FSA<S> delegated = trimDeadEndStatesDelegated(target);
         if (delegated == null) {
-            return (FSA<S>) getDecoratee().trimDeadEndStates(target);
+            return getDecoratee().trimDeadEndStates(target);
         }
         return delegated;
     }
