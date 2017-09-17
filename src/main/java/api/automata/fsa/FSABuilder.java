@@ -13,5 +13,5 @@ public interface FSABuilder<S extends Symbol> extends AutomatonBuilder<S>
     @Override
     FSA<S> build();
 
-    FSA<S> build(Alphabet<S> alphabetOverride);
+    FSA<S> build(Alphabet<S> alphabet);
 }

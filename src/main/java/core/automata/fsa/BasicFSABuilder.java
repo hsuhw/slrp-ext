@@ -8,6 +8,7 @@ import api.automata.fsa.FSABuilder;
 import core.automata.Alphabets;
 import core.automata.DoubleMapDelta;
 import core.automata.DoubleMapSetDelta;
+import core.automata.States;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableBooleanList;
@@ -111,7 +112,7 @@ public class BasicFSABuilder<S extends Symbol> implements FSABuilder<S>
         }));
     }
 
-    private FSA<S> settleRecordsHelper(Alphabet<S> alphabetOverride)
+    private FSA<S> settleRecords(Alphabet<S> alphabet)
     {
         // settle state records
         final ImmutableList<State> states = this.states.toImmutable();
@@ -127,25 +128,25 @@ public class BasicFSABuilder<S extends Symbol> implements FSABuilder<S>
         // settle transition records
         if (!isNondeterministicTarget()) {
             final DoubleMapDelta<S> delta = buildDeterministicDelta();
-            return new DoubleMapDFSA<>(alphabetOverride, states, startStateTable, acceptStateTable, delta);
+            return new DoubleMapDFSA<>(alphabet, states, startStateTable, acceptStateTable, delta);
         } else {
             final DoubleMapSetDelta<S> delta = new DoubleMapSetDelta<>(transitionTable);
-            return new DoubleMapSetNFSA<>(alphabetOverride, states, startStateTable, acceptStateTable, delta);
+            return new DoubleMapSetNFSA<>(alphabet, states, startStateTable, acceptStateTable, delta);
         }
     }
 
     @Override
     public FSA<S> build()
     {
-        return settleRecordsHelper(getCurrentAlphabet());
+        return settleRecords(getCurrentAlphabet());
     }
 
     @Override
-    public FSA<S> build(Alphabet<S> alphabetOverride)
+    public FSA<S> build(Alphabet<S> alphabet)
     {
-        if (!alphabetOverride.toSet().containsAll(usedSymbols)) {
+        if (!alphabet.toSet().containsAll(usedSymbols)) {
             throw new IllegalArgumentException("given alphabet does not contain all the symbols");
         }
-        return settleRecordsHelper(alphabetOverride);
+        return settleRecords(alphabet);
     }
 }
