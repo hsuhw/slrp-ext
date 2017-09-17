@@ -24,11 +24,11 @@ public class BaseFSAManipulator implements FSAManipulator
     }
 
     @Override
-    public <S extends Symbol, T extends Symbol, R extends Symbol> Automaton<R> makeProduct(Automaton<S> first,
-                                                                                           Automaton<T> after,
-                                                                                           Alphabet<R> targetAlphabet,
-                                                                                           BiFunction<S, T, R> transitionDecider,
-                                                                                           StateAttributeDecider<R> stateAttributeDecider)
+    public <S extends Symbol, T extends Symbol, R extends Symbol> FSA<R> makeProduct(Automaton<S> first,
+                                                                                     Automaton<T> after,
+                                                                                     Alphabet<R> targetAlphabet,
+                                                                                     BiFunction<S, T, R> transitionDecider,
+                                                                                     StateAttributeDecider<R> stateAttributeDecider)
     {
         throw new UnsupportedOperationException(Misc.NMI);
     }
@@ -53,18 +53,6 @@ public class BaseFSAManipulator implements FSAManipulator
 
     @Override
     public <S extends Symbol> FSA<S> makeComplement(FSA<S> target)
-    {
-        throw new UnsupportedOperationException(Misc.NMI);
-    }
-
-    @Override
-    public <S extends Symbol> FSA<S> makeIntersection(FSA<S> one, FSA<S> two)
-    {
-        throw new UnsupportedOperationException(Misc.NMI);
-    }
-
-    @Override
-    public <S extends Symbol> FSA<S> makeUnion(FSA<S> one, FSA<S> two)
     {
         throw new UnsupportedOperationException(Misc.NMI);
     }
