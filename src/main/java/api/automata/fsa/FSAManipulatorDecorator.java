@@ -145,4 +145,46 @@ public interface FSAManipulatorDecorator extends FSAManipulator
         }
         return getDecoratee().makeUnion(one, two);
     }
+
+    default <S extends Symbol> boolean checkLanguageEmptyDelegated(FSA<S> target)
+    {
+        return FSAManipulator.super.checkLanguageEmpty(target);
+    }
+
+    @Override
+    default <S extends Symbol> boolean checkLanguageEmpty(FSA<S> target)
+    {
+        if (isImplementationTarget(target)) {
+            return checkLanguageEmptyDelegated(target);
+        }
+        return getDecoratee().checkLanguageEmpty(target);
+    }
+
+    default <S extends Symbol> boolean checkLanguageSigmaStarDelegated(FSA<S> target)
+    {
+        return FSAManipulator.super.checkLanguageSigmaStar(target);
+    }
+
+    @Override
+    default <S extends Symbol> boolean checkLanguageSigmaStar(FSA<S> target)
+    {
+        if (isImplementationTarget(target)) {
+            return checkLanguageSigmaStarDelegated(target);
+        }
+        return getDecoratee().checkLanguageSigmaStar(target);
+    }
+
+    default <S extends Symbol> boolean checkLanguageContainmentDelegated(FSA<S> container, FSA<S> subset)
+    {
+        return FSAManipulator.super.checkLanguageContainment(container, subset);
+    }
+
+    @Override
+    default <S extends Symbol> boolean checkLanguageContainment(FSA<S> container, FSA<S> subset)
+    {
+        if (isImplementationTarget(container) && isImplementationTarget(subset)) {
+            return checkLanguageContainmentDelegated(container, subset);
+        }
+        return getDecoratee().checkLanguageContainment(container, subset);
+    }
 }
