@@ -14,16 +14,17 @@ public interface FSAManipulatorDecorator extends FSAManipulator
 {
     FSAManipulator getDecoratee();
 
+    <S extends Symbol> boolean isImplementationTarget(Automaton<S> target);
+
     <S extends Symbol> FSA<S> trimUnreachableStatesDelegated(Automaton<S> target);
 
     @Override
     default <S extends Symbol> FSA<S> trimUnreachableStates(Automaton<S> target)
     {
-        final FSA<S> delegated = trimUnreachableStatesDelegated(target);
-        if (delegated == null) {
-            getDecoratee().trimUnreachableStates(target);
+        if (isImplementationTarget(target)) {
+            return trimUnreachableStatesDelegated(target);
         }
-        return delegated;
+        return (FSA<S>) getDecoratee().trimUnreachableStates(target);
     }
 
     <S extends Symbol> FSA<S> trimDeadEndStatesDelegated(Automaton<S> target);
@@ -31,11 +32,10 @@ public interface FSAManipulatorDecorator extends FSAManipulator
     @Override
     default <S extends Symbol> FSA<S> trimDeadEndStates(Automaton<S> target)
     {
-        final FSA<S> delegated = trimDeadEndStatesDelegated(target);
-        if (delegated == null) {
-            getDecoratee().trimDeadEndStates(target);
+        if (isImplementationTarget(target)) {
+            return trimDeadEndStatesDelegated(target);
         }
-        return delegated;
+        return (FSA<S>) getDecoratee().trimDeadEndStates(target);
     }
 
     <S extends Symbol, T extends Symbol, R extends Symbol> FSA<R> makeProductDelegated(Automaton<S> one,
@@ -51,12 +51,10 @@ public interface FSAManipulatorDecorator extends FSAManipulator
                                                                                       BiFunction<S, T, R> transitionDecider,
                                                                                       StateAttributeDecider<R> stateAttributeDecider)
     {
-        final FSA<R> delegated = makeProductDelegated(one, two, targetAlphabet, transitionDecider,
-                                                      stateAttributeDecider);
-        if (delegated == null) {
-            getDecoratee().makeProduct(one, two, targetAlphabet, transitionDecider, stateAttributeDecider);
+        if (isImplementationTarget(one) && isImplementationTarget(two)) {
+            return makeProductDelegated(one, two, targetAlphabet, transitionDecider, stateAttributeDecider);
         }
-        return delegated;
+        return (FSA<R>) getDecoratee().makeProduct(one, two, targetAlphabet, transitionDecider, stateAttributeDecider);
     }
 
     <S extends Symbol> FSA<S> determinizeDelegated(FSA<S> target);
@@ -64,11 +62,10 @@ public interface FSAManipulatorDecorator extends FSAManipulator
     @Override
     default <S extends Symbol> FSA<S> determinize(FSA<S> target)
     {
-        final FSA<S> delegated = determinizeDelegated(target);
-        if (delegated == null) {
-            getDecoratee().determinize(target);
+        if (isImplementationTarget(target)) {
+            return determinizeDelegated(target);
         }
-        return delegated;
+        return getDecoratee().determinize(target);
     }
 
     <S extends Symbol> FSA<S> makeCompleteDelegated(FSA<S> target);
@@ -76,11 +73,10 @@ public interface FSAManipulatorDecorator extends FSAManipulator
     @Override
     default <S extends Symbol> FSA<S> makeComplete(FSA<S> target)
     {
-        final FSA<S> delegated = makeCompleteDelegated(target);
-        if (delegated == null) {
-            getDecoratee().makeComplete(target);
+        if (isImplementationTarget(target)) {
+            return makeCompleteDelegated(target);
         }
-        return delegated;
+        return getDecoratee().makeComplete(target);
     }
 
     <S extends Symbol> FSA<S> minimizeDelegated(FSA<S> target);
@@ -88,11 +84,10 @@ public interface FSAManipulatorDecorator extends FSAManipulator
     @Override
     default <S extends Symbol> FSA<S> minimize(FSA<S> target)
     {
-        final FSA<S> delegated = minimizeDelegated(target);
-        if (delegated == null) {
-            getDecoratee().minimize(target);
+        if (isImplementationTarget(target)) {
+            return minimizeDelegated(target);
         }
-        return delegated;
+        return getDecoratee().minimize(target);
     }
 
     <S extends Symbol> FSA<S> makeComplementDelegated(FSA<S> target);
@@ -100,11 +95,10 @@ public interface FSAManipulatorDecorator extends FSAManipulator
     @Override
     default <S extends Symbol> FSA<S> makeComplement(FSA<S> target)
     {
-        final FSA<S> delegated = makeComplementDelegated(target);
-        if (delegated == null) {
-            getDecoratee().makeComplement(target);
+        if (isImplementationTarget(target)) {
+            return makeComplementDelegated(target);
         }
-        return delegated;
+        return getDecoratee().makeComplement(target);
     }
 
     default <S extends Symbol> S matchedSymbol(S one, S two)
@@ -125,11 +119,10 @@ public interface FSAManipulatorDecorator extends FSAManipulator
     @Override
     default <S extends Symbol> FSA<S> makeIntersection(FSA<S> one, FSA<S> two)
     {
-        final FSA<S> delegated = makeIntersectionDelegated(one, two);
-        if (delegated == null) {
-            getDecoratee().makeIntersection(one, two);
+        if (isImplementationTarget(one) && isImplementationTarget(two)) {
+            return makeIntersectionDelegated(one, two);
         }
-        return delegated;
+        return getDecoratee().makeIntersection(one, two);
     }
 
     default <S extends Symbol> FSA<S> makeUnionDelegated(FSA<S> one, FSA<S> two)
@@ -145,12 +138,11 @@ public interface FSAManipulatorDecorator extends FSAManipulator
     @Override
     default <S extends Symbol> FSA<S> makeUnion(FSA<S> one, FSA<S> two)
     {
-        final FSA<S> completeOne = makeComplete(one);
-        final FSA<S> completeTwo = makeComplete(two);
-        final FSA<S> delegated = makeUnionDelegated(completeOne, completeTwo);
-        if (delegated == null) {
-            getDecoratee().makeUnion(completeOne, completeTwo);
+        if (isImplementationTarget(one) && isImplementationTarget(two)) {
+            final FSA<S> completeOne = makeComplete(one);
+            final FSA<S> completeTwo = makeComplete(two);
+            return makeUnionDelegated(completeOne, completeTwo);
         }
-        return delegated;
+        return getDecoratee().makeUnion(one, two);
     }
 }

@@ -22,6 +22,7 @@ import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.eclipse.collections.impl.tuple.Tuples;
+import util.Misc;
 
 import java.util.LinkedList;
 import java.util.Queue;
@@ -42,7 +43,8 @@ public class DoubleMapDFSAManipulator implements FSAManipulatorDecorator
         return decoratee;
     }
 
-    private <S extends Symbol> boolean isImplementationTarget(Automaton<S> target)
+    @Override
+    public <S extends Symbol> boolean isImplementationTarget(Automaton<S> target)
     {
         return target instanceof DoubleMapDFSA<?>;
     }
@@ -73,9 +75,6 @@ public class DoubleMapDFSAManipulator implements FSAManipulatorDecorator
     @Override
     public <S extends Symbol> FSA<S> trimUnreachableStatesDelegated(Automaton<S> target)
     {
-        if (!isImplementationTarget(target)) {
-            return null;
-        }
         final DoubleMapDFSA<S> targetDFSA = (DoubleMapDFSA<S>) target;
         final DoubleMapDelta<S> transes = targetDFSA.getTransitionFunction();
 
@@ -117,9 +116,6 @@ public class DoubleMapDFSAManipulator implements FSAManipulatorDecorator
     @Override
     public <S extends Symbol> FSA<S> trimDeadEndStatesDelegated(Automaton<S> target)
     {
-        if (!isImplementationTarget(target)) {
-            return null;
-        }
         final DoubleMapDFSA<S> targetDFSA = (DoubleMapDFSA<S>) target;
         final DoubleMapDelta<S> transes = targetDFSA.getTransitionFunction();
 
@@ -207,9 +203,6 @@ public class DoubleMapDFSAManipulator implements FSAManipulatorDecorator
         Automaton<S> one, Automaton<T> two, Alphabet<R> targetAlphabet, BiFunction<S, T, R> transitionDecider,
         StateAttributeDecider<R> stateAttributeDecider)
     {
-        if (!isImplementationTarget(one) || !isImplementationTarget(two)) {
-            return null;
-        }
         final DoubleMapDFSA<S> dfsaA = (DoubleMapDFSA<S>) one;
         final DoubleMapDFSA<T> dfsaB = (DoubleMapDFSA<T>) two;
         final MutableBiMap<State, Twin<State>> stateBiMap = BiMaps.mutable.empty();
@@ -225,9 +218,6 @@ public class DoubleMapDFSAManipulator implements FSAManipulatorDecorator
     @Override
     public <S extends Symbol> FSA<S> determinizeDelegated(FSA<S> target)
     {
-        if (!isImplementationTarget(target)) {
-            return null;
-        }
         return target;
     }
 
@@ -281,10 +271,6 @@ public class DoubleMapDFSAManipulator implements FSAManipulatorDecorator
     @Override
     public <S extends Symbol> DoubleMapDFSA<S> makeCompleteDelegated(FSA<S> target)
     {
-        if (!isImplementationTarget(target)) {
-            return null;
-        }
-
         // collect the incomplete states
         final DoubleMapDFSA<S> targetDFSA = (DoubleMapDFSA<S>) target;
         final Alphabet<S> alphabet = targetDFSA.getAlphabet();
@@ -309,18 +295,12 @@ public class DoubleMapDFSAManipulator implements FSAManipulatorDecorator
     @Override
     public <S extends Symbol> DoubleMapDFSA<S> minimizeDelegated(FSA<S> target)
     {
-        if (!isImplementationTarget(target)) {
-            return null;
-        }
-        return null;
+        throw new UnsupportedOperationException(Misc.NIY);
     }
 
     @Override
     public <S extends Symbol> DoubleMapDFSA<S> makeComplementDelegated(FSA<S> target)
     {
-        if (!isImplementationTarget(target)) {
-            return null;
-        }
         final DoubleMapDFSA<S> targetDFSA = makeCompleteDelegated(target);
         final ImmutableBooleanList originalAcceptStateTable = targetDFSA.getAcceptStateTable();
         final ImmutableBooleanList acceptStateTableComplement = makeAcceptStateComplement(originalAcceptStateTable);
