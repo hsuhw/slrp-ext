@@ -43,8 +43,7 @@ public class MapMapDFSAManipulator implements FSAManipulatorDecorator
         return decoratee;
     }
 
-    @Override
-    public <S extends Symbol> boolean isImplementationTarget(Automaton<S> target)
+    private <S extends Symbol> boolean isImplementationTarget(Automaton<S> target)
     {
         return target instanceof MapMapDFSA<?>;
     }
@@ -75,6 +74,9 @@ public class MapMapDFSAManipulator implements FSAManipulatorDecorator
     @Override
     public <S extends Symbol> FSA<S> trimUnreachableStatesDelegated(Automaton<S> target)
     {
+        if (!isImplementationTarget(target)) {
+            return null;
+        }
         final MapMapDFSA<S> targetDFSA = (MapMapDFSA<S>) target;
         final MapMapDelta<S> transes = targetDFSA.getTransitionFunction();
 
@@ -116,6 +118,9 @@ public class MapMapDFSAManipulator implements FSAManipulatorDecorator
     @Override
     public <S extends Symbol> FSA<S> trimDeadEndStatesDelegated(Automaton<S> target)
     {
+        if (!isImplementationTarget(target)) {
+            return null;
+        }
         final MapMapDFSA<S> targetDFSA = (MapMapDFSA<S>) target;
         final MapMapDelta<S> transes = targetDFSA.getTransitionFunction();
 
@@ -199,10 +204,15 @@ public class MapMapDFSAManipulator implements FSAManipulatorDecorator
     }
 
     @Override
-    public <S extends Symbol, T extends Symbol, R extends Symbol> MapMapDFSA<R> makeProductDelegated(
-        Automaton<S> one, Automaton<T> two, Alphabet<R> targetAlphabet, BiFunction<S, T, R> transitionDecider,
-        StateAttributeDecider<R> stateAttributeDecider)
+    public <S extends Symbol, T extends Symbol, R extends Symbol> MapMapDFSA<R> makeProductDelegated(Automaton<S> one,
+                                                                                                     Automaton<T> two,
+                                                                                                     Alphabet<R> targetAlphabet,
+                                                                                                     BiFunction<S, T, R> transitionDecider,
+                                                                                                     StateAttributeDecider<R> stateAttributeDecider)
     {
+        if (!isImplementationTarget(one) || !isImplementationTarget(two)) {
+            return null;
+        }
         final MapMapDFSA<S> dfsaA = (MapMapDFSA<S>) one;
         final MapMapDFSA<T> dfsaB = (MapMapDFSA<T>) two;
         final MutableBiMap<State, Twin<State>> stateBiMap = BiMaps.mutable.empty();
@@ -211,13 +221,15 @@ public class MapMapDFSAManipulator implements FSAManipulatorDecorator
         final StateAttributes stateAttributes = stateAttributeDecider.decide(stateMapping, newDelta);
 
         return new MapMapDFSA<>(targetAlphabet, stateAttributes.getDefinitionOfStates(),
-                                stateAttributes.getStartStateTable(), stateAttributes.getAcceptStateTable(),
-                                newDelta);
+                                stateAttributes.getStartStateTable(), stateAttributes.getAcceptStateTable(), newDelta);
     }
 
     @Override
     public <S extends Symbol> FSA<S> determinizeDelegated(FSA<S> target)
     {
+        if (!isImplementationTarget(target)) {
+            return null;
+        }
         return target;
     }
 
@@ -236,8 +248,7 @@ public class MapMapDFSAManipulator implements FSAManipulatorDecorator
     }
 
     private <S extends Symbol> MapMapDelta<S> addDeadEndStateToDelta(ImmutableSet<S> alphabetSet,
-                                                                     MutableList<State> states,
-                                                                     MapMapDelta<S> transes,
+                                                                     MutableList<State> states, MapMapDelta<S> transes,
                                                                      MutableList<State> incompleteStates)
     {
         final MutableMap<State, MutableMap<S, State>> delta = transes.getMutableDefinition();
@@ -271,6 +282,9 @@ public class MapMapDFSAManipulator implements FSAManipulatorDecorator
     @Override
     public <S extends Symbol> MapMapDFSA<S> makeCompleteDelegated(FSA<S> target)
     {
+        if (!isImplementationTarget(target)) {
+            return null;
+        }
         // collect the incomplete states
         final MapMapDFSA<S> targetDFSA = (MapMapDFSA<S>) target;
         final Alphabet<S> alphabet = targetDFSA.getAlphabet();
@@ -295,12 +309,18 @@ public class MapMapDFSAManipulator implements FSAManipulatorDecorator
     @Override
     public <S extends Symbol> MapMapDFSA<S> minimizeDelegated(FSA<S> target)
     {
+        if (!isImplementationTarget(target)) {
+            return null;
+        }
         throw new UnsupportedOperationException(Misc.NIY);
     }
 
     @Override
     public <S extends Symbol> MapMapDFSA<S> makeComplementDelegated(FSA<S> target)
     {
+        if (!isImplementationTarget(target)) {
+            return null;
+        }
         final MapMapDFSA<S> targetDFSA = makeCompleteDelegated(target);
         final ImmutableBooleanList originalAcceptStateTable = targetDFSA.getAcceptStateTable();
         final ImmutableBooleanList acceptStateTableComplement = makeAcceptStateComplement(originalAcceptStateTable);
