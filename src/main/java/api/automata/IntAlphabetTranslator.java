@@ -18,7 +18,7 @@ public interface IntAlphabetTranslator<S>
 
     int size();
 
-    default int getTargetEpsilonSymbol()
+    default int getIntEpsilonSymbol()
     {
         return INT_EPSILON;
     }
@@ -32,7 +32,7 @@ public interface IntAlphabetTranslator<S>
 
     S originSymbolOf(int symbol);
 
-    ImmutableIntSet getTargetAlphabet();
+    ImmutableIntSet getIntAlphabet();
 
     ImmutableSet<S> getOriginAlphabet();
 

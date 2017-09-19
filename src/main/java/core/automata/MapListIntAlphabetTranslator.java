@@ -43,7 +43,7 @@ public class MapListIntAlphabetTranslator<S> implements IntAlphabetTranslator<S>
     }
 
     @Override
-    public ImmutableIntSet getTargetAlphabet()
+    public ImmutableIntSet getIntAlphabet()
     {
         return encoder.values().toSet().toImmutable();
     }
