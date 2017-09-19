@@ -1,132 +1,102 @@
 package core.automata;
 
+import api.automata.DeltaFunction;
 import api.automata.Deterministic;
 import api.automata.State;
-import api.automata.Symbol;
-import api.automata.TransitionFunction;
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.map.ImmutableMap;
-import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.set.ImmutableSet;
-import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.impl.block.factory.Functions;
-import org.eclipse.collections.impl.block.factory.Predicates;
 import org.eclipse.collections.impl.factory.Sets;
-import org.eclipse.collections.impl.map.mutable.UnifiedMap;
-import org.eclipse.collections.impl.set.mutable.UnifiedSet;
-import org.eclipse.collections.impl.tuple.Tuples;
 
-public class MapMapDelta<S extends Symbol> implements Deterministic, TransitionFunction<S>
+public final class MapMapDelta<S> implements Deterministic, DeltaFunction<S>
 {
-    private final ImmutableMap<State, ImmutableMap<S, State>> delta;
-    private final ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> deltaInversed;
+    private final S epsilonSymbol;
+    private final ImmutableMap<State, ImmutableMap<S, State>> forwardDelta;
+    private final ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> backwardDelta;
 
-    private MapMapDelta(ImmutableMap<State, ImmutableMap<S, State>> definition,
-                        ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> definitionInversed)
+    private MapMapDelta(ImmutableMap<State, ImmutableMap<S, State>> forwardDefinition,
+                        ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> backwardDefinition, S epsilonSymbol)
     {
-        delta = definition;
-        deltaInversed = definitionInversed;
+        forwardDelta = forwardDefinition;
+        backwardDelta = backwardDefinition;
+        this.epsilonSymbol = epsilonSymbol;
     }
 
-    private static <S extends Symbol> ImmutableMap<State, ImmutableMap<S, State>> immutableDefinition(
-        MutableMap<State, MutableMap<S, State>> definition)
+    public MapMapDelta(MapMapLikeDeltaBuilder<S> record)
     {
-        return definition.collect((dept, transes) -> {
-            return Tuples.pair(dept, transes.toImmutable());
-        }).toImmutable();
+        this(record.getDemotedForwardDelta(), record.getBackwardDelta(), record.getEpsilonSymbol());
     }
 
-    private static <S extends Symbol> ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> immutableInversedDefinition(
-        MutableMap<State, MutableMap<S, MutableSet<State>>> definition)
+    ImmutableMap<State, ImmutableMap<S, State>> getForwardDelta()
     {
-        return definition.collect((dept, transes) -> {
-            return Tuples.pair(dept, transes.collect((sym, dests) -> {
-                return Tuples.pair(sym, dests.toImmutable());
-            }).toImmutable());
-        }).toImmutable();
+        return forwardDelta;
     }
 
-    private static <S extends Symbol> MutableMap<State, MutableMap<S, MutableSet<State>>> computeInverse(
-        MutableMap<State, MutableMap<S, State>> definition)
+    ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> getBackwardDelta()
     {
-        final MutableMap<State, MutableMap<S, MutableSet<State>>> inverse = UnifiedMap.newMap(definition.size());
-        definition.forEach((dept, transes) -> {
-            transes.forEach((sym, dest) -> {
-                inverse.getIfAbsentPut(dest, UnifiedMap.newMap(definition.size()))
-                       .getIfAbsentPut(sym, UnifiedSet.newSet(definition.size())) // upper bound
-                       .add(dept);
-            });
-        });
-        return inverse;
+        return backwardDelta;
     }
 
-    public MapMapDelta(MutableMap<State, MutableMap<S, State>> definition,
-                       MutableMap<State, MutableMap<S, MutableSet<State>>> definitionInversed)
+    S getEpsilonSymbol()
     {
-        // TODO: decide whether to check the validity of `definitionInversed`
-        this(immutableDefinition(definition), immutableInversedDefinition(definitionInversed));
-    }
-
-    public MapMapDelta(MutableMap<State, MutableMap<S, State>> definition)
-    {
-        this(definition, computeInverse(definition));
-    }
-
-    public MutableMap<State, MutableMap<S, State>> getMutableDefinition()
-    {
-        return delta.collect((dept, transes) -> {
-            return Tuples.pair(dept, transes.toMap());
-        }).toMap();
-    }
-
-    public MutableMap<State, MutableMap<S, MutableSet<State>>> getMutableInversedDefinition()
-    {
-        return deltaInversed.collect((dept, transes) -> {
-            return Tuples.pair(dept, transes.collect((sym, dests) -> {
-                return Tuples.pair(sym, dests.toSet());
-            }).toMap());
-        }).toMap();
+        return epsilonSymbol;
     }
 
     @Override
     public int size()
     {
-        return delta.collect(trans -> trans.count(Predicates.notNull())).injectInto(0, Integer::sum);
+        return forwardDelta.collect(RichIterable::size).injectInto(0, Integer::sum);
     }
 
     @Override
-    public ImmutableSet<S> enabledSymbolsOn(State state)
+    public SetIterable<State> getAllReferredStates()
     {
-        return delta.get(state).keysView().toSet().toImmutable();
+        return Sets.union(forwardDelta.keysView().toSet(), getBackwardDelta().keysView().toSet());
     }
 
     @Override
-    public ImmutableSet<State> successorsOf(State state)
+    public SetIterable<S> getAllReferredSymbols()
     {
-        return delta.get(state).valuesView().toSet().toImmutable();
+        return forwardDelta.flatCollect(MapIterable::keysView).toSet();
     }
 
     @Override
-    public ImmutableSet<State> successorsOf(State state, S symbol)
+    public SetIterable<S> enabledSymbolsOn(State state)
     {
-        return Sets.immutable.of(delta.get(state).get(symbol));
+        return forwardDelta.get(state).keysView().toSet();
+    }
+
+    @Override
+    public SetIterable<State> successorsOf(State state)
+    {
+        return forwardDelta.get(state).valuesView().toSet();
+    }
+
+    @Override
+    public SetIterable<State> successorsOf(State state, S symbol)
+    {
+        return Sets.fixedSize.of(forwardDelta.get(state).get(symbol));
     }
 
     @Override
     public State successorOf(State state, S symbol)
     {
-        return delta.get(state).get(symbol);
+        return forwardDelta.get(state).get(symbol);
     }
 
     @Override
-    public ImmutableSet<State> predecessorsOf(State state)
+    public SetIterable<State> predecessorsOf(State state)
     {
-        return deltaInversed.get(state).flatCollect(Functions.identity()).toSet().toImmutable();
+        return backwardDelta.get(state).flatCollect(Functions.identity()).toSet();
     }
 
     @Override
-    public ImmutableSet<State> predecessorsOf(State state, S symbol)
+    public SetIterable<State> predecessorsOf(State state, S symbol)
     {
-        return deltaInversed.get(state).get(symbol);
+        return backwardDelta.get(state).get(symbol);
     }
 
     @Override
@@ -136,11 +106,11 @@ public class MapMapDelta<S extends Symbol> implements Deterministic, TransitionF
         final String indent = "  ";
         final StringBuilder layout = new StringBuilder();
 
-        delta.forEachKeyValue((qi, stateTrans) -> {
-            stateTrans.forEachKeyValue((symbol, qj) -> {
-                layout.append(indent).append(qi);
-                layout.append(" -> ").append(qj);
-                layout.append(" [").append(symbol).append("];").append(newline);
+        forwardDelta.forEachKeyValue((dept, stateTrans) -> {
+            stateTrans.forEachKeyValue((symbol, dest) -> {
+                layout.append(indent);
+                layout.append(dept).append(" -> ").append(dest).append(" [").append(symbol).append("];");
+                layout.append(newline);
             });
         });
 

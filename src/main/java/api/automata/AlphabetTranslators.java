@@ -15,14 +15,13 @@ public final class AlphabetTranslators
     {
     }
 
-    public static <O, T extends Symbol> AlphabetTranslator<O, T> createOne(ImmutableBiMap<O, T> definition,
-                                                                           O epsilonSymbol)
+    public static <O, T extends Symbol> AlphabetTranslator<O, T> newOne(ImmutableBiMap<O, T> definition,
+                                                                        O epsilonSymbol)
     {
         return new BiMapAlphabetTranslator<>(definition, epsilonSymbol);
     }
 
-    public static <O, T extends Symbol> AlphabetTranslator<O, T> createOne(MutableBiMap<O, T> definition,
-                                                                           O epsilonSymbol)
+    public static <O, T extends Symbol> AlphabetTranslator<O, T> newOne(MutableBiMap<O, T> definition, O epsilonSymbol)
     {
         return new BiMapAlphabetTranslator<>(BiMaps.immutable.ofAll(definition), epsilonSymbol);
     }
