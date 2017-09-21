@@ -2,24 +2,29 @@ package core.automata;
 
 import api.automata.Alphabet;
 import api.automata.AlphabetTranslator;
-import api.automata.Symbol;
+import api.automata.Alphabets;
+import core.util.Assertions;
 import org.eclipse.collections.api.bimap.ImmutableBiMap;
-import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.bimap.MutableBiMap;
+import org.eclipse.collections.api.map.ImmutableMapIterable;
 
-public class BiMapAlphabetTranslator<O, T extends Symbol> implements AlphabetTranslator<O, T>
+public class BiMapAlphabetTranslator<O, T> implements AlphabetTranslator<O, T>
 {
-    private final ImmutableBiMap<O, T> encoder;
-    private final ImmutableBiMap<T, O> decoder;
+    private final ImmutableMapIterable<O, T> encoder;
+    private final ImmutableMapIterable<T, O> decoder;
     private final O originEpsilonSymbol;
 
-    public BiMapAlphabetTranslator(ImmutableBiMap<O, T> definition, O epsilonSymbol)
+    public BiMapAlphabetTranslator(MutableBiMap<O, T> definition, O originEpsilonSymbol)
     {
-        if (!definition.containsKey(epsilonSymbol)) {
-            throw new IllegalArgumentException("epsilon symbol not found in the definition");
+        Assertions.argumentNotNull(originEpsilonSymbol);
+        if (!definition.containsKey(originEpsilonSymbol)) {
+            throw new IllegalStateException("epsilon symbol not found in the definition");
         }
-        encoder = definition;
-        decoder = definition.inverse();
-        originEpsilonSymbol = epsilonSymbol;
+
+        final ImmutableBiMap<O, T> symbolTable = (ImmutableBiMap<O, T>) definition.toImmutable();
+        encoder = symbolTable;
+        decoder = symbolTable.inverse();
+        this.originEpsilonSymbol = originEpsilonSymbol;
     }
 
     @Override
@@ -55,12 +60,12 @@ public class BiMapAlphabetTranslator<O, T extends Symbol> implements AlphabetTra
     @Override
     public Alphabet<T> getTargetAlphabet()
     {
-        return Alphabets.createOne(encoder.valuesView().toSet(), getTargetEpsilonSymbol());
+        return Alphabets.newOne(encoder.valuesView().toSet(), getTargetEpsilonSymbol());
     }
 
     @Override
-    public ImmutableSet<O> getOriginAlphabet()
+    public Alphabet<O> getOriginAlphabet()
     {
-        return encoder.keysView().toSet().toImmutable();
+        return Alphabets.newOne(encoder.keysView().toSet(), getOriginEpsilonSymbol());
     }
 }

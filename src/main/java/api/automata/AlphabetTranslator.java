@@ -1,7 +1,7 @@
 package api.automata;
 
 import org.eclipse.collections.api.list.ImmutableList;
-import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.list.ListIterable;
 
 /**
  * The alphabet translating class that uses {@link T} symbols to represent
@@ -10,7 +10,7 @@ import org.eclipse.collections.api.set.ImmutableSet;
  * @param <O> the original symbol type
  * @param <T> the mapped symbol type
  */
-public interface AlphabetTranslator<O, T extends Symbol>
+public interface AlphabetTranslator<O, T>
 {
     int size();
 
@@ -24,15 +24,24 @@ public interface AlphabetTranslator<O, T extends Symbol>
 
     Alphabet<T> getTargetAlphabet();
 
-    ImmutableSet<O> getOriginAlphabet();
+    Alphabet<O> getOriginAlphabet();
 
-    default ImmutableList<T> translate(ImmutableList<O> word)
+    default ListIterable<T> translate(ImmutableList<O> word)
     {
         return word.collect(this::targetSymbolOf);
     }
 
-    default ImmutableList<O> translateBack(ImmutableList<T> word)
+    default ListIterable<O> translateBack(ImmutableList<T> word)
     {
         return word.collect(this::originSymbolOf);
+    }
+
+    interface Builder<O, T>
+    {
+        Builder<O, T> define(O origin, T target);
+
+        Builder<O, T> defineEpsilon(O origin, T target);
+
+        AlphabetTranslator<O, T> build();
     }
 }
