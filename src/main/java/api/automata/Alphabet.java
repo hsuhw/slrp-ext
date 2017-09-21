@@ -1,14 +1,21 @@
 package api.automata;
 
-import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.set.SetIterable;
 
-public interface Alphabet<S extends Symbol>
+public interface Alphabet<S>
 {
     int size();
 
     S getEpsilonSymbol();
 
-    boolean contains(S symbol);
+    SetIterable<S> getSet();
 
-    ImmutableSet<S> toSet();
+    interface Builder<S>
+    {
+        Builder<S> add(S symbol);
+
+        Builder<S> defineEpsilon(S symbol);
+
+        Alphabet<S> build();
+    }
 }

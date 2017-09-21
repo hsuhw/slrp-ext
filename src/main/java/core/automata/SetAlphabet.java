@@ -1,20 +1,24 @@
 package core.automata;
 
 import api.automata.Alphabet;
-import api.automata.Symbol;
-import org.eclipse.collections.api.set.ImmutableSet;
+import core.util.Assertions;
+import org.eclipse.collections.api.set.ImmutableSetIterable;
+import org.eclipse.collections.api.set.MutableSetIterable;
+import org.eclipse.collections.api.set.SetIterable;
 
-public class SetAlphabet<S extends Symbol> implements Alphabet<S>
+public class SetAlphabet<S> implements Alphabet<S>
 {
-    private final ImmutableSet<S> symbolSet;
+    private final ImmutableSetIterable<S> symbolSet;
     private final S epsilon;
 
-    public SetAlphabet(ImmutableSet<S> definition, S epsilonSymbol)
+    public SetAlphabet(MutableSetIterable<S> definition, S epsilonSymbol)
     {
+        Assertions.argumentNotNull(epsilonSymbol);
         if (!definition.contains(epsilonSymbol)) {
             throw new IllegalArgumentException("epsilon symbol not found in the definition");
         }
-        symbolSet = definition;
+
+        symbolSet = (ImmutableSetIterable<S>) definition.toImmutable();
         epsilon = epsilonSymbol;
     }
 
@@ -31,13 +35,7 @@ public class SetAlphabet<S extends Symbol> implements Alphabet<S>
     }
 
     @Override
-    public boolean contains(S symbol)
-    {
-        return symbolSet.contains(symbol);
-    }
-
-    @Override
-    public ImmutableSet<S> toSet()
+    public SetIterable<S> getSet()
     {
         return symbolSet;
     }
