@@ -1,29 +1,20 @@
-package util;
+package api.util;
 
 import org.apache.commons.text.RandomStringGenerator;
-
-import java.lang.reflect.Array;
 
 import static java.lang.Character.isLetter;
 import static java.lang.Character.isLowerCase;
 import static org.apache.commons.text.CharacterPredicates.DIGITS;
 import static org.apache.commons.text.CharacterPredicates.LETTERS;
 
-public final class Misc
+public final class Values
 {
-    public static final String NIY = "not implemented yet";
-    public static final String NMI = "no matched implementation found";
+    public static final String NOT_IMPLEMENTED_YET = "not implemented yet";
+    public static final String NO_MATCHED_IMPLEMENTATION_FOUND = "no matched implementation found";
     public static final String EPSILON_SYMBOL_DISPLAY_VALUE = "(epsilon)";
 
-    private Misc()
+    private Values()
     {
-    }
-
-    public static <T> T[] newArrayForLike(T example, int size)
-    {
-        @SuppressWarnings("unchecked")
-        final T[] array = (T[]) Array.newInstance(example.getClass(), size);
-        return array;
     }
 
     private static final RandomStringGenerator lowerCasedAlphanumericRSG = new RandomStringGenerator.Builder()
