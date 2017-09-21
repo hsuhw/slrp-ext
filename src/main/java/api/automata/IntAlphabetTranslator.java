@@ -1,9 +1,10 @@
 package api.automata;
 
 import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
-import org.eclipse.collections.api.set.ImmutableSet;
-import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
+import org.eclipse.collections.api.set.SetIterable;
+import org.eclipse.collections.api.set.primitive.IntSet;
 import org.eclipse.collections.impl.factory.primitive.IntLists;
 
 /**
@@ -32,21 +33,21 @@ public interface IntAlphabetTranslator<S>
 
     S originSymbolOf(int symbol);
 
-    ImmutableIntSet getIntAlphabet();
+    IntSet getIntAlphabet();
 
-    ImmutableSet<S> getOriginAlphabet();
+    SetIterable<S> getOriginAlphabet();
 
     default ImmutableIntList translate(ImmutableList<S> word)
     {
         return word.collectInt(this::intSymbolOf);
     }
 
-    default ImmutableList<S> translateBack(ImmutableIntList word)
+    default ListIterable<S> translateBack(ImmutableIntList word)
     {
         return word.collect(this::originSymbolOf);
     }
 
-    default ImmutableList<S> translateBack(int... word)
+    default ListIterable<S> translateBack(int... word)
     {
         return translateBack(IntLists.immutable.of(word));
     }

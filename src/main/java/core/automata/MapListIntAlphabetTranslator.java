@@ -1,10 +1,12 @@
 package core.automata;
 
 import api.automata.IntAlphabetTranslator;
+import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.primitive.ImmutableObjectIntMap;
-import org.eclipse.collections.api.set.ImmutableSet;
-import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
+import org.eclipse.collections.api.set.SetIterable;
+import org.eclipse.collections.api.set.primitive.IntSet;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 
 public class MapListIntAlphabetTranslator<S> implements IntAlphabetTranslator<S>
@@ -12,13 +14,17 @@ public class MapListIntAlphabetTranslator<S> implements IntAlphabetTranslator<S>
     private final ImmutableObjectIntMap<S> encoder;
     private final ImmutableList<S> decoder;
 
-    public MapListIntAlphabetTranslator(ImmutableList<S> definition, S epsilonSymbol)
+    public MapListIntAlphabetTranslator(MutableList<S> definition, S epsilonSymbol)
     {
-        if (!definition.contains(epsilonSymbol) || definition.get(INT_EPSILON) != epsilonSymbol) {
+        Assertions.argumentNotNull(epsilonSymbol);
+        if (!definition.contains(epsilonSymbol)) {
+            throw new IllegalArgumentException("epsilon symbol not found in the definition");
+        }
+        if (definition.get(INT_EPSILON) != epsilonSymbol) {
             throw new IllegalArgumentException("epsilon symbol should be mapped to zero");
         }
-        decoder = definition;
 
+        decoder = definition.toImmutable();
         final ObjectIntHashMap<S> definitionInversed = new ObjectIntHashMap<>(definition.size());
         definition.forEachWithIndex(definitionInversed::put);
         encoder = definitionInversed.toImmutable();
@@ -43,14 +49,14 @@ public class MapListIntAlphabetTranslator<S> implements IntAlphabetTranslator<S>
     }
 
     @Override
-    public ImmutableIntSet getIntAlphabet()
+    public IntSet getIntAlphabet()
     {
-        return encoder.values().toSet().toImmutable();
+        return encoder.values().toSet();
     }
 
     @Override
-    public ImmutableSet<S> getOriginAlphabet()
+    public SetIterable<S> getOriginAlphabet()
     {
-        return encoder.keysView().toSet().toImmutable();
+        return encoder.keysView().toSet();
     }
 }
