@@ -3,7 +3,6 @@ package core.automata;
 import api.automata.DeltaFunction;
 import api.automata.State;
 import core.util.Assertions;
-import core.util.Parameters;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.ImmutableSet;
@@ -13,6 +12,7 @@ import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.eclipse.collections.impl.tuple.Tuples;
 
 import static api.automata.DeltaFunction.Builder;
+import static core.util.Parameters.*;
 
 public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
 {
@@ -31,17 +31,17 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
 
     private static int estimateStateNumber(int originalSize)
     {
-        return (int) Math.round(originalSize * Parameters.ADDITIONAL_STATE_CAPACITY_MULTIPLIER);
+        return (int) Math.round(originalSize * ADDITIONAL_STATE_CAPACITY_MULTIPLIER);
     }
 
     private static <S> MutableMap<S, MutableSet<State>> newStateTrans()
     {
-        return UnifiedMap.newMap(Parameters.CURRENT_BIGGEST_ALPHABET_SIZE);
+        return UnifiedMap.newMap(CURRENT_BIGGEST_ALPHABET_SIZE);
     }
 
     private static MutableSet<State> newStateSet()
     {
-        return UnifiedSet.newSet(Parameters.NONDETERMINISTIC_TRANSITION_CAPACITY);
+        return UnifiedSet.newSet(NONDETERMINISTIC_TRANSITION_CAPACITY);
     }
 
     private static <S> MutableMap<State, MutableMap<S, MutableSet<State>>> mutableDelta(
