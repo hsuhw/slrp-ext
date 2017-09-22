@@ -1,110 +1,83 @@
 package core.automata;
 
 import api.automata.Automaton;
+import api.automata.DeltaFunction;
 import api.automata.State;
-import api.automata.Symbol;
-import api.automata.TransitionFunction;
-import org.eclipse.collections.api.list.ImmutableList;
-import org.eclipse.collections.api.list.primitive.ImmutableBooleanList;
-import org.eclipse.collections.api.map.primitive.ImmutableObjectIntMap;
-import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
-import org.eclipse.collections.impl.block.factory.primitive.BooleanPredicates;
-import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
+import org.eclipse.collections.api.set.ImmutableSet;
 
-public abstract class AbstractAutomaton<S extends Symbol> implements Automaton<S>
+import static api.util.Values.DISPLAY_INDENT;
+import static api.util.Values.DISPLAY_NEWLINE;
+import static core.util.Parameters.IMPLICIT_PRECONDITION_RESPECTED;
+
+public abstract class AbstractAutomaton<S> implements Automaton<S>
 {
-    protected final ImmutableList<State> states;
-    protected final ImmutableBooleanList startStateTable;
-    protected final ImmutableBooleanList acceptStateTable;
-    protected final ImmutableObjectIntMap<State> stateIndexTable;
-    protected final TransitionFunction<S> transitionFunction;
+    protected final ImmutableSet<State> states;
+    protected final ImmutableSet<State> startStates;
+    protected final ImmutableSet<State> acceptStates;
+    protected final DeltaFunction<S> deltaFunction;
 
-    private static <S extends Symbol> boolean meetsMinimumRequirements(ImmutableList<State> states,
-                                                                       ImmutableBooleanList startStateTable,
-                                                                       ImmutableBooleanList acceptStateTable,
-                                                                       TransitionFunction<S> transitionFunction)
+    protected static <S> boolean validateDefinition(ImmutableSet<State> states, ImmutableSet<State> startStates,
+                                                    ImmutableSet<State> acceptStates, DeltaFunction<S> deltaFunction)
     {
-        final int stateNumber = states.size();
-        final int startTableSize = startStateTable.size();
-        final int acceptTableSize = acceptStateTable.size();
-        final boolean consistentStateNumber = startTableSize == stateNumber && acceptTableSize == stateNumber;
-        final boolean atLeastOneTransition = transitionFunction.size() > 0;
-        final boolean atLeastOneStartState = startStateTable.anySatisfy(BooleanPredicates.isTrue());
+        final boolean validStartStates = states.containsAll(startStates.castToSet());
+        final boolean validAcceptStates = startStates.containsAll(acceptStates.castToSet());
+        final boolean validDeltaFunction;
+        final boolean validDeltaFunctionStates = states.containsAll(deltaFunction.getAllReferredStates().toSet());
+        if (!IMPLICIT_PRECONDITION_RESPECTED) {
+            validDeltaFunction = validDeltaFunctionStates && deltaFunction.size() > 0;
+        } else {
+            validDeltaFunction = validDeltaFunctionStates;
+        }
+        final boolean atLeastOneStartState = startStates.size() > 0;
 
-        return consistentStateNumber && atLeastOneTransition && atLeastOneStartState;
+        return validStartStates && validAcceptStates && validDeltaFunction && atLeastOneStartState;
     }
 
-    public AbstractAutomaton(ImmutableList<State> states, ImmutableBooleanList startStateTable,
-                             ImmutableBooleanList acceptStateTable, TransitionFunction<S> transitionFunction)
+    public AbstractAutomaton(ImmutableSet<State> states, ImmutableSet<State> startStates,
+                             ImmutableSet<State> acceptStates, DeltaFunction<S> deltaFunction)
     {
-        if (!meetsMinimumRequirements(states, startStateTable, acceptStateTable, transitionFunction)) {
-            throw new IllegalArgumentException("given definition does not meet minimum requirements");
+        if (!validateDefinition(states, startStates, acceptStates, deltaFunction)) {
+            throw new IllegalArgumentException("given an invalid definition");
         }
-        final MutableObjectIntMap<State> stateIndexTable = new ObjectIntHashMap<>(states.size());
-        states.forEachWithIndex(stateIndexTable::put);
-        // TODO: see whether to prevent the map creation when possible
         this.states = states;
-        this.stateIndexTable = stateIndexTable.toImmutable();
-        this.startStateTable = startStateTable;
-        this.acceptStateTable = acceptStateTable;
-        this.transitionFunction = transitionFunction;
+        this.startStates = startStates;
+        this.acceptStates = acceptStates;
+        this.deltaFunction = deltaFunction;
     }
 
     @Override
-    public ImmutableList<State> getStates()
+    public ImmutableSet<State> getStates()
     {
         return states;
     }
 
     @Override
-    public ImmutableObjectIntMap<State> getStateIndexTable()
+    public ImmutableSet<State> getStartStates()
     {
-        return stateIndexTable;
+        return startStates;
     }
 
     @Override
-    public ImmutableBooleanList getStartStateTable()
+    public ImmutableSet<State> getAcceptStates()
     {
-        return startStateTable;
+        return acceptStates;
     }
 
     @Override
-    public ImmutableBooleanList getAcceptStateTable()
+    public DeltaFunction<S> getDeltaFunction()
     {
-        return acceptStateTable;
-    }
-
-    @Override
-    public TransitionFunction<S> getTransitionFunction()
-    {
-        return transitionFunction;
+        return deltaFunction;
     }
 
     @Override
     public String toString()
     {
-        final String newline = System.getProperty("line.separator");
-        final String indent = "  ";
-        final StringBuilder layout = new StringBuilder();
-
-        layout.append("{").append(newline);
-        layout.append(indent).append("start:");
-        startStateTable.forEachWithIndex((x, i) -> {
-            if (x) {
-                layout.append(" s").append(i);
-            }
-        });
-        layout.append(";").append(newline).append(newline);
-        layout.append(transitionFunction).append(newline);
-        layout.append(indent).append("accept:");
-        acceptStateTable.forEachWithIndex((x, i) -> {
-            if (x) {
-                layout.append(" s").append(i);
-            }
-        });
-        layout.append(";").append(newline);
-        layout.append("}").append(newline);
-
-        return layout.toString();
+        return "{" + DISPLAY_NEWLINE //
+            + DISPLAY_INDENT + "start: " + startStates + ";" + DISPLAY_NEWLINE //
+            + DISPLAY_NEWLINE //
+            + deltaFunction //
+            + DISPLAY_NEWLINE //
+            + DISPLAY_INDENT + "accept: " + acceptStates + ";" + DISPLAY_NEWLINE //
+            + "}" + DISPLAY_NEWLINE;
     }
 }

@@ -105,11 +105,17 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
         return this;
     }
 
-    private void removeStateAndEmptyMap(MutableMap<S, MutableSet<State>> fromState, S symbol, State target)
+    private void removeStateAndEmptyParents(MutableMap<State, MutableMap<S, MutableSet<State>>> delta, State affected,
+                                            S symbol, State target)
     {
-        fromState.get(symbol).remove(target);
-        if (fromState.get(symbol).isEmpty()) {
-            fromState.remove(symbol);
+        final MutableMap<S, MutableSet<State>> affectedStateTrans = delta.get(affected);
+        final MutableSet<State> affectedStateSet = affectedStateTrans.get(symbol);
+        affectedStateSet.remove(target);
+        if (affectedStateSet.isEmpty()) {
+            affectedStateTrans.remove(symbol);
+        }
+        if (affectedStateTrans.isEmpty()) {
+            delta.remove(affected);
         }
     }
 
@@ -121,11 +127,11 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
         }
 
         forwardDelta.get(state).forEach((symbol, dests) -> {
-            dests.forEach(dest -> removeStateAndEmptyMap(backwardDelta.get(dest), symbol, state));
+            dests.forEach(dest -> removeStateAndEmptyParents(backwardDelta, dest, symbol, state));
         });
         forwardDelta.remove(state);
         backwardDelta.get(state).forEach((symbol, depts) -> {
-            depts.forEach(dept -> removeStateAndEmptyMap(forwardDelta.get(dept), symbol, state));
+            depts.forEach(dept -> removeStateAndEmptyParents(forwardDelta, dept, symbol, state));
         });
         backwardDelta.remove(state);
 
@@ -152,6 +158,10 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
     @Override
     public DeltaFunction<S> build()
     {
+        if (forwardDelta.isEmpty()) {
+            throw new IllegalStateException("an empty delta function will not be built");
+        }
+
         return isNondeterministic() ? new MapMapSetDelta<>(this) : new MapMapDelta<>(this);
     }
 

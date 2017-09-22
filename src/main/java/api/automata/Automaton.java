@@ -1,53 +1,42 @@
 package api.automata;
 
-import org.eclipse.collections.api.list.ImmutableList;
-import org.eclipse.collections.api.list.primitive.ImmutableBooleanList;
-import org.eclipse.collections.api.map.primitive.ImmutableObjectIntMap;
+import org.eclipse.collections.api.set.SetIterable;
 
-public interface Automaton<S extends Symbol>
+public interface Automaton<S>
 {
-    ImmutableList<State> getStates();
-
-    ImmutableObjectIntMap<State> getStateIndexTable();
+    SetIterable<State> getStates();
 
     default int getStateNumber()
     {
         return getStates().size();
     }
 
-    default State getState(int stateIndex)
-    {
-        return getStates().get(stateIndex);
-    }
-
-    default int getStateIndex(State state)
-    {
-        return getStateIndexTable().get(state);
-    }
-
-    ImmutableBooleanList getStartStateTable();
+    SetIterable<State> getStartStates();
 
     default boolean isStartState(State state)
     {
-        return getStartStateTable().get(getStateIndex(state));
+        return getStartStates().contains(state);
     }
 
-    default boolean isStartState(int stateIndex)
-    {
-        return getStartStateTable().get(stateIndex);
-    }
-
-    ImmutableBooleanList getAcceptStateTable();
+    SetIterable<State> getAcceptStates();
 
     default boolean isAcceptState(State state)
     {
-        return getAcceptStateTable().get(getStateIndex(state));
+        return getAcceptStates().contains(state);
     }
 
-    default boolean isAcceptState(int stateIndex)
+    DeltaFunction<S> getDeltaFunction();
+
+    interface Builder<S>
     {
-        return getAcceptStateTable().get(stateIndex);
-    }
+        void addState(State state);
 
-    TransitionFunction<S> getTransitionFunction();
+        void addStartState(State state);
+
+        void addAcceptState(State state);
+
+        void addTransition(State dept, State dest, S symbol);
+
+        Automaton<S> build();
+    }
 }
