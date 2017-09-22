@@ -11,6 +11,9 @@ import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.impl.block.factory.Functions;
 import org.eclipse.collections.impl.factory.Sets;
 
+import static api.util.Values.DISPLAY_INDENT;
+import static api.util.Values.DISPLAY_NEWLINE;
+
 public final class MapMapDelta<S> implements Deterministic, DeltaFunction<S>
 {
     private final S epsilonSymbol;
@@ -102,15 +105,13 @@ public final class MapMapDelta<S> implements Deterministic, DeltaFunction<S>
     @Override
     public String toString()
     {
-        final String newline = System.getProperty("line.separator");
-        final String indent = "  ";
         final StringBuilder layout = new StringBuilder();
 
         forwardDelta.forEachKeyValue((dept, stateTrans) -> {
             stateTrans.forEachKeyValue((symbol, dest) -> {
-                layout.append(indent);
+                layout.append(DISPLAY_INDENT);
                 layout.append(dept).append(" -> ").append(dest).append(" [").append(symbol).append("];");
-                layout.append(newline);
+                layout.append(DISPLAY_NEWLINE);
             });
         });
 
