@@ -60,12 +60,12 @@ public class BiMapAlphabetTranslator<O, T> implements AlphabetTranslator<O, T>
     @Override
     public Alphabet<T> getTargetAlphabet()
     {
-        return Alphabets.newOne(encoder.valuesView().toSet(), getTargetEpsilonSymbol());
+        return Alphabets.create(encoder.valuesView().toSet(), getTargetEpsilonSymbol());
     }
 
     @Override
     public Alphabet<O> getOriginAlphabet()
     {
-        return Alphabets.newOne(encoder.keysView().toSet(), getOriginEpsilonSymbol());
+        return Alphabets.create(encoder.keysView().toSet(), getOriginEpsilonSymbol());
     }
 }

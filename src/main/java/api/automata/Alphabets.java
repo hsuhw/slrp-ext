@@ -15,7 +15,7 @@ public final class Alphabets
         return new SetAlphabetBuilder<>(symbolNumberEstimate);
     }
 
-    public static <S> Alphabet<S> newOne(MutableSetIterable<S> definition, S epsilonSymbol)
+    public static <S> Alphabet<S> create(MutableSetIterable<S> definition, S epsilonSymbol)
     {
         return new SetAlphabet<>(definition, epsilonSymbol);
     }

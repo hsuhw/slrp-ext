@@ -11,7 +11,7 @@ public final class DeltaFunctions
         return new MapMapLikeDeltaBuilder<>(stateNumberEstimate, epsilonSymbol);
     }
 
-    static <S> DeltaFunction.Builder<S> builderWith(DeltaFunction<S> other)
+    static <S> DeltaFunction.Builder<S> builderOn(DeltaFunction<S> other)
     {
         if (other instanceof MapMapDelta<?>) {
             return new MapMapLikeDeltaBuilder<>((MapMapDelta<S>) other);
