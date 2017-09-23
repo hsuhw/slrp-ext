@@ -2,19 +2,13 @@ package core.automata;
 
 import api.automata.State;
 
-public class ParsedState implements State
+public class NamedState implements State
 {
     private final String name;
 
-    public ParsedState(String name)
+    public NamedState(String name)
     {
         this.name = name;
-    }
-
-    @Override
-    public String getName()
-    {
-        return name;
     }
 
     @Override

@@ -1,24 +1,18 @@
 package core.automata;
 
 import api.automata.State;
-import util.Misc;
+import api.util.Values;
 
-public class GeneratedState implements State
+public class NamelessState implements State
 {
     private static final String NAME_PREFIX = "$";
     private static final int GENERATED_NAME_LENGTH = 4;
 
     private final String name;
 
-    public GeneratedState()
+    public NamelessState()
     {
-        this.name = NAME_PREFIX + Misc.randomAlphanumeric(GENERATED_NAME_LENGTH, false);
-    }
-
-    @Override
-    public String getName()
-    {
-        return name;
+        name = NAME_PREFIX + Values.randomAlphanumeric(GENERATED_NAME_LENGTH, false);
     }
 
     @Override
