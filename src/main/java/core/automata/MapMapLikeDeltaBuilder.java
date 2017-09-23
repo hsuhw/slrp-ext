@@ -94,28 +94,17 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
         epsilonSymbol = delta.getEpsilonSymbol();
     }
 
-    @Override
-    public Builder<S> addState(State state)
+    private void removeEdgeFromGraph(MutableMap<State, MutableMap<S, MutableSet<State>>> graph, State from, S symbol,
+                                     State to)
     {
-        Assertions.argumentNotNull(state);
-
-        forwardDelta.computeIfAbsent(state, __ -> newStateTrans());
-        backwardDelta.computeIfAbsent(state, __ -> newStateTrans());
-
-        return this;
-    }
-
-    private void removeStateAndEmptyParents(MutableMap<State, MutableMap<S, MutableSet<State>>> delta, State affected,
-                                            S symbol, State target)
-    {
-        final MutableMap<S, MutableSet<State>> affectedStateTrans = delta.get(affected);
-        final MutableSet<State> affectedStateSet = affectedStateTrans.get(symbol);
-        affectedStateSet.remove(target);
-        if (affectedStateSet.isEmpty()) {
-            affectedStateTrans.remove(symbol);
+        final MutableMap<S, MutableSet<State>> stateTrans = graph.get(from);
+        final MutableSet<State> stateSet = stateTrans.get(symbol);
+        stateSet.remove(to);
+        if (stateSet.isEmpty()) {
+            stateTrans.remove(symbol);
         }
-        if (affectedStateTrans.isEmpty()) {
-            delta.remove(affected);
+        if (stateTrans.isEmpty()) {
+            graph.remove(from);
         }
     }
 
@@ -127,11 +116,11 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
         }
 
         forwardDelta.get(state).forEach((symbol, dests) -> {
-            dests.forEach(dest -> removeStateAndEmptyParents(backwardDelta, dest, symbol, state));
+            dests.forEach(dest -> removeEdgeFromGraph(backwardDelta, dest, symbol, state));
         });
         forwardDelta.remove(state);
         backwardDelta.get(state).forEach((symbol, depts) -> {
-            depts.forEach(dept -> removeStateAndEmptyParents(forwardDelta, dept, symbol, state));
+            depts.forEach(dept -> removeEdgeFromGraph(forwardDelta, dept, symbol, state));
         });
         backwardDelta.remove(state);
 
@@ -144,6 +133,18 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
         Assertions.argumentNotNull(dept, dest, symbol);
 
         forwardDelta.get(dept).computeIfAbsent(symbol, __ -> newStateSet()).add(dest);
+        backwardDelta.get(dest).computeIfAbsent(symbol, __ -> newStateSet()).add(dept);
+
+        return this;
+    }
+
+    @Override
+    public Builder<S> removeTransition(State dept, State dest, S symbol)
+    {
+        Assertions.argumentNotNull(dept, dest, symbol);
+
+        removeEdgeFromGraph(forwardDelta, dept, symbol, dest);
+        removeEdgeFromGraph(backwardDelta, dest, symbol, dept);
 
         return this;
     }

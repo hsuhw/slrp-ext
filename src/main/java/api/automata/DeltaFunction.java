@@ -30,11 +30,11 @@ public interface DeltaFunction<S>
 
     interface Builder<S>
     {
-        Builder<S> addState(State state);
-
         Builder<S> removeState(State state);
 
         Builder<S> addTransition(State dept, State dest, S symbol);
+
+        Builder<S> removeTransition(State dept, State dest, S symbol);
 
         DeltaFunction<S> build();
     }
