@@ -5,7 +5,9 @@ import core.util.Assertions;
 import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.impl.bimap.mutable.HashBiMap;
 
-public final class BiMapAlphabetTranslatorBuilder<O, T> implements AlphabetTranslator.Builder<O, T>
+import static api.automata.AlphabetTranslator.Builder;
+
+public final class BiMapAlphabetTranslatorBuilder<O, T> implements Builder<O, T>
 {
     private final MutableBiMap<O, T> symbolTable;
     private O originEpsilonSymbol;
@@ -16,7 +18,7 @@ public final class BiMapAlphabetTranslatorBuilder<O, T> implements AlphabetTrans
     }
 
     @Override
-    public AlphabetTranslator.Builder<O, T> define(O origin, T target)
+    public Builder<O, T> define(O origin, T target)
     {
         Assertions.argumentNotNull(origin, target);
 
@@ -26,7 +28,7 @@ public final class BiMapAlphabetTranslatorBuilder<O, T> implements AlphabetTrans
     }
 
     @Override
-    public AlphabetTranslator.Builder<O, T> defineEpsilon(O origin, T target)
+    public Builder<O, T> defineEpsilon(O origin, T target)
     {
         Assertions.argumentNotNull(origin, target);
 

@@ -5,7 +5,9 @@ import core.util.Assertions;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
-public class SetAlphabetBuilder<S> implements Alphabet.Builder<S>
+import static api.automata.Alphabet.Builder;
+
+public class SetAlphabetBuilder<S> implements Builder<S>
 {
     private final MutableSet<S> symbolSet;
     private S epsilonSymbol;
@@ -16,7 +18,7 @@ public class SetAlphabetBuilder<S> implements Alphabet.Builder<S>
     }
 
     @Override
-    public Alphabet.Builder<S> add(S symbol)
+    public Builder<S> add(S symbol)
     {
         Assertions.argumentNotNull(symbol);
 
@@ -26,7 +28,7 @@ public class SetAlphabetBuilder<S> implements Alphabet.Builder<S>
     }
 
     @Override
-    public Alphabet.Builder<S> defineEpsilon(S symbol)
+    public Builder<S> defineEpsilon(S symbol)
     {
         Assertions.argumentNotNull(symbol);
 

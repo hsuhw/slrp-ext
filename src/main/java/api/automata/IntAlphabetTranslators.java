@@ -9,7 +9,7 @@ public final class IntAlphabetTranslators
     {
     }
 
-    public static <S> IntAlphabetTranslator<S> builder(MutableList<S> definition, S epsilonSymbol)
+    public static <S> IntAlphabetTranslator<S> create(MutableList<S> definition, S epsilonSymbol)
     {
         return new MapListIntAlphabetTranslator<>(definition, epsilonSymbol);
     }
