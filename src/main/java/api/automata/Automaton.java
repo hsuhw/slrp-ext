@@ -29,13 +29,13 @@ public interface Automaton<S>
 
     interface Builder<S>
     {
-        void addState(State state);
+        Builder<S> addState(State state);
 
-        void addStartState(State state);
+        Builder<S> addStartState(State state);
 
-        void addAcceptState(State state);
+        Builder<S> addAcceptState(State state);
 
-        void addTransition(State dept, State dest, S symbol);
+        Builder<S> addTransition(State dept, State dest, S symbol);
 
         Automaton<S> build();
     }
