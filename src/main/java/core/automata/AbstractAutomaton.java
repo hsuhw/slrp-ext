@@ -5,6 +5,8 @@ import api.automata.DeltaFunction;
 import api.automata.State;
 import org.eclipse.collections.api.set.ImmutableSet;
 
+import java.util.Set;
+
 import static api.util.Values.DISPLAY_INDENT;
 import static api.util.Values.DISPLAY_NEWLINE;
 import static core.util.Parameters.IMPLICIT_PRECONDITION_RESPECTED;
@@ -19,8 +21,8 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
     protected static <S> boolean validateDefinition(ImmutableSet<State> states, ImmutableSet<State> startStates,
                                                     ImmutableSet<State> acceptStates, DeltaFunction<S> deltaFunction)
     {
-        final boolean validStartStates = states.containsAll(startStates.castToSet());
-        final boolean validAcceptStates = startStates.containsAll(acceptStates.castToSet());
+        final boolean validStartStates = states.containsAll((Set) startStates);
+        final boolean validAcceptStates = startStates.containsAll((Set) acceptStates);
         final boolean validDeltaFunction;
         final boolean validDeltaFunctionStates = states.containsAll(deltaFunction.getAllReferredStates().toSet());
         if (!IMPLICIT_PRECONDITION_RESPECTED) {
