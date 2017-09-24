@@ -113,7 +113,6 @@ public final class MapMapSetDelta<S> implements Nondeterministic, DeltaFunction<
     public String toString()
     {
         final StringBuilder layout = new StringBuilder();
-
         forwardDelta.forEachKeyValue((dept, stateTrans) -> {
             stateTrans.forEachKeyValue((symbol, dests) -> {
                 dests.forEach(dest -> {

@@ -106,7 +106,6 @@ public final class MapMapDelta<S> implements Deterministic, DeltaFunction<S>
     public String toString()
     {
         final StringBuilder layout = new StringBuilder();
-
         forwardDelta.forEachKeyValue((dept, stateTrans) -> {
             stateTrans.forEachKeyValue((symbol, dest) -> {
                 layout.append(DISPLAY_INDENT);

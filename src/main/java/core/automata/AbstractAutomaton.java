@@ -39,6 +39,7 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
         if (!validateDefinition(states, startStates, acceptStates, deltaFunction)) {
             throw new IllegalArgumentException("given an invalid definition");
         }
+
         this.states = states;
         this.startStates = startStates;
         this.acceptStates = acceptStates;
