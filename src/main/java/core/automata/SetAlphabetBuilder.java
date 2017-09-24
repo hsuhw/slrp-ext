@@ -3,6 +3,7 @@ package core.automata;
 import api.automata.Alphabet;
 import core.util.Assertions;
 import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
 import static api.automata.Alphabet.Builder;
@@ -36,6 +37,12 @@ public class SetAlphabetBuilder<S> implements Builder<S>
         epsilonSymbol = symbol;
 
         return this;
+    }
+
+    @Override
+    public SetIterable<S> getAddedSymbols()
+    {
+        return symbolSet.toImmutable(); // defense required
     }
 
     @Override
