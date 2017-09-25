@@ -1,151 +1,120 @@
 package core.automata.fsa;
 
-import api.automata.Alphabet;
-import api.automata.State;
-import api.automata.Symbol;
+import api.automata.*;
 import api.automata.fsa.FSA;
-import api.automata.fsa.FSABuilder;
-import core.automata.Alphabets;
-import core.automata.MapMapDelta;
-import core.automata.MapMapSetDelta;
-import org.eclipse.collections.api.list.ImmutableList;
-import org.eclipse.collections.api.list.MutableList;
-import org.eclipse.collections.api.list.primitive.ImmutableBooleanList;
-import org.eclipse.collections.api.map.MutableMap;
+import core.util.Assertions;
 import org.eclipse.collections.api.set.MutableSet;
-import org.eclipse.collections.impl.factory.primitive.BooleanLists;
-import org.eclipse.collections.impl.list.mutable.FastList;
-import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
-import org.eclipse.collections.impl.tuple.Tuples;
 
-public class BasicFSABuilder<S extends Symbol> implements FSABuilder<S>
+import java.util.Set;
+
+import static api.automata.fsa.FSA.Builder;
+
+public class BasicFSABuilder<S> implements Builder<S>
 {
-    private static final int NONDETERMINISTIC_TRANSITION_CAPACITY = 3;
-
-    private final int symbolNumberEstimate;
-    private final S epsilonSymbol;
-    private final MutableSet<S> usedSymbols;
-    private final MutableList<State> states;
+    private final Alphabet.Builder<S> alphabetBuilder;
+    private final DeltaFunction.Builder<S> deltaBuilder;
+    private final MutableSet<State> states;
     private final MutableSet<State> startStates;
     private final MutableSet<State> acceptStates;
-    private final MutableMap<State, MutableMap<S, MutableSet<State>>> transitionTable;
 
     public BasicFSABuilder(int symbolNumberEstimate, S epsilonSymbol, int stateNumberEstimate)
     {
-        this.symbolNumberEstimate = symbolNumberEstimate;
-        this.epsilonSymbol = epsilonSymbol;
-        usedSymbols = UnifiedSet.newSet(symbolNumberEstimate);
-        usedSymbols.add(epsilonSymbol);
-        states = FastList.newList(stateNumberEstimate);
+        alphabetBuilder = Alphabets.builder(symbolNumberEstimate);
+        alphabetBuilder.defineEpsilon(epsilonSymbol);
+        deltaBuilder = DeltaFunctions.builder(stateNumberEstimate, epsilonSymbol);
+        states = UnifiedSet.newSet(stateNumberEstimate);
         startStates = UnifiedSet.newSet(stateNumberEstimate);
         acceptStates = UnifiedSet.newSet(stateNumberEstimate);
-        transitionTable = UnifiedMap.newMap(stateNumberEstimate);
     }
 
     @Override
     public Alphabet<S> getCurrentAlphabet()
     {
-        return Alphabets.createOne(usedSymbols, epsilonSymbol);
+        return alphabetBuilder.build();
     }
 
     @Override
-    public void addSymbol(S symbol)
+    public Builder<S> addSymbol(S symbol)
     {
-        usedSymbols.add(symbol);
+        Assertions.argumentNotNull(symbol);
+
+        alphabetBuilder.add(symbol);
+
+        return this;
     }
 
     @Override
-    public void addState(State state)
+    public Builder<S> addState(State state)
     {
-        if (!states.contains(state)) {
-            states.add(state);
-            transitionTable.put(state, UnifiedMap.newMap(symbolNumberEstimate));
-        }
+        Assertions.argumentNotNull(state);
+
+        states.add(state);
+
+        return this;
     }
 
     @Override
-    public void addStartState(State state)
+    public Builder<S> addStartState(State state)
     {
+        Assertions.argumentNotNull(state);
+
         addState(state);
         startStates.add(state);
+
+        return this;
     }
 
     @Override
-    public void addAcceptState(State state)
+    public Builder<S> addAcceptState(State state)
     {
+        Assertions.argumentNotNull(state);
+
         addState(state);
         acceptStates.add(state);
+
+        return this;
     }
 
     @Override
-    public void addTransition(State dept, State dest, S symbol)
+    public Builder<S> addTransition(State dept, State dest, S symbol)
     {
-        addState(dept);
-        addState(dest);
-        addSymbol(symbol);
-        final MutableMap<S, MutableSet<State>> stateTrans = transitionTable.get(dept);
+        addState(dept).addState(dest).addSymbol(symbol);
+        deltaBuilder.addTransition(dept, dest, symbol);
 
-        if (!stateTrans.containsKey(symbol)) {
-            stateTrans.put(symbol, UnifiedSet.newSet(NONDETERMINISTIC_TRANSITION_CAPACITY));
+        return this;
+    }
+
+    private FSA<S> settle(Alphabet<S> alphabet)
+    {
+        final int startStateNumber = startStates.size();
+        if (startStateNumber < 1) {
+            throw new IllegalStateException("no start states has been specified");
         }
-        stateTrans.get(symbol).add(dest);
-    }
 
-    private boolean moreThanOnePossibleTrans(MutableMap<S, MutableSet<State>> stateTrans)
-    {
-        return stateTrans.anySatisfy(that -> that.size() > 1);
-    }
-
-    private boolean isNondeterministicTarget()
-    {
-        return transitionTable.anySatisfy(this::moreThanOnePossibleTrans);
-    }
-
-    private MapMapDelta<S> buildDeterministicDelta()
-    {
-        return new MapMapDelta<>(transitionTable.collect((dept, stateTrans) -> {
-            return Tuples.pair(dept, stateTrans.collect((sym, dest) -> {
-                return Tuples.pair(sym, dest.getOnly());
-            }));
-        }));
-    }
-
-    private FSA<S> settleRecords(Alphabet<S> alphabet)
-    {
-        // settle state records
-        final ImmutableList<State> states = this.states.toImmutable();
-        final boolean[] isStartState = new boolean[states.size()];
-        final boolean[] isAcceptState = new boolean[states.size()];
-        states.forEachWithIndex((s, i) -> {
-            isStartState[i] = startStates.contains(s);
-            isAcceptState[i] = acceptStates.contains(s);
-        });
-        final ImmutableBooleanList startStateTable = BooleanLists.immutable.of(isStartState);
-        final ImmutableBooleanList acceptStateTable = BooleanLists.immutable.of(isAcceptState);
-
-        // settle transition records
-        if (!isNondeterministicTarget()) {
-            final MapMapDelta<S> delta = buildDeterministicDelta();
-            return new MapMapDFSA<>(alphabet, states, startStateTable, acceptStateTable, delta);
+        final DeltaFunction<S> delta = deltaBuilder.build(startStateNumber != 1);
+        if (delta instanceof Deterministic) {
+            return new MapMapDFSA<>(alphabet, states.toImmutable(), startStates.toImmutable(),
+                                    acceptStates.toImmutable(), delta);
         } else {
-            final MapMapSetDelta<S> delta = new MapMapSetDelta<>(transitionTable);
-            return new MapMapSetNFSA<>(alphabet, states, startStateTable, acceptStateTable, delta);
+            return new MapMapSetNFSA<>(alphabet, states.toImmutable(), startStates.toImmutable(),
+                                       acceptStates.toImmutable(), delta);
         }
     }
 
     @Override
     public FSA<S> build()
     {
-        return settleRecords(getCurrentAlphabet());
+        return settle(getCurrentAlphabet());
     }
 
     @Override
     public FSA<S> build(Alphabet<S> alphabet)
     {
-        if (!alphabet.toSet().containsAll(usedSymbols)) {
+        if (!alphabet.getSet().containsAll((Set) alphabetBuilder.getAddedSymbols())) {
             throw new IllegalArgumentException("given alphabet does not contain all the symbols");
         }
-        return settleRecords(alphabet);
+
+        return settle(alphabet);
     }
 }

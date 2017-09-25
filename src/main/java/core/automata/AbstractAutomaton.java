@@ -1,5 +1,6 @@
 package core.automata;
 
+import api.automata.Alphabet;
 import api.automata.Automaton;
 import api.automata.DeltaFunction;
 import api.automata.State;
@@ -13,39 +14,47 @@ import static core.util.Parameters.IMPLICIT_PRECONDITION_RESPECTED;
 
 public abstract class AbstractAutomaton<S> implements Automaton<S>
 {
+    protected final Alphabet<S> alphabet;
     protected final ImmutableSet<State> states;
     protected final ImmutableSet<State> startStates;
     protected final ImmutableSet<State> acceptStates;
     protected final DeltaFunction<S> deltaFunction;
 
-    protected static <S> boolean validateDefinition(ImmutableSet<State> states, ImmutableSet<State> startStates,
-                                                    ImmutableSet<State> acceptStates, DeltaFunction<S> deltaFunction)
+    protected static <S> boolean validateDefinition(Alphabet<S> sigma, ImmutableSet<State> states,
+                                                    ImmutableSet<State> startStates, ImmutableSet<State> acceptStates,
+                                                    DeltaFunction<S> deltaFunction)
     {
         final boolean validStartStates = states.containsAll((Set) startStates);
         final boolean validAcceptStates = startStates.containsAll((Set) acceptStates);
-        final boolean validDeltaFunction;
-        final boolean validDeltaFunctionStates = states.containsAll(deltaFunction.getAllReferredStates().toSet());
-        if (!IMPLICIT_PRECONDITION_RESPECTED) {
-            validDeltaFunction = validDeltaFunctionStates && deltaFunction.size() > 0;
-        } else {
-            validDeltaFunction = validDeltaFunctionStates;
-        }
+        final Set<?> deltaSymbols = (Set) deltaFunction.getAllReferredSymbols();
+        final Set<?> deltaStates = (Set) deltaFunction.getAllReferredStates();
+        final boolean validDeltaFunctionSymbols = sigma.getSet().containsAll(deltaSymbols);
+        final boolean validDeltaFunctionStates = states.containsAll(deltaStates);
+        final boolean validDeltaFunction = validDeltaFunctionSymbols && validDeltaFunctionStates;
         final boolean atLeastOneStartState = startStates.size() > 0;
 
         return validStartStates && validAcceptStates && validDeltaFunction && atLeastOneStartState;
     }
 
-    public AbstractAutomaton(ImmutableSet<State> states, ImmutableSet<State> startStates,
+    public AbstractAutomaton(Alphabet<S> sigma, ImmutableSet<State> states, ImmutableSet<State> startStates,
                              ImmutableSet<State> acceptStates, DeltaFunction<S> deltaFunction)
     {
-        if (!validateDefinition(states, startStates, acceptStates, deltaFunction)) {
+        if (!IMPLICIT_PRECONDITION_RESPECTED // not constructed through a builder
+            && !validateDefinition(sigma, states, startStates, acceptStates, deltaFunction)) {
             throw new IllegalArgumentException("given an invalid definition");
         }
 
+        alphabet = sigma;
         this.states = states;
         this.startStates = startStates;
         this.acceptStates = acceptStates;
         this.deltaFunction = deltaFunction;
+    }
+
+    @Override
+    public Alphabet<S> getAlphabet()
+    {
+        return alphabet;
     }
 
     @Override

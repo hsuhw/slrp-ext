@@ -159,11 +159,17 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
     @Override
     public DeltaFunction<S> build()
     {
+        return build(false);
+    }
+
+    @Override
+    public DeltaFunction<S> build(boolean generalized)
+    {
         if (forwardDelta.isEmpty()) {
             throw new IllegalStateException("an empty delta function will not be built");
         }
 
-        return isNondeterministic() ? new MapMapSetDelta<>(this) : new MapMapDelta<>(this);
+        return generalized || isNondeterministic() ? new MapMapSetDelta<>(this) : new MapMapDelta<>(this);
     }
 
     private ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> immutableDelta(

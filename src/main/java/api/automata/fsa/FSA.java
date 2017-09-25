@@ -1,69 +1,49 @@
 package api.automata.fsa;
 
-import api.automata.*;
-import org.eclipse.collections.api.list.ImmutableList;
-import util.Misc;
+import api.automata.Alphabet;
+import api.automata.Automaton;
+import api.automata.State;
 
-public interface FSA<S extends Symbol> extends Automaton<S>
+public interface FSA<S> extends Automaton<S>
 {
-    default boolean isDeterministic()
-    {
-        return this instanceof Deterministic;
-    }
-
     default boolean isComplete()
     {
         if (!isDeterministic()) {
             throw new UnsupportedOperationException("N/A on nondeterministic FSA");
         }
+
         final int completeSize = getAlphabet().size() - 1; // without epsilon
         for (State s : getStates()) {
-            if (getTransitionFunction().enabledSymbolsOn(s).size() != completeSize) {
+            if (getDeltaFunction().enabledSymbolsOn(s).size() != completeSize) {
                 return false;
             }
         }
+
         return true;
     }
 
-    Alphabet<S> getAlphabet();
-
-    default int getAlphabetSize()
+    interface Builder<S> extends Automaton.Builder<S>
     {
-        return getAlphabet().size();
-    }
+        Alphabet<S> getCurrentAlphabet();
 
-    default State getStartState()
-    {
-        int count = 0;
-        int target = 0;
-        for (int index = 0; index < getStateNumber(); index++) {
-            if (isStartState(index)) {
-                count++;
-                target = index;
-            }
-        }
-        if (count == 0) {
-            throw new UnsupportedOperationException("automaton with no start states");
-        } else if (count > 1) {
-            throw new UnsupportedOperationException("N/A on nondeterministic FSA");
-        }
-        return getState(target);
-    }
+        @Override
+        Builder<S> addSymbol(S symbol);
 
-    default boolean accepts(ImmutableList<S> word)
-    {
-        if (!isDeterministic()) {
-            throw new UnsupportedOperationException(Misc.NIY);
-        }
-        State currState = getStartState(), nextState;
-        final TransitionFunction<S> delta = getTransitionFunction();
-        for (int readHead = 0; readHead < word.size(); readHead++) {
-            nextState = delta.successorOf(currState, word.get(readHead));
-            if (nextState == null) {
-                return false;
-            }
-            currState = nextState;
-        }
-        return isAcceptState(currState);
+        @Override
+        Builder<S> addState(State state);
+
+        @Override
+        Builder<S> addStartState(State state);
+
+        @Override
+        Builder<S> addAcceptState(State state);
+
+        @Override
+        Builder<S> addTransition(State dept, State dest, S symbol);
+
+        @Override
+        FSA<S> build();
+
+        FSA<S> build(Alphabet<S> alphabet);
     }
 }

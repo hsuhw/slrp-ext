@@ -37,5 +37,7 @@ public interface DeltaFunction<S>
         Builder<S> removeTransition(State dept, State dest, S symbol);
 
         DeltaFunction<S> build();
+
+        DeltaFunction<S> build(boolean generalized);
     }
 }
