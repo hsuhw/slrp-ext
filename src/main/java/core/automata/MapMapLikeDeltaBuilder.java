@@ -151,9 +151,12 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
 
     private boolean isNondeterministic()
     {
-        return forwardDelta.anySatisfy(stateTrans -> {
-            return stateTrans.containsKey(epsilonSymbol) || stateTrans.anySatisfy(that -> that.size() > 1);
-        });
+        return forwardDelta.detect((state, stateTrans) -> {
+            final MutableSet<State> epsilonDests = stateTrans.get(epsilonSymbol);
+            final boolean nonLoopEpsilonTrans = epsilonDests != null //
+                && (epsilonDests.size() > 1 || epsilonDests.getOnly() != state);
+            return nonLoopEpsilonTrans || stateTrans.anySatisfy(that -> that.size() > 1);
+        }) != null;
     }
 
     @Override
