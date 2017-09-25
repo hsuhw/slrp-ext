@@ -85,11 +85,12 @@ public class BasicFSABuilder<S> implements Builder<S>
         return this;
     }
 
-    private FSA<S> settle(Alphabet<S> alphabet)
+    public static <S> FSA<S> make(Alphabet<S> alphabet, MutableSet<State> states, MutableSet<State> startStates,
+                                  MutableSet<State> acceptStates, DeltaFunction.Builder<S> deltaBuilder)
     {
         final int startStateNumber = startStates.size();
         if (startStateNumber < 1) {
-            throw new IllegalStateException("no start states has been specified");
+            throw new IllegalStateException("no start states specified");
         }
 
         final DeltaFunction<S> delta = deltaBuilder.build(startStateNumber != 1);
@@ -100,6 +101,11 @@ public class BasicFSABuilder<S> implements Builder<S>
             return new MapMapSetNFSA<>(alphabet, states.toImmutable(), startStates.toImmutable(),
                                        acceptStates.toImmutable(), delta);
         }
+    }
+
+    private FSA<S> settle(Alphabet<S> alphabet)
+    {
+        return make(alphabet, states, startStates, acceptStates, deltaBuilder);
     }
 
     @Override
