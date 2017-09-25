@@ -62,9 +62,14 @@ public interface Automaton<S>
         }
 
         State currState = getStartState(), nextState;
+        S symbol;
         final DeltaFunction<S> delta = getDeltaFunction();
         for (int readHead = 0; readHead < word.size(); readHead++) {
-            nextState = delta.successorOf(currState, word.get(readHead));
+            symbol = word.get(readHead);
+            if (symbol == getAlphabet().getEpsilonSymbol()) {
+                continue;
+            }
+            nextState = delta.successorOf(currState, symbol);
             if (nextState == null) {
                 return false;
             }
