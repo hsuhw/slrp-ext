@@ -17,9 +17,9 @@ public final class Alphabets
         return new SetAlphabetBuilder<>(symbolNumberEstimate);
     }
 
-    public static <S> Builder<S> builderOn(Alphabet<S> other)
+    public static <S> Builder<S> builderBasedOn(Alphabet<S> alphabet)
     {
-        return new SetAlphabetBuilder<>((SetAlphabet<S>) other);
+        return new SetAlphabetBuilder<>((SetAlphabet<S>) alphabet);
     }
 
     public static <S> Alphabet<S> create(MutableSetIterable<S> definition, S epsilonSymbol)

@@ -13,12 +13,10 @@ public final class DeltaFunctions
         return new MapMapLikeDeltaBuilder<>(stateNumberEstimate, epsilonSymbol);
     }
 
-    public static <S> Builder<S> builderOn(DeltaFunction<S> other)
+    public static <S> Builder<S> builderBasedOn(DeltaFunction<S> delta)
     {
-        if (other instanceof MapMapDelta<?>) {
-            return new MapMapLikeDeltaBuilder<>((MapMapDelta<S>) other);
-        } else {
-            return new MapMapLikeDeltaBuilder<>((MapMapSetDelta<S>) other);
-        }
+        return delta instanceof MapMapDelta<?>
+               ? new MapMapLikeDeltaBuilder<>((MapMapDelta<S>) delta)
+               : new MapMapLikeDeltaBuilder<>((MapMapSetDelta<S>) delta);
     }
 }
