@@ -2,6 +2,7 @@ package api.automata;
 
 import api.util.Values;
 import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public interface Automaton<S>
         return getAlphabet().size();
     }
 
-    SetIterable<State> getStates();
+    ImmutableSet<State> getStates();
 
     default int getStateNumber()
     {
@@ -81,13 +82,15 @@ public interface Automaton<S>
 
     interface Builder<S>
     {
+        Builder<S> addSymbol(S symbol);
+
         Builder<S> addState(State state);
+
+        Builder<S> removeState(State state);
 
         Builder<S> addStartState(State state);
 
         Builder<S> addAcceptState(State state);
-
-        Builder<S> addSymbol(S symbol);
 
         Builder<S> addTransition(State dept, State dest, S symbol);
 

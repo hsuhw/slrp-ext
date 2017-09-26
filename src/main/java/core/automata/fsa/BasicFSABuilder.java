@@ -3,20 +3,24 @@ package core.automata.fsa;
 import api.automata.*;
 import api.automata.fsa.FSA;
 import core.util.Assertions;
+import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
 import java.util.Set;
 
 import static api.automata.fsa.FSA.Builder;
+import static core.util.Parameters.estimateExtendedSize;
 
-public class BasicFSABuilder<S> implements Builder<S>
+public final class BasicFSABuilder<S> implements Builder<S>
 {
     private final Alphabet.Builder<S> alphabetBuilder;
     private final DeltaFunction.Builder<S> deltaBuilder;
     private final MutableSet<State> states;
     private final MutableSet<State> startStates;
     private final MutableSet<State> acceptStates;
+    private Alphabet<S> exportingAlphabet;
+    private DeltaFunction<S> exportingDelta;
 
     public BasicFSABuilder(int symbolNumberEstimate, S epsilonSymbol, int stateNumberEstimate)
     {
@@ -26,6 +30,34 @@ public class BasicFSABuilder<S> implements Builder<S>
         states = UnifiedSet.newSet(stateNumberEstimate);
         startStates = UnifiedSet.newSet(stateNumberEstimate);
         acceptStates = UnifiedSet.newSet(stateNumberEstimate);
+    }
+
+    public BasicFSABuilder(MapMapDFSA<S> fsa)
+    {
+        alphabetBuilder = Alphabets.builderBasedOn(fsa.getAlphabet());
+        deltaBuilder = DeltaFunctions.builderBasedOn(fsa.getDeltaFunction());
+
+        final int estimateSize = estimateExtendedSize(fsa.getStateNumber());
+        states = UnifiedSet.newSet(estimateSize);
+        startStates = UnifiedSet.newSet(estimateSize); // heuristic upper bound
+        acceptStates = UnifiedSet.newSet(estimateSize);  // heuristic upper bound
+        states.addAllIterable(fsa.getStates());
+        startStates.addAllIterable(fsa.getStartStates());
+        acceptStates.addAllIterable(fsa.getAcceptStates());
+    }
+
+    public BasicFSABuilder(MapMapSetNFSA<S> fsa)
+    {
+        alphabetBuilder = Alphabets.builderBasedOn(fsa.getAlphabet());
+        deltaBuilder = DeltaFunctions.builderBasedOn(fsa.getDeltaFunction());
+
+        final int estimateSize = estimateExtendedSize(fsa.getStateNumber());
+        states = UnifiedSet.newSet(estimateSize);
+        startStates = UnifiedSet.newSet(estimateSize); // heuristic upper bound
+        acceptStates = UnifiedSet.newSet(estimateSize);  // heuristic upper bound
+        states.addAllIterable(fsa.getStates());
+        startStates.addAllIterable(fsa.getStartStates());
+        acceptStates.addAllIterable(fsa.getAcceptStates());
     }
 
     @Override
@@ -50,6 +82,19 @@ public class BasicFSABuilder<S> implements Builder<S>
         Assertions.argumentNotNull(state);
 
         states.add(state);
+
+        return this;
+    }
+
+    @Override
+    public Builder<S> removeState(State state)
+    {
+        Assertions.argumentNotNull(state);
+
+        states.remove(state);
+        startStates.remove(state);
+        acceptStates.remove(state);
+        deltaBuilder.removeState(state);
 
         return this;
     }
@@ -85,27 +130,16 @@ public class BasicFSABuilder<S> implements Builder<S>
         return this;
     }
 
-    public static <S> FSA<S> make(Alphabet<S> alphabet, MutableSet<State> states, MutableSet<State> startStates,
-                                  MutableSet<State> acceptStates, DeltaFunction.Builder<S> deltaBuilder)
+    private FSA<S> settle(Alphabet<S> alphabet)
     {
         final int startStateNumber = startStates.size();
         if (startStateNumber < 1) {
-            throw new IllegalStateException("no start states specified");
+            throw new IllegalStateException("no start state have been specified");
         }
 
-        final DeltaFunction<S> delta = deltaBuilder.build(startStateNumber != 1);
-        if (delta instanceof Deterministic) {
-            return new MapMapDFSA<>(alphabet, states.toImmutable(), startStates.toImmutable(),
-                                    acceptStates.toImmutable(), delta);
-        } else {
-            return new MapMapSetNFSA<>(alphabet, states.toImmutable(), startStates.toImmutable(),
-                                       acceptStates.toImmutable(), delta);
-        }
-    }
-
-    private FSA<S> settle(Alphabet<S> alphabet)
-    {
-        return make(alphabet, states, startStates, acceptStates, deltaBuilder);
+        exportingAlphabet = alphabet;
+        exportingDelta = deltaBuilder.build(startStateNumber != 1);
+        return exportingDelta instanceof Deterministic ? new MapMapDFSA<>(this) : new MapMapSetNFSA<>(this);
     }
 
     @Override
@@ -122,5 +156,30 @@ public class BasicFSABuilder<S> implements Builder<S>
         }
 
         return settle(alphabet);
+    }
+
+    Alphabet<S> getExportingAlphabet()
+    {
+        return exportingAlphabet;
+    }
+
+    ImmutableSet<State> getStates()
+    {
+        return states.toImmutable();
+    }
+
+    ImmutableSet<State> getStartStates()
+    {
+        return startStates.toImmutable();
+    }
+
+    ImmutableSet<State> getAcceptStates()
+    {
+        return acceptStates.toImmutable();
+    }
+
+    DeltaFunction<S> getExportingDelta()
+    {
+        return exportingDelta;
     }
 }

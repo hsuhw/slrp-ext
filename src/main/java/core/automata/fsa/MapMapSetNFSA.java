@@ -9,12 +9,18 @@ import core.automata.AbstractAutomaton;
 import core.automata.MapMapSetDelta;
 import org.eclipse.collections.api.set.ImmutableSet;
 
-public class MapMapSetNFSA<S> extends AbstractAutomaton<S> implements Nondeterministic, FSA<S>
+public final class MapMapSetNFSA<S> extends AbstractAutomaton<S> implements Nondeterministic, FSA<S>
 {
-    public MapMapSetNFSA(Alphabet<S> sigma, ImmutableSet<State> states, ImmutableSet<State> startStates,
-                         ImmutableSet<State> acceptStates, DeltaFunction<S> delta)
+    private MapMapSetNFSA(Alphabet<S> sigma, ImmutableSet<State> states, ImmutableSet<State> startStates,
+                          ImmutableSet<State> acceptStates, DeltaFunction<S> delta)
     {
         super(sigma, states, startStates, acceptStates, delta);
+    }
+
+    public MapMapSetNFSA(BasicFSABuilder<S> record)
+    {
+        this(record.getExportingAlphabet(), record.getStates(), record.getStartStates(), record.getAcceptStates(),
+             record.getExportingDelta());
     }
 
     @Override

@@ -1,9 +1,11 @@
 package api.automata.fsa;
 
-import api.automata.*;
+import api.automata.Alphabet;
+import api.automata.State;
+import api.automata.States;
 import core.automata.fsa.BasicFSABuilder;
-import org.eclipse.collections.api.set.MutableSet;
-import org.eclipse.collections.impl.factory.Sets;
+import core.automata.fsa.MapMapDFSA;
+import core.automata.fsa.MapMapSetNFSA;
 
 public final class FSAs
 {
@@ -16,29 +18,30 @@ public final class FSAs
         return new BasicFSABuilder<>(symbolNumberEstimate, epsilonSymbol, stateNumberEstimate);
     }
 
-    public static <S> FSA<S> create(Alphabet<S> alphabet, MutableSet<State> states, MutableSet<State> startStates,
-                                    MutableSet<State> acceptStates, DeltaFunction.Builder<S> deltaBuilder)
+    public static <S> BasicFSABuilder<S> builderBasedOn(FSA<S> fsa)
     {
-        return BasicFSABuilder.make(alphabet, states, startStates, acceptStates, deltaBuilder);
+        return fsa instanceof MapMapDFSA<?>
+               ? new BasicFSABuilder<>((MapMapDFSA<S>) fsa)
+               : new BasicFSABuilder<>((MapMapSetNFSA<S>) fsa);
     }
 
     public static <S> FSA<S> withEmptyLanguage(Alphabet<S> alphabet)
     {
         final State state = States.generate();
-        final DeltaFunction.Builder<S> deltaBuilder = DeltaFunctions.builder(1, alphabet.getEpsilonSymbol());
-        alphabet.getSet().forEach(symbol -> deltaBuilder.addTransition(state, state, symbol));
-        final MutableSet<State> stateSingleton = Sets.fixedSize.of(state);
+        final BasicFSABuilder<S> builder = builder(alphabet.size(), alphabet.getEpsilonSymbol(), 1);
+        builder.addStartState(state);
+        alphabet.getSet().forEach(symbol -> builder.addTransition(state, state, symbol));
 
-        return create(alphabet, stateSingleton, stateSingleton, Sets.fixedSize.empty(), deltaBuilder);
+        return builder.build();
     }
 
     public static <S> FSA<S> withSigmaStarLanguage(Alphabet<S> alphabet)
     {
         final State state = States.generate();
-        final DeltaFunction.Builder<S> deltaBuilder = DeltaFunctions.builder(1, alphabet.getEpsilonSymbol());
-        alphabet.getSet().forEach(symbol -> deltaBuilder.addTransition(state, state, symbol));
-        final MutableSet<State> stateSingleton = Sets.fixedSize.of(state);
+        final BasicFSABuilder<S> builder = builder(alphabet.size(), alphabet.getEpsilonSymbol(), 1);
+        builder.addStartState(state).addAcceptState(state);
+        alphabet.getSet().forEach(symbol -> builder.addTransition(state, state, symbol));
 
-        return create(alphabet, stateSingleton, stateSingleton, stateSingleton, deltaBuilder);
+        return builder.build();
     }
 }

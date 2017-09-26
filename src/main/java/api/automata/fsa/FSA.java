@@ -33,6 +33,9 @@ public interface FSA<S> extends Automaton<S>
         Builder<S> addState(State state);
 
         @Override
+        Builder<S> removeState(State state);
+
+        @Override
         Builder<S> addStartState(State state);
 
         @Override
