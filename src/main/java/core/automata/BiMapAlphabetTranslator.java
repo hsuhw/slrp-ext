@@ -18,7 +18,10 @@ public class BiMapAlphabetTranslator<O, T> implements AlphabetTranslator<O, T>
     {
         Assertions.argumentNotNull(originEpsilonSymbol);
         if (!definition.containsKey(originEpsilonSymbol)) {
-            throw new IllegalStateException("epsilon symbol not found in the definition");
+            throw new IllegalArgumentException("epsilon symbol not found in the definition");
+        }
+        if (definition.containsKey(null) || definition.containsValue(null)) {
+            throw new IllegalArgumentException("a null reference found in the definition");
         }
 
         final ImmutableBiMap<O, T> symbolTable = (ImmutableBiMap<O, T>) definition.toImmutable();

@@ -1,12 +1,12 @@
 package core.automata;
 
 import api.automata.Alphabet;
-import core.util.Assertions;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
 import static api.automata.Alphabet.Builder;
+import static core.util.Parameters.estimateExtendedSize;
 
 public class SetAlphabetBuilder<S> implements Builder<S>
 {
@@ -18,11 +18,15 @@ public class SetAlphabetBuilder<S> implements Builder<S>
         symbolSet = UnifiedSet.newSet(symbolNumberEstimate);
     }
 
+    public SetAlphabetBuilder(SetAlphabet<S> alphabet)
+    {
+        symbolSet = UnifiedSet.newSet(estimateExtendedSize(alphabet.size()));
+        symbolSet.addAllIterable(alphabet.getSet());
+    }
+
     @Override
     public Builder<S> add(S symbol)
     {
-        Assertions.argumentNotNull(symbol);
-
         symbolSet.add(symbol);
 
         return this;
@@ -31,8 +35,6 @@ public class SetAlphabetBuilder<S> implements Builder<S>
     @Override
     public Builder<S> defineEpsilon(S symbol)
     {
-        Assertions.argumentNotNull(symbol);
-
         symbolSet.add(symbol);
         epsilonSymbol = symbol;
 

@@ -29,11 +29,6 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
         this.epsilonSymbol = epsilonSymbol;
     }
 
-    private static int estimateStateNumber(int originalSize)
-    {
-        return (int) Math.round(originalSize * ADDITIONAL_STATE_CAPACITY_MULTIPLIER);
-    }
-
     private static <S> MutableMap<S, MutableSet<State>> newStateTrans()
     {
         return UnifiedMap.newMap(CURRENT_BIGGEST_ALPHABET_SIZE);
@@ -52,7 +47,7 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
             final MutableMap<S, MutableSet<State>> stateTrans = newStateTrans();
             transes.forEachKeyValue((sym, dests) -> {
                 final MutableSet<State> destSet = newStateSet();
-                destSet.addAll(dests.castToSet());
+                destSet.addAllIterable(dests);
                 stateTrans.put(sym, destSet);
             });
             result.put(dept, stateTrans);
@@ -63,9 +58,9 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
 
     public MapMapLikeDeltaBuilder(MapMapSetDelta<S> delta)
     {
-        final int estimate = estimateStateNumber(delta.getAllReferredStates().size());
-        forwardDelta = mutableDelta(delta.getForwardDelta(), estimate);
-        backwardDelta = mutableDelta(delta.getBackwardDelta(), estimate);
+        final int estimateSize = estimateExtendedSize(delta.getAllReferredStates().size());
+        forwardDelta = mutableDelta(delta.getForwardDelta(), estimateSize);
+        backwardDelta = mutableDelta(delta.getBackwardDelta(), estimateSize);
         epsilonSymbol = delta.getEpsilonSymbol();
     }
 
@@ -88,9 +83,9 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
 
     public MapMapLikeDeltaBuilder(MapMapDelta<S> delta)
     {
-        final int estimate = estimateStateNumber(delta.getAllReferredStates().size());
-        forwardDelta = mutableHoistedDelta(delta.getForwardDelta(), estimate);
-        backwardDelta = mutableDelta(delta.getBackwardDelta(), estimate);
+        final int estimateSize = estimateExtendedSize(delta.getAllReferredStates().size());
+        forwardDelta = mutableHoistedDelta(delta.getForwardDelta(), estimateSize);
+        backwardDelta = mutableDelta(delta.getBackwardDelta(), estimateSize);
         epsilonSymbol = delta.getEpsilonSymbol();
     }
 
@@ -169,7 +164,7 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
     public DeltaFunction<S> build(boolean generalized)
     {
         if (forwardDelta.isEmpty()) {
-            throw new IllegalStateException("an empty delta function will not be built");
+            throw new IllegalStateException("nothing has been specified");
         }
 
         return generalized || isNondeterministic() ? new MapMapSetDelta<>(this) : new MapMapDelta<>(this);

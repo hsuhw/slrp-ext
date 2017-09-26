@@ -23,6 +23,9 @@ public class MapListIntAlphabetTranslator<S> implements IntAlphabetTranslator<S>
         if (definition.get(INT_EPSILON) != epsilonSymbol) {
             throw new IllegalArgumentException("epsilon symbol should be mapped to zero");
         }
+        if (definition.contains(null)) {
+            throw new IllegalArgumentException("a null reference found in the definition");
+        }
 
         decoder = definition.toImmutable();
         final ObjectIntHashMap<S> definitionInversed = new ObjectIntHashMap<>(definition.size());

@@ -1,5 +1,6 @@
 package api.automata;
 
+import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.ListIterable;
 
@@ -28,11 +29,15 @@ public interface AlphabetTranslator<O, T>
 
     default ListIterable<T> translate(ImmutableList<O> word)
     {
+        word.forEach(Assertions::argumentNotNull);
+
         return word.collect(this::targetSymbolOf);
     }
 
     default ListIterable<O> translateBack(ImmutableList<T> word)
     {
+        word.forEach(Assertions::argumentNotNull);
+
         return word.collect(this::originSymbolOf);
     }
 

@@ -1,5 +1,6 @@
 package api.automata;
 
+import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
@@ -39,6 +40,8 @@ public interface IntAlphabetTranslator<S>
 
     default ImmutableIntList translate(ImmutableList<S> word)
     {
+        word.forEach(Assertions::argumentNotNull);
+
         return word.collectInt(this::intSymbolOf);
     }
 
