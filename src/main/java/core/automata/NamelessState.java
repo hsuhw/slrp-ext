@@ -1,7 +1,8 @@
 package core.automata;
 
 import api.automata.State;
-import api.util.Values;
+
+import static api.util.Values.randomAlphanumeric;
 
 public class NamelessState implements State
 {
@@ -12,7 +13,7 @@ public class NamelessState implements State
 
     public NamelessState()
     {
-        name = NAME_PREFIX + Values.randomAlphanumeric(GENERATED_NAME_LENGTH, false);
+        name = NAME_PREFIX + randomAlphanumeric(GENERATED_NAME_LENGTH, false);
     }
 
     @Override
