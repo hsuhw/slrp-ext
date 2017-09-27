@@ -1,13 +1,12 @@
 package core.automata.fsa;
 
 import api.automata.IntAlphabetTranslator;
-import api.automata.StringSymbol;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAManipulator;
+import api.automata.fsa.FSAManipulators;
 import api.synth.SatSolver;
 import com.mscharhag.oleaster.runner.OleasterRunner;
-import core.automata.AlphabetTranslators;
-import core.automata.StringSymbols;
+import api.automata.AlphabetTranslators;
 import core.synth.ReferenceFSAEncoding;
 import core.synth.Sat4jSolverAdapter;
 import org.eclipse.collections.api.list.ImmutableList;
