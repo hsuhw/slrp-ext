@@ -8,6 +8,7 @@ import org.eclipse.collections.impl.factory.primitive.IntSets;
 
 import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
+import static core.util.Parameters.SAT_SOLVER_MAX_CLAUSE_NUMBER;
 
 public abstract class AbstractSatSolverTest
 {
@@ -58,7 +59,7 @@ public abstract class AbstractSatSolverTest
             });
 
             it("should throw an exception when the solver instance runs out of free variables", () -> {
-                expect(() -> solver.newFreeVariables(SatSolver.MAX_CLAUSE_NUMBER + 1))
+                expect(() -> solver.newFreeVariables(SAT_SOLVER_MAX_CLAUSE_NUMBER + 1))
                     .toThrow(IllegalArgumentException.class);
             });
 

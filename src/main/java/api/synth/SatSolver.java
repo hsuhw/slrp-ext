@@ -438,7 +438,7 @@ public interface SatSolver
      * @return an {@link IntSet} containing the true variable IDs in
      * positive {@code int} and the false variable IDs in negative {@code int}
      */
-    IntSet getModel();
+    ImmutableIntSet getModel();
 
     /**
      * Returns the variables in the model that have been assigned true of the

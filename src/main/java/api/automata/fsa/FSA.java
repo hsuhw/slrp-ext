@@ -15,18 +15,17 @@ public interface FSA<S> extends Automaton<S>
             throw new UnsupportedOperationException("only available on deterministic instances");
         }
 
-        final Alphabet<S> alphabet = getAlphabet();
         final DeltaFunction<S> delta = getDeltaFunction();
-        final ImmutableSet<S> completeAlphabet = alphabet.getNoEpsilonSet();
+        final ImmutableSet<S> completeAlphabet = getAlphabet().getNoEpsilonSet();
 
         return getStates().select(state -> {
-            return delta.enabledSymbolsOn(state).containsAllIterable(completeAlphabet);
+            return !delta.enabledSymbolsOn(state).containsAllIterable(completeAlphabet);
         });
     }
 
     default boolean isComplete()
     {
-        return getIncompleteStates().size() > 0;
+        return getIncompleteStates().size() == 0;
     }
 
     interface Builder<S> extends Automaton.Builder<S>
