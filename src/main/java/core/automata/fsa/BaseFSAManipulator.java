@@ -9,7 +9,7 @@ import java.util.function.BiFunction;
 
 import static api.util.Values.NO_MATCHED_IMPLEMENTATION_FOUND;
 
-public class BaseFSAManipulator implements FSAManipulator
+public final class BaseFSAManipulator implements FSAManipulator
 {
     @Override
     public <S> FSA<S> trimUnreachableStates(Automaton<S> target)
