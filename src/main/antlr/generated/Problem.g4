@@ -7,10 +7,10 @@ package generated;
 }
 
 problem
-    : initStatesRepr tgtStatesRepr schedulerRepr processRepr verifierOptions
+    : initialStatesRepr finalStatesRepr schedulerRepr processRepr verifierOptions
     ;
 
-initStatesRepr
+initialStatesRepr
     : 'I0' automaton closedUnderTransFlag?
     ;
 
@@ -18,7 +18,7 @@ closedUnderTransFlag
     : 'closedUnderTransitions' ';'
     ;
 
-tgtStatesRepr
+finalStatesRepr
     : 'F' automaton
     ;
 
@@ -35,17 +35,17 @@ verifierOptions
     ;
 
 verifierOption
-    : 'initAutomatonStateGuessing' ':' integerRange
-    | 'automatonStateGuessing' ':' integerRange
-    | 'transducerStateGuessing' ':' integerRange
-    | 'explicitChecksUntilLength' ':' INTEGER
-    | 'symmetries' ':' symmetryOption (',' symmetryOption)*
-    | 'closedUnderTransitions'
-    | 'useRankingFunctions'
-    | 'monolithicWitness'
-    | 'noPrecomputedInvariant'
-    | 'logLevel' ':' INTEGER
-    | 'parallel' ':' INTEGER
+    : 'initAutomatonStateGuessing' ':' integerRange # unusedOption
+    | 'automatonStateGuessing' ':' integerRange # invariantSearchSpace
+    | 'transducerStateGuessing' ':' integerRange # relationSearchSpace
+    | 'explicitChecksUntilLength' ':' INTEGER # unusedOption
+    | 'symmetries' ':' symmetryOption (',' symmetryOption)* # unusedOption
+    | 'closedUnderTransitions' # unusedOption
+    | 'useRankingFunctions' # unusedOption
+    | 'monolithicWitness' # unusedOption
+    | 'noPrecomputedInvariant' # unusedOption
+    | 'logLevel' ':' INTEGER # unusedOption
+    | 'parallel' ':' INTEGER # unusedOption
     ;
 
 integerRange

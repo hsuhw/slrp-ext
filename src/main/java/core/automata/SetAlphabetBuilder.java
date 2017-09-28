@@ -13,9 +13,11 @@ public class SetAlphabetBuilder<S> implements Alphabet.Builder<S>
     private final MutableSet<S> symbolSet;
     private S epsilonSymbol;
 
-    public SetAlphabetBuilder(int symbolNumberEstimate)
+    public SetAlphabetBuilder(int symbolNumberEstimate, S epsilonSymbol)
     {
         symbolSet = UnifiedSet.newSet(symbolNumberEstimate);
+        this.epsilonSymbol = epsilonSymbol;
+        symbolSet.add(epsilonSymbol);
     }
 
     public SetAlphabetBuilder(SetAlphabet<S> alphabet)
@@ -29,15 +31,6 @@ public class SetAlphabetBuilder<S> implements Alphabet.Builder<S>
     public Builder<S> add(S symbol)
     {
         symbolSet.add(symbol);
-
-        return this;
-    }
-
-    @Override
-    public Builder<S> defineEpsilon(S symbol)
-    {
-        symbolSet.add(symbol);
-        epsilonSymbol = symbol;
 
         return this;
     }

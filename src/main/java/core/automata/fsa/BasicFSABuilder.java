@@ -25,8 +25,7 @@ public final class BasicFSABuilder<S> implements FSA.Builder<S>
 
     public BasicFSABuilder(int symbolNumberEstimate, S epsilonSymbol, int stateNumberEstimate)
     {
-        alphabetBuilder = Alphabets.builder(symbolNumberEstimate);
-        alphabetBuilder.defineEpsilon(epsilonSymbol);
+        alphabetBuilder = Alphabets.builder(symbolNumberEstimate, epsilonSymbol);
         deltaBuilder = DeltaFunctions.builder(stateNumberEstimate, symbolNumberEstimate, epsilonSymbol);
         this.stateNumberEstimate = stateNumberEstimate;
         states = UnifiedSet.newSet(stateNumberEstimate);

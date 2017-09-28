@@ -17,8 +17,6 @@ public interface Alphabet<S>
     {
         Builder<S> add(S symbol);
 
-        Builder<S> defineEpsilon(S symbol);
-
         SetIterable<S> getAddedSymbols();
 
         Alphabet<S> build();

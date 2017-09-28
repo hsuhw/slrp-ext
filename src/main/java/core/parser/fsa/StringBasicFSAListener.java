@@ -7,8 +7,8 @@ import api.automata.States;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import core.util.Assertions;
-import generated.AutomatonListBaseListener;
-import generated.AutomatonListParser;
+import generated.ProblemBaseListener;
+import generated.ProblemParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
@@ -22,7 +22,7 @@ import static api.parser.Parser.SymbolCollectingPolicy.*;
 import static api.util.Values.DISPLAY_EPSILON_SYMBOL;
 import static core.util.Parameters.PARSER_PARSING_TARGET_CAPACITY;
 
-public class StringBasicFSAListener extends AutomatonListBaseListener
+public class StringBasicFSAListener extends ProblemBaseListener
 {
     private static final String EPSILON_SYMBOL = DISPLAY_EPSILON_SYMBOL;
 
@@ -56,7 +56,7 @@ public class StringBasicFSAListener extends AutomatonListBaseListener
         symbolCollectingPolicy = policy;
         switch (symbolCollectingPolicy) {
             case AGGREGATE:
-                alphabetBuilder = Alphabets.builder(PARSER_PARSING_TARGET_CAPACITY);
+                alphabetBuilder = Alphabets.builder(PARSER_PARSING_TARGET_CAPACITY, EPSILON_SYMBOL);
                 break;
             case SEPARATE:
                 predefinedAlphabet = Alphabets.create(Sets.mutable.empty(), EPSILON_SYMBOL);
@@ -98,7 +98,7 @@ public class StringBasicFSAListener extends AutomatonListBaseListener
     }
 
     @Override
-    public void enterAutomaton(AutomatonListParser.AutomatonContext ctx)
+    public void enterAutomaton(ProblemParser.AutomatonContext ctx)
     {
         final int heuristic = estimateCapacityFactor(ctx);
         if (symbolCollectingPolicy == SEPARATE) {
@@ -106,10 +106,15 @@ public class StringBasicFSAListener extends AutomatonListBaseListener
         }
         stateNameTable = UnifiedMap.newMap(heuristic);
         fsaBuilder = FSAs.builder(heuristic, EPSILON_SYMBOL, heuristic);
+
+        ctx.startStates().enterRule(this);
+        ctx.transitions().transition().forEach(trans -> trans.enterRule(this));
+        ctx.acceptStates().enterRule(this);
+        ctx.exitRule(this);
     }
 
     @Override
-    public void exitAutomaton(AutomatonListParser.AutomatonContext ctx)
+    public void exitAutomaton(ProblemParser.AutomatonContext ctx)
     {
         switch (symbolCollectingPolicy) {
             case PREDEFINED:
@@ -130,20 +135,20 @@ public class StringBasicFSAListener extends AutomatonListBaseListener
 
     private State getState(String name)
     {
-        return stateNameTable.getIfAbsentPut(name, States.create(name));
+        return stateNameTable.computeIfAbsent(name, __ -> States.create(name));
     }
 
     @Override
-    public void enterStartStates(AutomatonListParser.StartStatesContext ctx)
+    public void enterStartStates(ProblemParser.StartStatesContext ctx)
     {
         ctx.stateList().ID().forEach(id -> fsaBuilder.addStartState(getState(id.getText())));
     }
 
     @Override
-    public void enterTransition(AutomatonListParser.TransitionContext ctx)
+    public void enterTransition(ProblemParser.TransitionContext ctx)
     {
-        final State dept = stateNameTable.get(ctx.ID(0).getText());
-        final State dest = stateNameTable.get(ctx.ID(1).getText());
+        final State dept = getState(ctx.ID(0).getText());
+        final State dest = getState(ctx.ID(1).getText());
         final String symbol = ctx.transitionLabel().epsilonTransitionLabel() != null
                               ? EPSILON_SYMBOL
                               : ctx.transitionLabel().monadTransitionLabel().getText();
@@ -152,7 +157,7 @@ public class StringBasicFSAListener extends AutomatonListBaseListener
     }
 
     @Override
-    public void enterAcceptStates(AutomatonListParser.AcceptStatesContext ctx)
+    public void enterAcceptStates(ProblemParser.AcceptStatesContext ctx)
     {
         ctx.stateList().ID().forEach(id -> fsaBuilder.addAcceptState(getState(id.getText())));
     }

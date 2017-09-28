@@ -1,11 +1,8 @@
 package cli;
 
-import generated.ProblemLexer;
-import generated.ProblemParser;
-import org.antlr.v4.runtime.CharStream;
-import org.antlr.v4.runtime.CharStreams;
-import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
+import api.parser.Parser;
+import core.Problem;
+import core.parser.ProblemParser;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,13 +41,14 @@ public class Main
             is = new FileInputStream(filename);
         }
 
-        CharStream input = CharStreams.fromStream(is);
-        ProblemLexer lexer = new ProblemLexer(input);
-        CommonTokenStream tokens = new CommonTokenStream(lexer);
-        ProblemParser parser = new ProblemParser(tokens);
+        Parser<Problem> parser = new ProblemParser();
+        Problem problem = parser.parse(is).getOnly();
 
-        ParseTree tree = parser.problem();
-
-        System.out.println(tree.toStringTree());
+        System.out.println(problem.getInitialConfigurations());
+        System.out.println(problem.getFinalConfigurations());
+        System.out.println(problem.getSchedulerBehavior());
+        System.out.println(problem.getProcessBehavior());
+        System.out.println(problem.getInvariantConfigSearchSpace());
+        System.out.println(problem.getOrderRelationSearchSpace());
     }
 }

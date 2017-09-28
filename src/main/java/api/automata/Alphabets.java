@@ -12,9 +12,9 @@ public final class Alphabets
     {
     }
 
-    public static <S> Builder<S> builder(int symbolNumberEstimate)
+    public static <S> Builder<S> builder(int symbolNumberEstimate, S epsilonSymbol)
     {
-        return new SetAlphabetBuilder<>(symbolNumberEstimate);
+        return new SetAlphabetBuilder<>(symbolNumberEstimate, epsilonSymbol);
     }
 
     public static <S> Builder<S> builderBasedOn(Alphabet<S> alphabet)
