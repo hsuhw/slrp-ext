@@ -1,64 +1,91 @@
 package core.parser.fsa;
 
 import api.automata.Alphabet;
+import api.automata.Alphabets;
 import api.automata.State;
-import api.automata.StringSymbol;
+import api.automata.States;
 import api.automata.fsa.FSA;
-import api.automata.fsa.FSABuilder;
-import api.parser.ParserWithAlphabet;
-import core.automata.Alphabets;
-import core.automata.States;
-import core.automata.StringSymbols;
-import core.automata.fsa.BasicFSABuilder;
-import core.automata.fsa.FSABuilders;
+import api.automata.fsa.FSAs;
+import core.util.Assertions;
 import generated.AutomatonListBaseListener;
 import generated.AutomatonListParser;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.eclipse.collections.api.bimap.MutableBiMap;
-import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 
-import static api.parser.ParserWithAlphabet.SymbolCollectingPolicy.AGGREGATE;
-import static api.parser.ParserWithAlphabet.SymbolCollectingPolicy.PREDEFINED;
+import static api.parser.Parser.SymbolCollectingPolicy;
+import static api.parser.Parser.SymbolCollectingPolicy.*;
+import static api.util.Values.DISPLAY_EPSILON_SYMBOL;
+import static core.util.Parameters.PARSER_PARSING_TARGET_CAPACITY;
 
 public class StringBasicFSAListener extends AutomatonListBaseListener
 {
-    private final MutableBiMap<String, StringSymbol> symbolTable;
-    private final ParserWithAlphabet.SymbolCollectingPolicy symbolCollectingPolicy;
-    private final MutableList<FSABuilder<StringSymbol>> postponeBuilds;
-    private final MutableList<FSA<StringSymbol>> builtAutomata;
-    private Alphabet<StringSymbol> currentAlphabet;
-    private MutableMap<String, State> stateTable;
-    private BasicFSABuilder<StringSymbol> bookkeeper;
+    private static final String EPSILON_SYMBOL = DISPLAY_EPSILON_SYMBOL;
 
-    public StringBasicFSAListener(MutableBiMap<String, StringSymbol> symbolTable,
-                                  ParserWithAlphabet.SymbolCollectingPolicy symbolCollectingPolicy)
+    private final SymbolCollectingPolicy symbolCollectingPolicy;
+    private final MutableList<FSA.Builder<String>> queuedBuilds;
+    private final MutableList<FSA<String>> builtAutomata;
+    private Alphabet<String> predefinedAlphabet;
+    private MutableMap<String, State> stateNameTable;
+    private Alphabet.Builder<String> alphabetBuilder;
+    private FSA.Builder<String> fsaBuilder;
+
+    public StringBasicFSAListener(Alphabet<String> alphabet, SymbolCollectingPolicy policy)
     {
-        if (!symbolTable.containsValue(StringSymbols.EPSILON_DISPLAY_VALUE)) {
-            symbolTable.put(StringSymbols.EPSILON_DISPLAY_VALUE, StringSymbols.EPSILON);
+        Assertions.argumentNotNull(alphabet);
+
+        symbolCollectingPolicy = policy;
+        predefinedAlphabet = alphabet;
+        if (symbolCollectingPolicy == AGGREGATE) {
+            alphabetBuilder = Alphabets.builderBasedOn(alphabet);
         }
-        this.symbolTable = symbolTable;
-        this.symbolCollectingPolicy = symbolCollectingPolicy;
-        currentAlphabet = symbolCollectingPolicy == PREDEFINED ? getCurrentAlphabet() : null;
-        postponeBuilds = FastList.newList();
-        builtAutomata = FastList.newList();
+        queuedBuilds = FastList.newList(PARSER_PARSING_TARGET_CAPACITY);
+        builtAutomata = FastList.newList(PARSER_PARSING_TARGET_CAPACITY);
     }
 
-    public Alphabet<StringSymbol> getCurrentAlphabet()
+    public StringBasicFSAListener(SymbolCollectingPolicy policy)
     {
-        return Alphabets.createOne(symbolTable.valuesView().toSet(), StringSymbols.EPSILON);
+        if (policy == PREDEFINED) {
+            throw new IllegalArgumentException("no predefined alphabet specified");
+        }
+
+        symbolCollectingPolicy = policy;
+        switch (symbolCollectingPolicy) {
+            case AGGREGATE:
+                alphabetBuilder = Alphabets.builder(PARSER_PARSING_TARGET_CAPACITY);
+                break;
+            case SEPARATE:
+                predefinedAlphabet = Alphabets.create(Sets.mutable.empty(), EPSILON_SYMBOL);
+                break;
+            default:
+                break; // should not happen
+        }
+        queuedBuilds = FastList.newList(PARSER_PARSING_TARGET_CAPACITY);
+        builtAutomata = FastList.newList(PARSER_PARSING_TARGET_CAPACITY);
     }
 
-    public ImmutableList<FSA<StringSymbol>> getAutomata()
+    public StringBasicFSAListener(Alphabet.Builder<String> alphabetBuilder)
+    {
+        Assertions.argumentNotNull(alphabetBuilder);
+
+        symbolCollectingPolicy = AGGREGATE;
+        this.alphabetBuilder = alphabetBuilder;
+        queuedBuilds = FastList.newList(PARSER_PARSING_TARGET_CAPACITY);
+        builtAutomata = FastList.newList(PARSER_PARSING_TARGET_CAPACITY);
+    }
+
+    public ListIterable<FSA<String>> getAutomata()
     {
         if (symbolCollectingPolicy == AGGREGATE) {
-            currentAlphabet = getCurrentAlphabet();
-            postponeBuilds.forEach(builder -> builtAutomata.add(builder.build(currentAlphabet)));
+            final Alphabet<String> alphabet = alphabetBuilder.build();
+            queuedBuilds.forEach(builder -> builtAutomata.add(builder.build(alphabet)));
         }
-        return builtAutomata.toImmutable();
+
+        return builtAutomata;
     }
 
     private int estimateCapacityFactor(ParserRuleContext ctx)
@@ -74,8 +101,11 @@ public class StringBasicFSAListener extends AutomatonListBaseListener
     public void enterAutomaton(AutomatonListParser.AutomatonContext ctx)
     {
         final int heuristic = estimateCapacityFactor(ctx);
-        stateTable = UnifiedMap.newMap(heuristic);
-        bookkeeper = FSABuilders.createBasic(heuristic, StringSymbols.EPSILON, heuristic);
+        if (symbolCollectingPolicy == SEPARATE) {
+            alphabetBuilder = Alphabets.builderBasedOn(predefinedAlphabet);
+        }
+        stateNameTable = UnifiedMap.newMap(heuristic);
+        fsaBuilder = FSAs.builder(heuristic, EPSILON_SYMBOL, heuristic);
     }
 
     @Override
@@ -83,50 +113,47 @@ public class StringBasicFSAListener extends AutomatonListBaseListener
     {
         switch (symbolCollectingPolicy) {
             case PREDEFINED:
-                builtAutomata.add(bookkeeper.build(currentAlphabet));
+                builtAutomata.add(fsaBuilder.build(predefinedAlphabet));
             case AGGREGATE:
-                postponeBuilds.add(bookkeeper);
+                queuedBuilds.add(fsaBuilder);
                 break;
             case SEPARATE:
-                builtAutomata.add(bookkeeper.build(getCurrentAlphabet()));
+                builtAutomata.add(fsaBuilder.build(alphabetBuilder.build()));
+                alphabetBuilder = null;
                 break;
             default:
-                break;
+                break; // should not happen
         }
-        stateTable = null;
-        bookkeeper = null;
-    }
-
-    private StringSymbol getSymbol(String name)
-    {
-        return symbolTable.getIfAbsentPut(name, StringSymbols.createOne(name));
+        stateNameTable = null;
+        fsaBuilder = null;
     }
 
     private State getState(String name)
     {
-        return stateTable.getIfAbsentPut(name, States.createOne(name));
+        return stateNameTable.getIfAbsentPut(name, States.create(name));
     }
 
     @Override
     public void enterStartStates(AutomatonListParser.StartStatesContext ctx)
     {
-        ctx.stateList().ID().forEach(id -> bookkeeper.addStartState(getState(id.getText())));
+        ctx.stateList().ID().forEach(id -> fsaBuilder.addStartState(getState(id.getText())));
     }
 
     @Override
     public void enterTransition(AutomatonListParser.TransitionContext ctx)
     {
-        final State dept = stateTable.get(ctx.ID(0).getText());
-        final State dest = stateTable.get(ctx.ID(1).getText());
-        final StringSymbol symbol = ctx.transitionLabel().epsilonTransitionLabel() != null
-                                    ? StringSymbols.EPSILON
-                                    : getSymbol(ctx.transitionLabel().monadTransitionLabel().getText());
-        bookkeeper.addTransition(dept, dest, symbol);
+        final State dept = stateNameTable.get(ctx.ID(0).getText());
+        final State dest = stateNameTable.get(ctx.ID(1).getText());
+        final String symbol = ctx.transitionLabel().epsilonTransitionLabel() != null
+                              ? EPSILON_SYMBOL
+                              : ctx.transitionLabel().monadTransitionLabel().getText();
+        alphabetBuilder.add(symbol);
+        fsaBuilder.addTransition(dept, dest, symbol);
     }
 
     @Override
     public void enterAcceptStates(AutomatonListParser.AcceptStatesContext ctx)
     {
-        ctx.stateList().ID().forEach(id -> bookkeeper.addAcceptState(getState(id.getText())));
+        ctx.stateList().ID().forEach(id -> fsaBuilder.addAcceptState(getState(id.getText())));
     }
 }
