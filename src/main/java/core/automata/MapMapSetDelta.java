@@ -125,6 +125,12 @@ public final class MapMapSetDelta<S> implements Nondeterministic, DeltaFunction<
     }
 
     @Override
+    public SetIterable<State> epsilonClosureOf(SetIterable<State> states)
+    {
+        return epsilonClosureOf(states, epsilonSymbol);
+    }
+
+    @Override
     public SetIterable<State> epsilonClosureOf(SetIterable<State> states, S symbol)
     {
         // compute epsilon closure base

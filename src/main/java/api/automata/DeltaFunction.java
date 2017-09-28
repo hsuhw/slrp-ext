@@ -29,6 +29,11 @@ public interface DeltaFunction<S>
 
     SetIterable<State> predecessorsOf(State state, S symbol);
 
+    default SetIterable<State> epsilonClosureOf(SetIterable<State> states)
+    {
+        throw new UnsupportedOperationException("only available on nondeterministic instances");
+    }
+
     default SetIterable<State> epsilonClosureOf(SetIterable<State> states, S symbol)
     {
         throw new UnsupportedOperationException("only available on nondeterministic instances");

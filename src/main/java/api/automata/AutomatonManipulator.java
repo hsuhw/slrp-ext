@@ -14,12 +14,12 @@ import static api.automata.Automaton.Builder;
 
 public interface AutomatonManipulator
 {
-    static SetIterable<State> selectStatesFromProduct(BiMap<State, Twin<State>> stateMapping,
+    static SetIterable<State> selectStatesFromProduct(BiMap<Twin<State>, State> stateMapping,
                                                       Predicate<State> filterOne, Predicate<State> filterTwo,
                                                       BooleanBooleanPredicate connective)
     {
         final MutableSet<State> result = UnifiedSet.newSet(stateMapping.size()); // upper bound
-        stateMapping.forEachKeyValue((state, statePair) -> {
+        stateMapping.forEachKeyValue((statePair, state) -> {
             if (connective.accept(filterOne.test(statePair.getOne()), filterTwo.test(statePair.getTwo()))) {
                 result.add(state);
             }
@@ -38,6 +38,6 @@ public interface AutomatonManipulator
     @FunctionalInterface
     interface Finalizer<S>
     {
-        void apply(BiMap<State, Twin<State>> stateMapping, Builder<S> builder);
+        void apply(BiMap<Twin<State>, State> stateMapping, Builder<S> builder);
     }
 }
