@@ -1,21 +1,17 @@
 package api.synth;
 
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
+import org.eclipse.collections.api.list.primitive.IntList;
 import org.eclipse.collections.api.list.primitive.MutableIntList;
-import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
-import org.eclipse.collections.impl.factory.Sets;
+import org.eclipse.collections.api.set.primitive.IntSet;
 import org.eclipse.collections.impl.factory.primitive.IntLists;
-import org.eclipse.collections.impl.factory.primitive.IntSets;
 
 /**
  * The API definition for the SAT solver functionalities we use in programs.
  */
 public interface SatSolver
 {
-    int MAX_VARIABLE_NUMBER = 1000000;
-    int MAX_CLAUSE_NUMBER = 1000000; // TODO: [tuning] see if there's any effects of modifying this
-
     boolean isVerbose();
 
     void setVerbose(boolean value);
@@ -101,7 +97,7 @@ public interface SatSolver
         }
         final int deltaLength = bitArray1.length - bitArray2.length;
         final int commonDigitLength = Math.min(bitArray1.length, bitArray2.length);
-        final ImmutableIntList greaterAlreadyIndicators = newFreeVariables(commonDigitLength + 1);
+        final IntList greaterAlreadyIndicators = newFreeVariables(commonDigitLength + 1);
         if (deltaLength > 0) {
             // array1 being longer
 
@@ -439,26 +435,26 @@ public interface SatSolver
      * Returns the model of the given constraints after the satisfiability has
      * been determined.
      *
-     * @return an {@link ImmutableIntSet} containing the true variable IDs in
+     * @return an {@link IntSet} containing the true variable IDs in
      * positive {@code int} and the false variable IDs in negative {@code int}
      */
-    ImmutableIntSet getModel();
+    IntSet getModel();
 
     /**
      * Returns the variables in the model that have been assigned true of the
      * given constraints after the satisfiability has been determined.
      *
-     * @return an {@link ImmutableIntSet} containing the true variable IDs
+     * @return an {@link IntSet} containing the true variable IDs
      */
-    ImmutableIntSet getModelTruthyVariables();
+    IntSet getModelTruthyVariables();
 
     /**
      * Returns the variables in the model that have been assigned false of the
      * given constraints after the satisfiability has been determined.
      *
-     * @return an {@link ImmutableIntSet} containing the false variable IDs
+     * @return an {@link IntSet} containing the false variable IDs
      */
-    ImmutableIntSet getModelFalsyVariables();
+    IntSet getModelFalsyVariables();
 
     /**
      * Resets the internal states of the solver instance, making it like one

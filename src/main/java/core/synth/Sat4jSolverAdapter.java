@@ -6,6 +6,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
+import org.eclipse.collections.api.set.primitive.IntSet;
 import org.eclipse.collections.impl.block.factory.primitive.IntPredicates;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
@@ -16,6 +17,9 @@ import org.sat4j.specs.ISolver;
 import org.sat4j.specs.TimeoutException;
 
 import java.util.Arrays;
+
+import static core.util.Parameters.SAT_SOLVER_MAX_CLAUSE_NUMBER;
+import static core.util.Parameters.SAT_SOLVER_MAX_VARIABLE_NUMBER;
 
 public class Sat4jSolverAdapter implements SatSolver
 {
@@ -29,8 +33,8 @@ public class Sat4jSolverAdapter implements SatSolver
     public Sat4jSolverAdapter()
     {
         solver = SolverFactory.newDefault(); // TODO: [tuning] see if there's any effects of modifying this
-        solver.newVar(MAX_VARIABLE_NUMBER);
-        solver.setExpectedNumberOfClauses(MAX_CLAUSE_NUMBER);
+        solver.newVar(SAT_SOLVER_MAX_VARIABLE_NUMBER);
+        solver.setExpectedNumberOfClauses(SAT_SOLVER_MAX_CLAUSE_NUMBER);
     }
 
     private void assertModelValid()
@@ -83,7 +87,7 @@ public class Sat4jSolverAdapter implements SatSolver
             final String msg = "asking for " + howMany + " new variables";
             throw new IllegalArgumentException(msg);
         }
-        if (nextFreeVariableId + howMany > MAX_VARIABLE_NUMBER) {
+        if (nextFreeVariableId + howMany > SAT_SOLVER_MAX_VARIABLE_NUMBER) {
             final String msg = "ran out of available free variables";
             throw new IllegalArgumentException(msg);
         }
@@ -183,7 +187,7 @@ public class Sat4jSolverAdapter implements SatSolver
     }
 
     @Override
-    public ImmutableIntSet getModelFalsyVariables()
+    public IntSet getModelFalsyVariables()
     {
         assertModelValid();
         ImmutableIntSet falsyVariablesAsSet = model.select(IntPredicates.lessThan(0));
@@ -194,7 +198,7 @@ public class Sat4jSolverAdapter implements SatSolver
     public void reset()
     {
         solver.reset();
-        solver.newVar(MAX_VARIABLE_NUMBER);
+        solver.newVar(SAT_SOLVER_MAX_VARIABLE_NUMBER);
         nextFreeVariableId = 1;
         model = null;
     }

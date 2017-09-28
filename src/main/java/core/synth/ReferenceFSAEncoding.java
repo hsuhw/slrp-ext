@@ -1,26 +1,20 @@
 package core.synth;
 
-import api.automata.Alphabet;
-import api.automata.IntAlphabetTranslator;
-import api.automata.State;
-import api.automata.Symbol;
+import api.automata.*;
 import api.automata.fsa.FSA;
-import api.automata.fsa.FSABuilder;
+import api.automata.fsa.FSAs;
 import api.synth.FSAEncoding;
 import api.synth.SatSolver;
 import api.synth.SatSolverTimeoutException;
-import core.automata.Alphabets;
-import core.automata.States;
-import core.automata.fsa.FSABuilders;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.set.ImmutableSet;
-import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
+import org.eclipse.collections.api.set.primitive.IntSet;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 
-public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
+public class ReferenceFSAEncoding<S> implements FSAEncoding<S>
 {
     private static final int START_STATE_INDEX = 0;
     private static final int EPSILON_SYMBOL_INDEX = IntAlphabetTranslator.INT_EPSILON;
@@ -102,6 +96,7 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
             distanceIndicators[state] = possibleDistance; // from 0 to n - 1
             solver.addClauseExactly(1, possibleDistance);
         }
+
         return distanceIndicators;
     }
 
@@ -138,6 +133,7 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
         if (noUnreachableStatesEnsured) {
             return;
         }
+
         final ImmutableIntList[] distFromStartIndicators = prepareDistanceIndicators();
         final int startStateDistBeZero = distFromStartIndicators[START_STATE_INDEX].get(0);
         solver.setLiteralTruthy(startStateDistBeZero);
@@ -155,6 +151,7 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
         if (noDeadEndStatesEnsured) {
             return;
         }
+
         ImmutableIntList[] distFromAcceptIndicators = prepareDistanceIndicators();
         for (int state = 0; state < stateNumber; state++) {
             final int takenAsAcceptState = acceptStateIndicators.get(state);
@@ -298,13 +295,12 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
     @Override
     public void blockCurrentInstance() throws SatSolverTimeoutException
     {
-        // get solution (if any)
         if (!solver.findItSatisfiable()) {
             return;
         }
-        final ImmutableIntSet truthyIndicators = solver.getModelTruthyVariables();
 
         // collect which to be blocked
+        final IntSet truthyIndicators = solver.getModelTruthyVariables();
         final MutableIntSet trackedIndicators = new IntHashSet(truthyIndicators.size());
         acceptStateIndicators.forEach(acceptIndicator -> {
             if (truthyIndicators.contains(acceptIndicator)) {
@@ -322,35 +318,28 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
             }
         }
 
-        // block the solution
         solver.addClauseBlocking(trackedIndicators.toArray());
     }
 
     @Override
     public FSA<S> resolveToFSA() throws SatSolverTimeoutException
     {
-        // get the solution (if any)
         if (!solver.findItSatisfiable()) {
             return null;
         }
-        final ImmutableIntSet truthyIndicators = solver.getModelTruthyVariables();
 
-        // prepare FSA builder
-        final int symbolNumber = alphabetEncoding.size();
-        final S epsilonSymbol = alphabetEncoding.getOriginEpsilonSymbol();
-        final FSABuilder<S> builder = FSABuilders.createBasic(symbolNumber, epsilonSymbol, stateNumber);
-
-        // prepare state objects
+        // decode states
+        final IntSet truthyIndicators = solver.getModelTruthyVariables();
+        final FSA.Builder<S> builder = FSAs
+            .builder(alphabetEncoding.size(), alphabetEncoding.getOriginEpsilonSymbol(), stateNumber);
         final State[] states = new State[stateNumber];
         for (int i = 0; i < stateNumber; i++) {
-            states[i] = States.createOne("s" + i);
+            states[i] = States.create("s" + i);
         }
-
-        // decode start & accept states
         builder.addStartState(states[START_STATE_INDEX]);
-        acceptStateIndicators.forEachWithIndex((i, s) -> {
-            if (truthyIndicators.contains(i)) {
-                builder.addAcceptState(states[s]);
+        acceptStateIndicators.forEachWithIndex((indicator, stateIndex) -> {
+            if (truthyIndicators.contains(indicator)) {
+                builder.addAcceptState(states[stateIndex]);
             }
         });
 
@@ -365,11 +354,6 @@ public class ReferenceFSAEncoding<S extends Symbol> implements FSAEncoding<S>
             }
         }
 
-        // build
-        final ImmutableSet<S> originAlphabetSet = alphabetEncoding.getOriginAlphabet();
-        final S originEpsilonSymbol = alphabetEncoding.getOriginEpsilonSymbol();
-        final Alphabet<S> originalAlphabet = Alphabets.createOne(originAlphabetSet, originEpsilonSymbol);
-
-        return builder.build(originalAlphabet);
+        return builder.build(alphabetEncoding.getOriginAlphabet());
     }
 }
