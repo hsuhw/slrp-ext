@@ -4,7 +4,6 @@ import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
-import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.set.primitive.IntSet;
 import org.eclipse.collections.impl.factory.primitive.IntLists;
 
@@ -36,7 +35,7 @@ public interface IntAlphabetTranslator<S>
 
     IntSet getIntAlphabet();
 
-    SetIterable<S> getOriginAlphabet();
+    Alphabet<S> getOriginAlphabet();
 
     default ImmutableIntList translate(ImmutableList<S> word)
     {

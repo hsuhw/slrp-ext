@@ -1,11 +1,12 @@
 package core.automata;
 
+import api.automata.Alphabet;
+import api.automata.Alphabets;
 import api.automata.IntAlphabetTranslator;
 import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.primitive.ImmutableObjectIntMap;
-import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.set.primitive.IntSet;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 
@@ -58,8 +59,8 @@ public class MapListIntAlphabetTranslator<S> implements IntAlphabetTranslator<S>
     }
 
     @Override
-    public SetIterable<S> getOriginAlphabet()
+    public Alphabet<S> getOriginAlphabet()
     {
-        return encoder.keysView().toSet();
+        return Alphabets.create(encoder.keysView().toSet(), getOriginEpsilonSymbol());
     }
 }
