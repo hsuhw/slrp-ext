@@ -3,9 +3,7 @@ package api.automata.fsa;
 import api.automata.Alphabet;
 import api.automata.State;
 import api.automata.States;
-import core.automata.fsa.BasicFSABuilder;
-import core.automata.fsa.MapMapDFSA;
-import core.automata.fsa.MapMapSetNFSA;
+import core.automata.fsa.*;
 
 public final class FSAs
 {
@@ -43,5 +41,19 @@ public final class FSAs
         alphabet.getSet().forEach(symbol -> builder.addTransition(state, state, symbol));
 
         return builder.build();
+    }
+
+    public static FSAManipulator manipulator()
+    {
+        return DefaultManipulatorSingleton.INSTANCE;
+    }
+
+    private static final class DefaultManipulatorSingleton // Bill Pugh singleton pattern
+    {
+        private static final FSAManipulator INSTANCE;
+
+        static {
+            INSTANCE = new BasicFSAManipulator(new BaseFSAManipulator());
+        }
     }
 }

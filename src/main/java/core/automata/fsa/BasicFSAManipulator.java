@@ -3,15 +3,14 @@ package core.automata.fsa;
 import api.automata.*;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAManipulator;
-import api.automata.fsa.FSAManipulatorDecorator;
 import api.automata.fsa.FSAs;
-import api.util.Values;
 import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.bimap.mutable.HashBiMap;
+import org.eclipse.collections.impl.factory.BiMaps;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.eclipse.collections.impl.tuple.Tuples;
 
@@ -21,11 +20,13 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class MapMapDFSAManipulator implements FSAManipulatorDecorator
+import static api.util.Values.NOT_IMPLEMENTED_YET;
+
+public class BasicFSAManipulator implements FSAManipulator.Decorator
 {
     private final FSAManipulator decoratee;
 
-    public MapMapDFSAManipulator(FSAManipulator decoratee)
+    public BasicFSAManipulator(FSAManipulator decoratee)
     {
         this.decoratee = decoratee;
     }
@@ -36,7 +37,7 @@ public class MapMapDFSAManipulator implements FSAManipulatorDecorator
         return decoratee;
     }
 
-    private <S> boolean isImplementationTarget(Automaton<S> target)
+    private <S> boolean isFSA(Automaton<S> target)
     {
         return target instanceof FSA<?>;
     }
@@ -77,7 +78,7 @@ public class MapMapDFSAManipulator implements FSAManipulatorDecorator
     @Override
     public <S> FSA<S> trimUnreachableStatesDelegated(Automaton<S> target)
     {
-        if (!isImplementationTarget(target)) {
+        if (!isFSA(target)) {
             return null;
         }
 
@@ -98,7 +99,7 @@ public class MapMapDFSAManipulator implements FSAManipulatorDecorator
     @Override
     public <S> FSA<S> trimDeadEndStatesDelegated(Automaton<S> target)
     {
-        if (!isImplementationTarget(target)) {
+        if (!isFSA(target)) {
             return null;
         }
 
@@ -152,7 +153,7 @@ public class MapMapDFSAManipulator implements FSAManipulatorDecorator
     public <S, T, R> FSA<R> makeProductDelegated(Automaton<S> one, Automaton<T> two, Alphabet<R> targetAlphabet,
                                                  BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer)
     {
-        if (!isImplementationTarget(one) || !isImplementationTarget(two)) {
+        if (!isFSA(one) || !isFSA(two)) {
             return null;
         }
 
@@ -172,9 +173,15 @@ public class MapMapDFSAManipulator implements FSAManipulatorDecorator
     @Override
     public <S> FSA<S> determinizeDelegated(FSA<S> target)
     {
-        if (!isImplementationTarget(target)) {
+        if (target instanceof MapMapDFSA<?>) {
+            return target;
+        }
+        if (!(target instanceof MapMapSetNFSA<?>)) {
             return null;
         }
+
+        final int statePowerSetNumber = (int) Math.pow(2, target.getStateNumber());
+        final MutableBiMap<State, MutableSet<State>> statePowerSetBiMap = BiMaps.mutable.empty();
 
         return null;
     }
@@ -182,10 +189,10 @@ public class MapMapDFSAManipulator implements FSAManipulatorDecorator
     @Override
     public <S> FSA<S> minimizeDelegated(FSA<S> target)
     {
-        if (!isImplementationTarget(target)) {
+        if (!isFSA(target)) {
             return null;
         }
 
-        throw new UnsupportedOperationException(Values.NOT_IMPLEMENTED_YET);
+        throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
     }
 }

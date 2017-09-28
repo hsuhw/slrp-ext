@@ -8,7 +8,7 @@ import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import static api.automata.Alphabet.Builder;
 import static core.util.Parameters.estimateExtendedSize;
 
-public class SetAlphabetBuilder<S> implements Builder<S>
+public class SetAlphabetBuilder<S> implements Alphabet.Builder<S>
 {
     private final MutableSet<S> symbolSet;
     private S epsilonSymbol;

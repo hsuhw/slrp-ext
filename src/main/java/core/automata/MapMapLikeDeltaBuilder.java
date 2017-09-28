@@ -12,9 +12,10 @@ import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.eclipse.collections.impl.tuple.Tuples;
 
 import static api.automata.DeltaFunction.Builder;
-import static core.util.Parameters.*;
+import static core.util.Parameters.NONDETERMINISTIC_TRANSITION_CAPACITY;
+import static core.util.Parameters.estimateExtendedSize;
 
-public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
+public final class MapMapLikeDeltaBuilder<S> implements DeltaFunction.Builder<S>
 {
     private final S epsilonSymbol;
     private final MutableMap<State, MutableMap<S, MutableSet<State>>> forwardDelta;
@@ -29,22 +30,18 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
         this.epsilonSymbol = epsilonSymbol;
     }
 
-    private static <S> MutableMap<S, MutableSet<State>> newStateTrans()
-    {
-        return UnifiedMap.newMap(CURRENT_BIGGEST_ALPHABET_SIZE);
-    }
-
     private static MutableSet<State> newStateSet()
     {
         return UnifiedSet.newSet(NONDETERMINISTIC_TRANSITION_CAPACITY);
     }
 
     private static <S> MutableMap<State, MutableMap<S, MutableSet<State>>> mutableDelta(
-        ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> definition, int stateNumberEstimate)
+        ImmutableMap<State, ImmutableMap<S, ImmutableSet<State>>> definition, int stateNumberEstimate,
+        int symbolNumberEstimate)
     {
         final MutableMap<State, MutableMap<S, MutableSet<State>>> result = UnifiedMap.newMap(stateNumberEstimate);
         definition.forEachKeyValue((dept, transes) -> {
-            final MutableMap<S, MutableSet<State>> stateTrans = newStateTrans();
+            final MutableMap<S, MutableSet<State>> stateTrans = UnifiedMap.newMap(symbolNumberEstimate);
             transes.forEachKeyValue((sym, dests) -> {
                 final MutableSet<State> destSet = newStateSet();
                 destSet.addAllIterable(dests);
@@ -58,18 +55,19 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
 
     public MapMapLikeDeltaBuilder(MapMapSetDelta<S> delta)
     {
-        final int estimateSize = estimateExtendedSize(delta.getAllReferredStates().size());
-        forwardDelta = mutableDelta(delta.getForwardDelta(), estimateSize);
-        backwardDelta = mutableDelta(delta.getBackwardDelta(), estimateSize);
+        final int estimateStateNumber = estimateExtendedSize(delta.getAllReferredStates().size());
+        final int estimateSymbolNumber = estimateExtendedSize(delta.getAllReferredSymbols().size());
+        forwardDelta = mutableDelta(delta.getForwardDelta(), estimateStateNumber, estimateSymbolNumber);
+        backwardDelta = mutableDelta(delta.getBackwardDelta(), estimateStateNumber, estimateSymbolNumber);
         epsilonSymbol = delta.getEpsilonSymbol();
     }
 
     private static <S> MutableMap<State, MutableMap<S, MutableSet<State>>> mutableHoistedDelta(
-        ImmutableMap<State, ImmutableMap<S, State>> definition, int stateNumberEstimate)
+        ImmutableMap<State, ImmutableMap<S, State>> definition, int stateNumberEstimate, int symbolNumberEstimate)
     {
         final MutableMap<State, MutableMap<S, MutableSet<State>>> result = UnifiedMap.newMap(stateNumberEstimate);
         definition.forEachKeyValue((dept, transes) -> {
-            final MutableMap<S, MutableSet<State>> stateTrans = newStateTrans();
+            final MutableMap<S, MutableSet<State>> stateTrans = UnifiedMap.newMap(symbolNumberEstimate);
             transes.forEachKeyValue((sym, dest) -> {
                 final MutableSet<State> dests = newStateSet();
                 dests.add(dest);
@@ -83,9 +81,10 @@ public final class MapMapLikeDeltaBuilder<S> implements Builder<S>
 
     public MapMapLikeDeltaBuilder(MapMapDelta<S> delta)
     {
-        final int estimateSize = estimateExtendedSize(delta.getAllReferredStates().size());
-        forwardDelta = mutableHoistedDelta(delta.getForwardDelta(), estimateSize);
-        backwardDelta = mutableDelta(delta.getBackwardDelta(), estimateSize);
+        final int estimateStateNumber = estimateExtendedSize(delta.getAllReferredStates().size());
+        final int estimateSymbolNumber = estimateExtendedSize(delta.getAllReferredSymbols().size());
+        forwardDelta = mutableHoistedDelta(delta.getForwardDelta(), estimateStateNumber, estimateSymbolNumber);
+        backwardDelta = mutableDelta(delta.getBackwardDelta(), estimateStateNumber, estimateSymbolNumber);
         epsilonSymbol = delta.getEpsilonSymbol();
     }
 

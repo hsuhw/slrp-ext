@@ -10,7 +10,11 @@ public interface DeltaFunction<S>
 
     SetIterable<S> getAllReferredSymbols();
 
+    S getEpsilonSymbol();
+
     SetIterable<S> enabledSymbolsOn(State state);
+
+    boolean available(State state, S symbol);
 
     SetIterable<State> successorsOf(State state);
 
@@ -24,6 +28,11 @@ public interface DeltaFunction<S>
     SetIterable<State> predecessorsOf(State state);
 
     SetIterable<State> predecessorsOf(State state, S symbol);
+
+    default SetIterable<State> epsilonClosureOf(SetIterable<State> states, S symbol)
+    {
+        throw new UnsupportedOperationException("only available on nondeterministic instances");
+    }
 
     @Override
     String toString();

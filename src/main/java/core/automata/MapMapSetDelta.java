@@ -7,6 +7,7 @@ import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.impl.block.factory.Functions;
 import org.eclipse.collections.impl.factory.Sets;
@@ -44,11 +45,6 @@ public final class MapMapSetDelta<S> implements Nondeterministic, DeltaFunction<
         return backwardDelta;
     }
 
-    S getEpsilonSymbol()
-    {
-        return epsilonSymbol;
-    }
-
     @Override
     public int size()
     {
@@ -68,9 +64,21 @@ public final class MapMapSetDelta<S> implements Nondeterministic, DeltaFunction<
     }
 
     @Override
+    public S getEpsilonSymbol()
+    {
+        return epsilonSymbol;
+    }
+
+    @Override
     public SetIterable<S> enabledSymbolsOn(State state)
     {
         return forwardDelta.get(state).keysView().toSet();
+    }
+
+    @Override
+    public boolean available(State state, S symbol)
+    {
+        return forwardDelta.get(state).get(symbol) != null;
     }
 
     private SetIterable<State> getSuccessorsFromGraph(
@@ -107,6 +115,34 @@ public final class MapMapSetDelta<S> implements Nondeterministic, DeltaFunction<
     public SetIterable<State> predecessorsOf(State state, S symbol)
     {
         return getSuccessorsFromGraph(backwardDelta, state, symbol);
+    }
+
+    private MutableSet<State> predecessorsOf(SetIterable<State> states, S symbol)
+    {
+        return states.flatCollect(state -> {
+            return available(state, symbol) ? predecessorsOf(state, symbol) : Sets.immutable.empty();
+        }).toSet();
+    }
+
+    @Override
+    public SetIterable<State> epsilonClosureOf(SetIterable<State> states, S symbol)
+    {
+        // compute epsilon closure base
+        MutableSet<State> prevSet = predecessorsOf(states, epsilonSymbol);
+        MutableSet<State> currSet;
+        while (!prevSet.containsAll(currSet = predecessorsOf(prevSet, epsilonSymbol))) {
+            prevSet = currSet;
+        }
+        if (symbol == epsilonSymbol) {
+            return prevSet;
+        }
+
+        // compute epsilon closure of one-step afterward
+        prevSet = predecessorsOf(prevSet, symbol);
+        while (!prevSet.containsAll(currSet = predecessorsOf(prevSet, epsilonSymbol))) {
+            prevSet = currSet;
+        }
+        return prevSet;
     }
 
     @Override

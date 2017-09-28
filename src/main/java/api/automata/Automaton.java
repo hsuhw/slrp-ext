@@ -1,11 +1,10 @@
 package api.automata;
 
-import api.util.Values;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 
-import java.util.List;
+import static api.util.Values.NOT_IMPLEMENTED_YET;
 
 public interface Automaton<S>
 {
@@ -51,14 +50,19 @@ public interface Automaton<S>
         return getAcceptStates().contains(state);
     }
 
+    default SetIterable<State> getNonAcceptStates()
+    {
+        return getStates().newWithoutAll(getAcceptStates());
+    }
+
     DeltaFunction<S> getDeltaFunction();
 
     default boolean accepts(ImmutableList<S> word)
     {
         if (!isDeterministic()) {
-            throw new UnsupportedOperationException(Values.NOT_IMPLEMENTED_YET);
+            throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
         }
-        if (!getAlphabet().getSet().containsAll((List) word)) {
+        if (!getAlphabet().getSet().containsAllIterable(word)) {
             return false;
         }
 
@@ -90,7 +94,15 @@ public interface Automaton<S>
 
         Builder<S> addStartState(State state);
 
+        Builder<S> addStartStates(SetIterable<State> states);
+
+        Builder<S> resetStartStates();
+
         Builder<S> addAcceptState(State state);
+
+        Builder<S> addAcceptStates(SetIterable<State> states);
+
+        Builder<S> resetAcceptStates();
 
         Builder<S> addTransition(State dept, State dest, S symbol);
 

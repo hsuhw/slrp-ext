@@ -5,8 +5,7 @@ import api.automata.Automaton;
 import api.automata.DeltaFunction;
 import api.automata.State;
 import org.eclipse.collections.api.set.ImmutableSet;
-
-import java.util.Set;
+import org.eclipse.collections.api.set.SetIterable;
 
 import static api.util.Values.DISPLAY_INDENT;
 import static api.util.Values.DISPLAY_NEWLINE;
@@ -24,12 +23,12 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
                                                     ImmutableSet<State> startStates, ImmutableSet<State> acceptStates,
                                                     DeltaFunction<S> deltaFunction)
     {
-        final boolean validStartStates = states.containsAll((Set) startStates);
-        final boolean validAcceptStates = startStates.containsAll((Set) acceptStates);
-        final Set<?> deltaSymbols = (Set) deltaFunction.getAllReferredSymbols();
-        final Set<?> deltaStates = (Set) deltaFunction.getAllReferredStates();
-        final boolean validDeltaFunctionSymbols = sigma.getSet().containsAll(deltaSymbols);
-        final boolean validDeltaFunctionStates = states.containsAll(deltaStates);
+        final boolean validStartStates = states.containsAllIterable(startStates);
+        final boolean validAcceptStates = startStates.containsAllIterable(acceptStates);
+        final SetIterable<S> deltaSymbols = deltaFunction.getAllReferredSymbols();
+        final SetIterable<State> deltaStates = deltaFunction.getAllReferredStates();
+        final boolean validDeltaFunctionSymbols = sigma.getSet().containsAllIterable(deltaSymbols);
+        final boolean validDeltaFunctionStates = states.containsAllIterable(deltaStates);
         final boolean validDeltaFunction = validDeltaFunctionSymbols && validDeltaFunctionStates;
         final boolean atLeastOneStartState = startStates.size() > 0;
 

@@ -43,11 +43,6 @@ public final class MapMapDelta<S> implements Deterministic, DeltaFunction<S>
         return backwardDelta;
     }
 
-    S getEpsilonSymbol()
-    {
-        return epsilonSymbol;
-    }
-
     @Override
     public int size()
     {
@@ -67,9 +62,21 @@ public final class MapMapDelta<S> implements Deterministic, DeltaFunction<S>
     }
 
     @Override
+    public S getEpsilonSymbol()
+    {
+        return epsilonSymbol;
+    }
+
+    @Override
     public SetIterable<S> enabledSymbolsOn(State state)
     {
         return forwardDelta.get(state).keysView().toSet();
+    }
+
+    @Override
+    public boolean available(State state, S symbol)
+    {
+        return forwardDelta.get(state).get(symbol) != null;
     }
 
     @Override

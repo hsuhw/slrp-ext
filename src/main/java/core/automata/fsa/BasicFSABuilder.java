@@ -5,20 +5,21 @@ import api.automata.fsa.FSA;
 import core.util.Assertions;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.api.set.SetIterable;
+import org.eclipse.collections.impl.block.factory.Predicates;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
-
-import java.util.Set;
 
 import static api.automata.fsa.FSA.Builder;
 import static core.util.Parameters.estimateExtendedSize;
 
-public final class BasicFSABuilder<S> implements Builder<S>
+public final class BasicFSABuilder<S> implements FSA.Builder<S>
 {
     private final Alphabet.Builder<S> alphabetBuilder;
     private final DeltaFunction.Builder<S> deltaBuilder;
+    private final int stateNumberEstimate;
     private final MutableSet<State> states;
-    private final MutableSet<State> startStates;
-    private final MutableSet<State> acceptStates;
+    private MutableSet<State> startStates;
+    private MutableSet<State> acceptStates;
     private Alphabet<S> exportingAlphabet;
     private DeltaFunction<S> exportingDelta;
 
@@ -27,6 +28,7 @@ public final class BasicFSABuilder<S> implements Builder<S>
         alphabetBuilder = Alphabets.builder(symbolNumberEstimate);
         alphabetBuilder.defineEpsilon(epsilonSymbol);
         deltaBuilder = DeltaFunctions.builder(stateNumberEstimate, epsilonSymbol);
+        this.stateNumberEstimate = stateNumberEstimate;
         states = UnifiedSet.newSet(stateNumberEstimate);
         startStates = UnifiedSet.newSet(stateNumberEstimate);
         acceptStates = UnifiedSet.newSet(stateNumberEstimate);
@@ -38,6 +40,7 @@ public final class BasicFSABuilder<S> implements Builder<S>
         deltaBuilder = DeltaFunctions.builderBasedOn(fsa.getDeltaFunction());
 
         final int estimateSize = estimateExtendedSize(fsa.getStateNumber());
+        this.stateNumberEstimate = estimateSize;
         states = UnifiedSet.newSet(estimateSize);
         startStates = UnifiedSet.newSet(estimateSize); // heuristic upper bound
         acceptStates = UnifiedSet.newSet(estimateSize);  // heuristic upper bound
@@ -52,6 +55,7 @@ public final class BasicFSABuilder<S> implements Builder<S>
         deltaBuilder = DeltaFunctions.builderBasedOn(fsa.getDeltaFunction());
 
         final int estimateSize = estimateExtendedSize(fsa.getStateNumber());
+        this.stateNumberEstimate = estimateSize;
         states = UnifiedSet.newSet(estimateSize);
         startStates = UnifiedSet.newSet(estimateSize); // heuristic upper bound
         acceptStates = UnifiedSet.newSet(estimateSize);  // heuristic upper bound
@@ -111,12 +115,54 @@ public final class BasicFSABuilder<S> implements Builder<S>
     }
 
     @Override
+    public Builder<S> addStartStates(SetIterable<State> states)
+    {
+        if (states.anySatisfy(Predicates.isNull())) {
+            throw new IllegalArgumentException("a null reference found in given set");
+        }
+
+        this.states.addAllIterable(states);
+        startStates.addAllIterable(states);
+
+        return this;
+    }
+
+    @Override
+    public Builder<S> resetStartStates()
+    {
+        startStates = UnifiedSet.newSet(stateNumberEstimate);
+
+        return this;
+    }
+
+    @Override
     public Builder<S> addAcceptState(State state)
     {
         Assertions.argumentNotNull(state);
 
         addState(state);
         acceptStates.add(state);
+
+        return this;
+    }
+
+    @Override
+    public Builder<S> addAcceptStates(SetIterable<State> states)
+    {
+        if (states.anySatisfy(Predicates.isNull())) {
+            throw new IllegalArgumentException("a null reference found in given set");
+        }
+
+        this.states.addAllIterable(states);
+        acceptStates.addAllIterable(states);
+
+        return this;
+    }
+
+    @Override
+    public Builder<S> resetAcceptStates()
+    {
+        acceptStates = UnifiedSet.newSet(stateNumberEstimate);
 
         return this;
     }
@@ -151,7 +197,7 @@ public final class BasicFSABuilder<S> implements Builder<S>
     @Override
     public FSA<S> build(Alphabet<S> alphabet)
     {
-        if (!alphabet.getSet().containsAll((Set) alphabetBuilder.getAddedSymbols())) {
+        if (!alphabet.getSet().containsAllIterable(alphabetBuilder.getAddedSymbols())) {
             throw new IllegalArgumentException("given alphabet does not contain all the symbols");
         }
 

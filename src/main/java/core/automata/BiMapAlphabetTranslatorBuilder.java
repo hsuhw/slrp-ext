@@ -6,7 +6,7 @@ import org.eclipse.collections.impl.bimap.mutable.HashBiMap;
 
 import static api.automata.AlphabetTranslator.Builder;
 
-public class BiMapAlphabetTranslatorBuilder<O, T> implements Builder<O, T>
+public class BiMapAlphabetTranslatorBuilder<O, T> implements AlphabetTranslator.Builder<O, T>
 {
     private final MutableBiMap<O, T> symbolTable;
     private O originEpsilonSymbol;

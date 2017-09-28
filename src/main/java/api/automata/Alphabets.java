@@ -2,7 +2,7 @@ package api.automata;
 
 import core.automata.SetAlphabet;
 import core.automata.SetAlphabetBuilder;
-import org.eclipse.collections.api.set.MutableSetIterable;
+import org.eclipse.collections.api.set.MutableSet;
 
 import static api.automata.Alphabet.Builder;
 
@@ -22,7 +22,7 @@ public final class Alphabets
         return new SetAlphabetBuilder<>((SetAlphabet<S>) alphabet);
     }
 
-    public static <S> Alphabet<S> create(MutableSetIterable<S> definition, S epsilonSymbol)
+    public static <S> Alphabet<S> create(MutableSet<S> definition, S epsilonSymbol)
     {
         return new SetAlphabet<>(definition, epsilonSymbol);
     }

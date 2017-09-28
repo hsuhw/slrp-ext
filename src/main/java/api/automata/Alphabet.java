@@ -1,5 +1,6 @@
 package api.automata;
 
+import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 
 public interface Alphabet<S>
@@ -8,7 +9,9 @@ public interface Alphabet<S>
 
     S getEpsilonSymbol();
 
-    SetIterable<S> getSet();
+    ImmutableSet<S> getSet();
+
+    ImmutableSet<S> getNoEpsilonSet();
 
     interface Builder<S>
     {

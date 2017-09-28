@@ -2,16 +2,15 @@ package core.automata;
 
 import api.automata.Alphabet;
 import core.util.Assertions;
-import org.eclipse.collections.api.set.ImmutableSetIterable;
-import org.eclipse.collections.api.set.MutableSetIterable;
-import org.eclipse.collections.api.set.SetIterable;
+import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.set.MutableSet;
 
 public class SetAlphabet<S> implements Alphabet<S>
 {
-    private final ImmutableSetIterable<S> symbolSet;
+    private final ImmutableSet<S> symbolSet;
     private final S epsilon;
 
-    public SetAlphabet(MutableSetIterable<S> definition, S epsilonSymbol)
+    public SetAlphabet(MutableSet<S> definition, S epsilonSymbol)
     {
         Assertions.argumentNotNull(epsilonSymbol);
         if (!definition.contains(epsilonSymbol)) {
@@ -21,7 +20,7 @@ public class SetAlphabet<S> implements Alphabet<S>
             throw new IllegalArgumentException("a null reference found in the definition");
         }
 
-        symbolSet = (ImmutableSetIterable<S>) definition.toImmutable();
+        symbolSet = definition.toImmutable();
         epsilon = epsilonSymbol;
     }
 
@@ -38,8 +37,14 @@ public class SetAlphabet<S> implements Alphabet<S>
     }
 
     @Override
-    public SetIterable<S> getSet()
+    public ImmutableSet<S> getSet()
     {
         return symbolSet;
+    }
+
+    @Override
+    public ImmutableSet<S> getNoEpsilonSet()
+    {
+        return symbolSet.newWithout(epsilon);
     }
 }
