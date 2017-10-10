@@ -11,9 +11,11 @@ import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.impl.block.factory.Functions;
 import org.eclipse.collections.impl.factory.Sets;
+import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
 import static api.util.Values.DISPLAY_INDENT;
 import static api.util.Values.DISPLAY_NEWLINE;
+import static core.util.Parameters.estimateExtendedSize;
 
 public final class MapMapSetDelta<S> implements Nondeterministic, DeltaFunction<S>
 {
@@ -72,18 +74,26 @@ public final class MapMapSetDelta<S> implements Nondeterministic, DeltaFunction<
     @Override
     public SetIterable<S> enabledSymbolsOn(State state)
     {
+        if (!forwardDelta.containsKey(state)) {
+            return Sets.immutable.empty();
+        }
+
         return forwardDelta.get(state).keysView().toSet();
     }
 
     @Override
     public boolean available(State state, S symbol)
     {
-        return forwardDelta.get(state).get(symbol) != null;
+        return forwardDelta.containsKey(state) && forwardDelta.get(state).get(symbol) != null;
     }
 
     private SetIterable<State> getSuccessorsFromGraph(
         MapIterable<State, ? extends MapIterable<S, ? extends SetIterable<State>>> graph, State state)
     {
+        if (!graph.containsKey(state)) {
+            return Sets.immutable.empty();
+        }
+
         return graph.get(state).flatCollect(Functions.identity()).toSet();
     }
 
@@ -96,13 +106,21 @@ public final class MapMapSetDelta<S> implements Nondeterministic, DeltaFunction<
     private SetIterable<State> getSuccessorsFromGraph(
         MapIterable<State, ? extends MapIterable<S, ? extends SetIterable<State>>> graph, State state, S symbol)
     {
-        return graph.get(state).get(symbol).toImmutable(); // defense required
+        if (graph.containsKey(state) && graph.get(state).containsKey(symbol)) {
+            return graph.get(state).get(symbol).toImmutable(); // defense required
+        }
+        return Sets.immutable.empty();
     }
 
     @Override
     public SetIterable<State> successorsOf(State state, S symbol)
     {
         return getSuccessorsFromGraph(forwardDelta, state, symbol);
+    }
+
+    private MutableSet<State> successorsOf(SetIterable<State> states, S symbol)
+    {
+        return states.flatCollect(state -> successorsOf(state, symbol)).toSet();
     }
 
     @Override
@@ -117,13 +135,6 @@ public final class MapMapSetDelta<S> implements Nondeterministic, DeltaFunction<
         return getSuccessorsFromGraph(backwardDelta, state, symbol);
     }
 
-    private MutableSet<State> predecessorsOf(SetIterable<State> states, S symbol)
-    {
-        return states.flatCollect(state -> {
-            return available(state, symbol) ? predecessorsOf(state, symbol) : Sets.immutable.empty();
-        }).toSet();
-    }
-
     @Override
     public SetIterable<State> epsilonClosureOf(SetIterable<State> states)
     {
@@ -133,22 +144,14 @@ public final class MapMapSetDelta<S> implements Nondeterministic, DeltaFunction<
     @Override
     public SetIterable<State> epsilonClosureOf(SetIterable<State> states, S symbol)
     {
-        // compute epsilon closure base
-        MutableSet<State> prevSet = predecessorsOf(states, epsilonSymbol);
+        MutableSet<State> baseSet = UnifiedSet.newSet(estimateExtendedSize(states.size())); // heuristic
+        baseSet.addAllIterable(states);
         MutableSet<State> currSet;
-        while (!prevSet.containsAll(currSet = predecessorsOf(prevSet, epsilonSymbol))) {
-            prevSet = currSet;
-        }
-        if (symbol == epsilonSymbol) {
-            return prevSet;
+        while (!baseSet.containsAll(currSet = successorsOf(baseSet, epsilonSymbol))) {
+            baseSet.addAllIterable(currSet);
         }
 
-        // compute epsilon closure of one-step afterward
-        prevSet = predecessorsOf(prevSet, symbol);
-        while (!prevSet.containsAll(currSet = predecessorsOf(prevSet, epsilonSymbol))) {
-            prevSet = currSet;
-        }
-        return prevSet;
+        return symbol.equals(epsilonSymbol) ? baseSet : epsilonClosureOf(successorsOf(baseSet, symbol));
     }
 
     @Override

@@ -21,5 +21,5 @@ transducerTransitionLabel
     ;
 
 monadIOTransitionLabel
-    : (ID '/' ID)?
+    : ID '/' ID
     ;

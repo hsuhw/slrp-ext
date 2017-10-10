@@ -2,6 +2,7 @@ package cli;
 
 import api.parser.Parser;
 import core.Problem;
+import core.Prover;
 import core.parser.ProblemParser;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -44,11 +45,13 @@ public class Main
         Parser<Problem> parser = new ProblemParser();
         Problem problem = parser.parse(is).getOnly();
 
-        System.out.println(problem.getInitialConfigurations());
-        System.out.println(problem.getFinalConfigurations());
-        System.out.println(problem.getSchedulerBehavior());
-        System.out.println(problem.getProcessBehavior());
-        System.out.println(problem.getInvariantConfigSearchSpace());
-        System.out.println(problem.getOrderRelationSearchSpace());
+//        System.out.println(problem.getInitialConfigurations());
+//        System.out.println(problem.getFinalConfigurations());
+//        System.out.println(problem.getSchedulerBehavior());
+//        System.out.println(problem.getProcessBehavior());
+//        System.out.println(problem.getInvariantConfigSearchSpace());
+//        System.out.println(problem.getOrderRelationSearchSpace());
+
+        new Prover(problem).prove();
     }
 }

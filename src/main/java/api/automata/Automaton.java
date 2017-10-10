@@ -71,7 +71,7 @@ public interface Automaton<S>
         final DeltaFunction<S> delta = getDeltaFunction();
         for (int readHead = 0; readHead < word.size(); readHead++) {
             symbol = word.get(readHead);
-            if (symbol == getAlphabet().getEpsilonSymbol()) {
+            if (symbol.equals(getAlphabet().getEpsilonSymbol())) {
                 continue;
             }
             nextState = delta.successorOf(currState, symbol);

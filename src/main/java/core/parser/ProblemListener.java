@@ -33,8 +33,8 @@ public class ProblemListener extends generated.ProblemBaseListener
             .builder(PARSER_PARSING_TARGET_CAPACITY, EPSILON_SYMBOL);
         initialConfigListener = new StringBasicFSAListener(alphabetRecorder);
         finalConfigListener = new StringBasicFSAListener(alphabetRecorder);
-        schedulerListener = new StringRelationFSAListener(alphabetRecorder);
-        processListener = new StringRelationFSAListener(alphabetRecorder);
+        schedulerListener = new StringRelationFSAListener();
+        processListener = new StringRelationFSAListener();
     }
 
     public ListIterable<Problem> getProblem()
@@ -75,16 +75,16 @@ public class ProblemListener extends generated.ProblemBaseListener
     @Override
     public void enterInvariantSearchSpace(ProblemParser.InvariantSearchSpaceContext ctx)
     {
-        final int from = Integer.parseInt(ctx.integerRange().INTEGER(0).getText());
-        final int to = Integer.parseInt(ctx.integerRange().INTEGER(1).getText());
+        final int from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 1);
+        final int to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 1);
         invariantBound = PrimitiveTuples.pair(from, to);
     }
 
     @Override
     public void enterRelationSearchSpace(ProblemParser.RelationSearchSpaceContext ctx)
     {
-        final int from = Integer.parseInt(ctx.integerRange().INTEGER(0).getText());
-        final int to = Integer.parseInt(ctx.integerRange().INTEGER(1).getText());
+        final int from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 1);
+        final int to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 1);
         relationBound = PrimitiveTuples.pair(from, to);
     }
 }

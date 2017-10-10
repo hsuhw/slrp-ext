@@ -114,11 +114,25 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
         return reachable.size() == stateNumber ? fsa : trimStates(fsa, states.newWithoutAll(reachable));
     }
 
+    private <S> void addProductTransition(Queue<Twin<State>> pendingProductStates,
+                                          MutableBiMap<Twin<State>, State> stateMapping, FSA.Builder<S> builder,
+                                          State deptP, Twin<State> destStatePair, S symbolP)
+    {
+        final State destP = stateMapping.computeIfAbsent(destStatePair, __ -> {
+            pendingProductStates.add(destStatePair);
+            return States.generate();
+        });
+        builder.addTransition(deptP, destP, symbolP);
+    }
+
     private <S, T, R> void computeProductDelta(FSA<S> fsaA, FSA<T> fsaB, MutableBiMap<Twin<State>, State> stateMapping,
                                                FSA.Builder<R> builder, BiFunction<S, T, R> transitionDecider)
     {
         final DeltaFunction<S> deltaA = fsaA.getDeltaFunction();
         final DeltaFunction<T> deltaB = fsaB.getDeltaFunction();
+        final S epsilonA = deltaA.getEpsilonSymbol();
+        final T epsilonB = deltaB.getEpsilonSymbol();
+        final R epsilonP = transitionDecider.apply(epsilonA, epsilonB);
         final Queue<Twin<State>> pendingProductStates = new LinkedList<>();
 
         final Twin<State> startStatePair = Tuples.twin(fsaA.getStartState(), fsaB.getStartState());
@@ -126,24 +140,36 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
         pendingProductStates.add(startStatePair);
         Twin<State> currStatePair;
         while ((currStatePair = pendingProductStates.poll()) != null) {
-            final State prodDept = stateMapping.get(currStatePair);
+            final State deptP = stateMapping.get(currStatePair);
             final State deptA = currStatePair.getOne();
             final State deptB = currStatePair.getTwo();
-            deltaA.enabledSymbolsOn(deptA).forEach(symbolA -> {
-                deltaB.enabledSymbolsOn(deptB).forEach(symbolB -> {
-                    final R prodTransSymbol = transitionDecider.apply(symbolA, symbolB);
-                    if (prodTransSymbol != null) {
-                        final State destA = deltaA.successorOf(deptA, symbolA);
-                        final State destB = deltaB.successorOf(deptB, symbolB);
-                        final Twin<State> destStatePair = Tuples.twin(destA, destB);
-                        final State prodDest = stateMapping.computeIfAbsent(destStatePair, __ -> {
-                            pendingProductStates.add(destStatePair);
-                            return States.generate();
+            for (S symbolA : deltaA.enabledSymbolsOn(deptA)) {
+                if (symbolA.equals(epsilonA)) {
+                    deltaA.successorsOf(deptA, epsilonA).forEach(destA -> {
+                        addProductTransition(pendingProductStates, stateMapping, builder, deptP,
+                                             Tuples.twin(destA, deptB), epsilonP);
+                    });
+                    continue;
+                }
+                for (T symbolB : deltaB.enabledSymbolsOn(deptB)) {
+                    if (symbolB.equals(epsilonB)) {
+                        deltaB.successorsOf(deptB, epsilonB).forEach(destB -> {
+                            addProductTransition(pendingProductStates, stateMapping, builder, deptP,
+                                                 Tuples.twin(deptA, destB), epsilonP);
                         });
-                        builder.addTransition(prodDept, prodDest, prodTransSymbol);
+                        continue;
                     }
-                });
-            });
+                    final R symbolP = transitionDecider.apply(symbolA, symbolB);
+                    if (symbolP != null) {
+                        deltaA.successorsOf(deptA, symbolA).forEach(destA -> {
+                            deltaB.successorsOf(deptB, symbolB).forEach(destB -> {
+                                addProductTransition(pendingProductStates, stateMapping, builder, deptP,
+                                                     Tuples.twin(destA, destB), symbolP);
+                            });
+                        });
+                    }
+                }
+            }
         }
     }
 
@@ -165,7 +191,11 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
         computeProductDelta(fsaA, fsaB, stateMapping, builder, transitionDecider);
         finalizer.apply(stateMapping, builder);
 
-        return builder.build();
+        try {
+            return builder.build();
+        } catch (IllegalStateException e) {
+            return FSAs.withEmptyLanguage(targetAlphabet);
+        }
     }
 
     @Override
@@ -180,9 +210,10 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
 
         final Alphabet<S> alphabet = target.getAlphabet();
         final DeltaFunction<S> delta = target.getDeltaFunction();
-        final int statePowerSetNumber = (int) Math.pow(2, target.getStateNumber());
-        final FSA.Builder<S> builder = FSAs.builder(alphabet.size(), alphabet.getEpsilonSymbol(), statePowerSetNumber);
-        final MutableBiMap<MutableSet<State>, State> stateMapping = new HashBiMap<>(statePowerSetNumber);
+        final int statePowerSetEstimate = target.getStateNumber() * target.getStateNumber(); // heuristic
+        final FSA.Builder<S> builder = FSAs
+            .builder(alphabet.size(), alphabet.getEpsilonSymbol(), statePowerSetEstimate);
+        final MutableBiMap<MutableSet<State>, State> stateMapping = new HashBiMap<>(statePowerSetEstimate);
         final Queue<MutableSet<State>> pendingStateSets = new LinkedList<>();
 
         final MutableSet<State> startStates = delta.epsilonClosureOf(target.getStartStates()).toSet();
@@ -193,16 +224,19 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
         final SetIterable<S> noEpsilonSymbolSet = alphabet.getNoEpsilonSet();
         MutableSet<State> currStateSet;
         while ((currStateSet = pendingStateSets.poll()) != null) {
-            final MutableSet<State> fixer = currStateSet;
             final State newDept = stateMapping.get(currStateSet);
-            noEpsilonSymbolSet.forEach(symbol -> {
-                final MutableSet<State> destStates = delta.epsilonClosureOf(fixer, symbol).toSet();
+            for (S symbol : noEpsilonSymbolSet) {
+                final MutableSet<State> destStates = delta.epsilonClosureOf(currStateSet, symbol).toSet();
                 final State newDest = stateMapping.computeIfAbsent(destStates, __ -> {
                     pendingStateSets.add(destStates);
-                    return States.generate();
+                    final State s = States.generate();
+                    if (destStates.anySatisfy(target::isAcceptState)) {
+                        builder.addAcceptState(s);
+                    }
+                    return s;
                 });
                 builder.addTransition(newDept, newDest, symbol);
-            });
+            }
         }
 
         return builder.build(alphabet);

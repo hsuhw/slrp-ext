@@ -4,8 +4,20 @@ import api.automata.Alphabet;
 import api.automata.Automaton;
 import api.automata.DeltaFunction;
 import api.automata.State;
+import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.SetIterable;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.list.mutable.FastList;
+import org.eclipse.collections.impl.map.mutable.UnifiedMap;
+import org.eclipse.collections.impl.tuple.Tuples;
+
+import java.util.LinkedList;
+import java.util.Queue;
+
+import static api.util.Values.NOT_IMPLEMENTED_YET;
 
 public interface FSA<S> extends Automaton<S>
 {
@@ -26,6 +38,40 @@ public interface FSA<S> extends Automaton<S>
     default boolean isComplete()
     {
         return getIncompleteStates().size() == 0;
+    }
+
+    default ImmutableList<S> enumerateOneShortestWord()
+    {
+        if (!isDeterministic()) {
+            throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
+        }
+
+        final DeltaFunction<S> delta = getDeltaFunction();
+        final MutableMap<State, Pair<State, S>> touchedBy = UnifiedMap.newMap(getStateNumber()); // upper bound
+        final Queue<State> pendingChecks = new LinkedList<>();
+        final State startState = getStartState();
+        pendingChecks.add(startState);
+        State currState;
+        while ((currState = pendingChecks.poll()) != null) {
+            if (isAcceptState(currState)) {
+                final MutableList<S> word = FastList.newList(getStateNumber()); // upper bound
+                while (currState != startState) {
+                    final Pair<State, S> touch = touchedBy.get(currState);
+                    word.add(touch.getTwo());
+                    currState = touch.getOne();
+                }
+                return word.reverseThis().toImmutable();
+            }
+            final State state = currState; // effectively finalize for lambda expressions
+            for (S symbol : delta.enabledSymbolsOn(currState)) {
+                touchedBy.computeIfAbsent(delta.successorOf(state, symbol), touchedState -> {
+                    pendingChecks.add(touchedState);
+                    return Tuples.pair(state, symbol);
+                });
+            }
+        }
+
+        return null;
     }
 
     interface Builder<S> extends Automaton.Builder<S>

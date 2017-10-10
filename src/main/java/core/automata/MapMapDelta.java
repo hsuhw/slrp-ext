@@ -70,25 +70,37 @@ public final class MapMapDelta<S> implements Deterministic, DeltaFunction<S>
     @Override
     public SetIterable<S> enabledSymbolsOn(State state)
     {
+        if (!forwardDelta.containsKey(state)) {
+            return Sets.immutable.empty();
+        }
+
         return forwardDelta.get(state).keysView().toSet();
     }
 
     @Override
     public boolean available(State state, S symbol)
     {
-        return forwardDelta.get(state).get(symbol) != null;
+        return forwardDelta.containsKey(state) && forwardDelta.get(state).get(symbol) != null;
     }
 
     @Override
     public SetIterable<State> successorsOf(State state)
     {
+        if (!forwardDelta.containsKey(state)) {
+            return Sets.immutable.empty();
+        }
+
         return forwardDelta.get(state).valuesView().toSet();
     }
 
     @Override
     public SetIterable<State> successorsOf(State state, S symbol)
     {
-        return Sets.fixedSize.of(forwardDelta.get(state).get(symbol));
+        if (!forwardDelta.containsKey(state)) {
+            return Sets.immutable.empty();
+        }
+
+        return Sets.immutable.of(forwardDelta.get(state).get(symbol));
     }
 
     @Override
@@ -100,13 +112,20 @@ public final class MapMapDelta<S> implements Deterministic, DeltaFunction<S>
     @Override
     public SetIterable<State> predecessorsOf(State state)
     {
+        if (!backwardDelta.containsKey(state)) {
+            return Sets.immutable.empty();
+        }
+
         return backwardDelta.get(state).flatCollect(Functions.identity()).toSet();
     }
 
     @Override
     public SetIterable<State> predecessorsOf(State state, S symbol)
     {
-        return backwardDelta.get(state).get(symbol);
+        if (backwardDelta.containsKey(state) && backwardDelta.get(state).containsKey(symbol)) {
+            return backwardDelta.get(state).get(symbol).toImmutable(); // defense required
+        }
+        return Sets.immutable.empty();
     }
 
     @Override

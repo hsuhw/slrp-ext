@@ -6,7 +6,6 @@ import api.automata.State;
 import api.automata.States;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
-import core.util.Assertions;
 import generated.ProblemBaseListener;
 import generated.ProblemParser;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -23,26 +22,15 @@ import static core.util.Parameters.PARSER_PARSING_TARGET_CAPACITY;
 
 public class StringRelationFSAListener extends ProblemBaseListener
 {
-    private static final String ORIGIN_EPSILON_SYMBOL = DISPLAY_EPSILON_SYMBOL;
     private static final Twin<String> EPSILON_SYMBOL = Tuples.twin(DISPLAY_EPSILON_SYMBOL, DISPLAY_EPSILON_SYMBOL);
 
     private final MutableList<FSA<Twin<String>>> builtAutomata;
     private MutableMap<String, State> stateNameTable;
-    private Alphabet.Builder<String> alphabetRecorder;
     private Alphabet.Builder<Twin<String>> alphabetBuilder;
     private FSA.Builder<Twin<String>> fsaBuilder;
 
-    public StringRelationFSAListener(Alphabet.Builder<String> alphabetBuilder)
-    {
-        Assertions.argumentNotNull(alphabetBuilder);
-
-        alphabetRecorder = alphabetBuilder;
-        builtAutomata = FastList.newList(PARSER_PARSING_TARGET_CAPACITY);
-    }
-
     public StringRelationFSAListener()
     {
-        alphabetRecorder = Alphabets.builder(PARSER_PARSING_TARGET_CAPACITY, ORIGIN_EPSILON_SYMBOL);
         builtAutomata = FastList.newList(PARSER_PARSING_TARGET_CAPACITY);
     }
 
@@ -108,8 +96,6 @@ public class StringRelationFSAListener extends ProblemBaseListener
             final String output = ctx.transducerTransitionLabel().monadIOTransitionLabel().ID(1).getText();
             symbol = Tuples.twin(input, output);
             alphabetBuilder.add(symbol);
-            alphabetRecorder.add(input);
-            alphabetRecorder.add(output);
         }
         fsaBuilder.addTransition(dept, dest, symbol);
     }
