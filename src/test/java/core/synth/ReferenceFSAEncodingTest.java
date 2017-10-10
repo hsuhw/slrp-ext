@@ -1,7 +1,7 @@
 package core.synth;
 
-import api.automata.IntAlphabetTranslator;
-import api.automata.IntAlphabetTranslators;
+import api.automata.AlphabetIntEncoder;
+import api.automata.AlphabetIntEncoders;
 import api.automata.fsa.FSA;
 import api.synth.SatSolver;
 import com.mscharhag.oleaster.runner.OleasterRunner;
@@ -16,12 +16,12 @@ import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
 public class ReferenceFSAEncodingTest
 {
     private final SatSolver solver = new Sat4jSolverAdapter();
-    private IntAlphabetTranslator<String> alphabetEncoding;
+    private AlphabetIntEncoder<String> alphabetEncoding;
     private ReferenceFSAEncoding<String> encoding;
 
     private void prepareAlphabet()
     {
-        alphabetEncoding = IntAlphabetTranslators.create(Lists.mutable.of("e", "1", "2", "3"), "e");
+        alphabetEncoding = AlphabetIntEncoders.create(Lists.mutable.of("e", "1", "2", "3"), "e");
     }
 
     private void prepareFSAEncoding()
@@ -77,12 +77,12 @@ public class ReferenceFSAEncodingTest
             });
 
             it("should find correct FSAs with no-words-purely-made-of constraints", () -> {
-                encoding.ensureNoWordsPurelyMadeOf(alphabetEncoding.getOriginAlphabet().getSet());
+                encoding.ensureNoWordsPurelyMadeOf(alphabetEncoding.originAlphabet().set());
                 expect(solver.findItSatisfiable()).toBeFalse();
             });
 
             it("should find no FSAs with unsatisfiable constraints", () -> {
-                final ImmutableList<String> word1 = alphabetEncoding.translateBack(1, 3).toImmutable();
+                final ImmutableList<String> word1 = alphabetEncoding.decode(1, 3).toImmutable();
                 encoding.ensureAcceptingWord(word1);
                 encoding.ensureNotAcceptingWord(word1);
                 expect(solver.findItSatisfiable()).toBeFalse();

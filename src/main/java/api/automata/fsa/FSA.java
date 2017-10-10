@@ -28,7 +28,7 @@ public interface FSA<S> extends Automaton<S>
         }
 
         final DeltaFunction<S> delta = getDeltaFunction();
-        final ImmutableSet<S> completeAlphabet = getAlphabet().getNoEpsilonSet();
+        final ImmutableSet<S> completeAlphabet = getAlphabet().noEpsilonSet();
 
         return getStates().select(state -> {
             return !delta.enabledSymbolsOn(state).containsAllIterable(completeAlphabet);

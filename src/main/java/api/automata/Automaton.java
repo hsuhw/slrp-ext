@@ -62,7 +62,7 @@ public interface Automaton<S>
         if (!isDeterministic()) {
             throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
         }
-        if (!getAlphabet().getSet().containsAllIterable(word)) {
+        if (!getAlphabet().set().containsAllIterable(word)) {
             return false;
         }
 
@@ -71,7 +71,7 @@ public interface Automaton<S>
         final DeltaFunction<S> delta = getDeltaFunction();
         for (int readHead = 0; readHead < word.size(); readHead++) {
             symbol = word.get(readHead);
-            if (symbol.equals(getAlphabet().getEpsilonSymbol())) {
+            if (symbol.equals(getAlphabet().epsilon())) {
                 continue;
             }
             nextState = delta.successorOf(currState, symbol);

@@ -17,11 +17,11 @@ import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 public class ReferenceFSAEncoding<S> implements FSAEncoding<S>
 {
     private static final int START_STATE_INDEX = 0;
-    private static final int EPSILON_SYMBOL_INDEX = IntAlphabetTranslator.INT_EPSILON;
+    private static final int EPSILON_SYMBOL_INDEX = AlphabetIntEncoder.INT_EPSILON;
 
     private final SatSolver solver;
     private final int stateNumber;
-    private final IntAlphabetTranslator<S> alphabetEncoding;
+    private final AlphabetIntEncoder<S> alphabetEncoding;
     private ImmutableIntList[][] transitionIndicators;
     private ImmutableIntList acceptStateIndicators;
     private boolean noUnreachableStatesEnsured;
@@ -76,7 +76,7 @@ public class ReferenceFSAEncoding<S> implements FSAEncoding<S>
         }
     }
 
-    public ReferenceFSAEncoding(SatSolver solver, int stateNumber, IntAlphabetTranslator<S> alphabetEncoding)
+    public ReferenceFSAEncoding(SatSolver solver, int stateNumber, AlphabetIntEncoder<S> alphabetEncoding)
     {
         this.solver = solver;
         this.stateNumber = stateNumber;
@@ -199,7 +199,7 @@ public class ReferenceFSAEncoding<S> implements FSAEncoding<S>
     @Override
     public void ensureAcceptingWord(ImmutableList<S> word)
     {
-        final ImmutableIntList encodedWord = alphabetEncoding.translate(word);
+        final ImmutableIntList encodedWord = alphabetEncoding.encode(word);
         final int activated = solver.newFreeVariables(1).getFirst();
         ensureAcceptWordIf(activated, encodedWord);
         solver.setLiteralTruthy(activated);
@@ -250,7 +250,7 @@ public class ReferenceFSAEncoding<S> implements FSAEncoding<S>
     @Override
     public void ensureNotAcceptingWord(ImmutableList<S> word)
     {
-        final ImmutableIntList encodedWord = alphabetEncoding.translate(word);
+        final ImmutableIntList encodedWord = alphabetEncoding.encode(word);
         final int activated = solver.newFreeVariables(1).getFirst();
         ensureNotAcceptWordIf(activated, encodedWord);
         solver.setLiteralTruthy(activated);
@@ -259,7 +259,7 @@ public class ReferenceFSAEncoding<S> implements FSAEncoding<S>
     @Override
     public void whetherAcceptWord(int indicator, ImmutableList<S> word)
     {
-        final ImmutableIntList encodedWord = alphabetEncoding.translate(word);
+        final ImmutableIntList encodedWord = alphabetEncoding.encode(word);
         ensureAcceptWordIf(indicator, encodedWord);
         ensureNotAcceptWordIf(-indicator, encodedWord);
     }
@@ -267,7 +267,7 @@ public class ReferenceFSAEncoding<S> implements FSAEncoding<S>
     @Override
     public void ensureNoWordsPurelyMadeOf(ImmutableSet<S> symbols)
     {
-        final ImmutableIntList encodedSymbols = alphabetEncoding.translate(symbols.toList().toImmutable());
+        final ImmutableIntList encodedSymbols = alphabetEncoding.encode(symbols.toList().toImmutable());
 
         final ImmutableIntList canBePurelyMadeUntil = solver.newFreeVariables(stateNumber + 1);
         final int initialStepAlwaysPossible = canBePurelyMadeUntil.get(START_STATE_INDEX);
@@ -331,7 +331,7 @@ public class ReferenceFSAEncoding<S> implements FSAEncoding<S>
         // decode states
         final IntSet truthyIndicators = solver.getModelTruthyVariables();
         final FSA.Builder<S> builder = FSAs
-            .builder(alphabetEncoding.size(), alphabetEncoding.getOriginEpsilonSymbol(), stateNumber);
+            .builder(alphabetEncoding.size(), alphabetEncoding.originEpsilon(), stateNumber);
         final State[] states = new State[stateNumber];
         for (int i = 0; i < stateNumber; i++) {
             states[i] = States.create("s" + i);
@@ -348,12 +348,12 @@ public class ReferenceFSAEncoding<S> implements FSAEncoding<S>
             for (int qj = 0; qj < stateNumber; qj++) {
                 for (int s = 0; s < alphabetEncoding.size(); s++) {
                     if (truthyIndicators.contains(transitionIndicators[qi][s].get(qj))) {
-                        builder.addTransition(states[qi], states[qj], alphabetEncoding.originSymbolOf(s));
+                        builder.addTransition(states[qi], states[qj], alphabetEncoding.decode(s));
                     }
                 }
             }
         }
 
-        return builder.build(alphabetEncoding.getOriginAlphabet());
+        return builder.build(alphabetEncoding.originAlphabet());
     }
 }

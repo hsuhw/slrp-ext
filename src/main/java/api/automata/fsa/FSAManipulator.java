@@ -37,7 +37,7 @@ public interface FSAManipulator extends AutomatonManipulator
         // complete the ignored transitions of those states
         final FSA.Builder<S> builder = FSAs.builderBasedOn(target);
         final State deadEndState = States.generate();
-        final ImmutableSet<S> completeAlphabet = target.getAlphabet().getNoEpsilonSet();
+        final ImmutableSet<S> completeAlphabet = target.getAlphabet().noEpsilonSet();
         completeAlphabet.forEach(symbol -> {
             builder.addTransition(deadEndState, deadEndState, symbol);
         });

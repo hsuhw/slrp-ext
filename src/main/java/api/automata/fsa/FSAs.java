@@ -26,9 +26,9 @@ public final class FSAs
     public static <S> FSA<S> withEmptyLanguage(Alphabet<S> alphabet)
     {
         final State state = States.generate();
-        final BasicFSABuilder<S> builder = builder(alphabet.size(), alphabet.getEpsilonSymbol(), 1);
+        final BasicFSABuilder<S> builder = builder(alphabet.size(), alphabet.epsilon(), 1);
         builder.addStartState(state);
-        alphabet.getSet().forEach(symbol -> builder.addTransition(state, state, symbol));
+        alphabet.set().forEach(symbol -> builder.addTransition(state, state, symbol));
 
         return builder.build();
     }
@@ -36,9 +36,9 @@ public final class FSAs
     public static <S> FSA<S> withSigmaStarLanguage(Alphabet<S> alphabet)
     {
         final State state = States.generate();
-        final BasicFSABuilder<S> builder = builder(alphabet.size(), alphabet.getEpsilonSymbol(), 1);
+        final BasicFSABuilder<S> builder = builder(alphabet.size(), alphabet.epsilon(), 1);
         builder.addStartState(state).addAcceptState(state);
-        alphabet.getSet().forEach(symbol -> builder.addTransition(state, state, symbol));
+        alphabet.set().forEach(symbol -> builder.addTransition(state, state, symbol));
 
         return builder.build();
     }

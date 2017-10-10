@@ -1,8 +1,8 @@
 package core.automata;
 
 import api.automata.Alphabet;
+import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
-import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
 import static api.automata.Alphabet.Builder;
@@ -10,40 +10,40 @@ import static core.util.Parameters.estimateExtendedSize;
 
 public class SetAlphabetBuilder<S> implements Alphabet.Builder<S>
 {
-    private final MutableSet<S> symbolSet;
-    private S epsilonSymbol;
+    private final MutableSet<S> symbols;
+    private S epsilon;
 
-    public SetAlphabetBuilder(int symbolNumberEstimate, S epsilonSymbol)
+    public SetAlphabetBuilder(int sizeEstimate, S epsilon)
     {
-        symbolSet = UnifiedSet.newSet(symbolNumberEstimate);
-        this.epsilonSymbol = epsilonSymbol;
-        symbolSet.add(epsilonSymbol);
+        symbols = UnifiedSet.newSet(sizeEstimate);
+        symbols.add(epsilon);
+        this.epsilon = epsilon;
     }
 
     public SetAlphabetBuilder(SetAlphabet<S> alphabet)
     {
-        symbolSet = UnifiedSet.newSet(estimateExtendedSize(alphabet.size()));
-        symbolSet.addAllIterable(alphabet.getSet());
-        epsilonSymbol = alphabet.getEpsilonSymbol();
+        symbols = UnifiedSet.newSet(estimateExtendedSize(alphabet.size()));
+        symbols.addAllIterable(alphabet.set());
+        epsilon = alphabet.epsilon();
     }
 
     @Override
     public Builder<S> add(S symbol)
     {
-        symbolSet.add(symbol);
+        symbols.add(symbol);
 
         return this;
     }
 
     @Override
-    public SetIterable<S> getAddedSymbols()
+    public ImmutableSet<S> addedSymbols()
     {
-        return symbolSet.toImmutable(); // defense required
+        return symbols.toImmutable(); // defense required
     }
 
     @Override
     public Alphabet<S> build()
     {
-        return new SetAlphabet<>(symbolSet, epsilonSymbol);
+        return new SetAlphabet<>(symbols, epsilon);
     }
 }

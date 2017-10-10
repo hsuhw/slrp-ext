@@ -186,7 +186,7 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
         final int stateNumberEstimate = fsaA.getStateNumber() * fsaB.getStateNumber(); // upper bound
         final MutableBiMap<Twin<State>, State> stateMapping = new HashBiMap<>(stateNumberEstimate);
         final FSA.Builder<R> builder = FSAs
-            .builder(targetAlphabet.size(), targetAlphabet.getEpsilonSymbol(), stateNumberEstimate);
+            .builder(targetAlphabet.size(), targetAlphabet.epsilon(), stateNumberEstimate);
 
         computeProductDelta(fsaA, fsaB, stateMapping, builder, transitionDecider);
         finalizer.apply(stateMapping, builder);
@@ -212,7 +212,7 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
         final DeltaFunction<S> delta = target.getDeltaFunction();
         final int statePowerSetEstimate = target.getStateNumber() * target.getStateNumber(); // heuristic
         final FSA.Builder<S> builder = FSAs
-            .builder(alphabet.size(), alphabet.getEpsilonSymbol(), statePowerSetEstimate);
+            .builder(alphabet.size(), alphabet.epsilon(), statePowerSetEstimate);
         final MutableBiMap<MutableSet<State>, State> stateMapping = new HashBiMap<>(statePowerSetEstimate);
         final Queue<MutableSet<State>> pendingStateSets = new LinkedList<>();
 
@@ -221,7 +221,7 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
         stateMapping.put(startStates, newStart);
         builder.addStartState(newStart);
         pendingStateSets.add(startStates);
-        final SetIterable<S> noEpsilonSymbolSet = alphabet.getNoEpsilonSet();
+        final SetIterable<S> noEpsilonSymbolSet = alphabet.noEpsilonSet();
         MutableSet<State> currStateSet;
         while ((currStateSet = pendingStateSets.poll()) != null) {
             final State newDept = stateMapping.get(currStateSet);

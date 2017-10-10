@@ -1,7 +1,7 @@
 package core.automata.fsa;
 
-import api.automata.IntAlphabetTranslator;
-import api.automata.IntAlphabetTranslators;
+import api.automata.AlphabetIntEncoder;
+import api.automata.AlphabetIntEncoders;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAManipulator;
 import api.automata.fsa.FSAs;
@@ -21,12 +21,12 @@ public class BasicFSAManipulatorTest
 {
     private final SatSolver solver = new Sat4jSolverAdapter();
     private final FSAManipulator manipulator = FSAs.manipulator();
-    private IntAlphabetTranslator<String> alphabetEncoding;
+    private AlphabetIntEncoder<String> alphabetEncoding;
     private ReferenceFSAEncoding<String> encoding;
 
     private void prepareAlphabet()
     {
-        alphabetEncoding = IntAlphabetTranslators.create(Lists.mutable.of("e", "1", "2", "3"), "e");
+        alphabetEncoding = AlphabetIntEncoders.create(Lists.mutable.of("e", "1", "2", "3"), "e");
     }
 
     private void prepareFSAEncoding()

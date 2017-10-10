@@ -27,7 +27,7 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
         final boolean validAcceptStates = startStates.containsAllIterable(acceptStates);
         final SetIterable<S> deltaSymbols = deltaFunction.getAllReferredSymbols();
         final SetIterable<State> deltaStates = deltaFunction.getAllReferredStates();
-        final boolean validDeltaFunctionSymbols = sigma.getSet().containsAllIterable(deltaSymbols);
+        final boolean validDeltaFunctionSymbols = sigma.set().containsAllIterable(deltaSymbols);
         final boolean validDeltaFunctionStates = states.containsAllIterable(deltaStates);
         final boolean validDeltaFunction = validDeltaFunctionSymbols && validDeltaFunctionStates;
         final boolean atLeastOneStartState = startStates.size() > 0;

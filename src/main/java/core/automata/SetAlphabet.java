@@ -7,44 +7,44 @@ import org.eclipse.collections.api.set.MutableSet;
 
 public class SetAlphabet<S> implements Alphabet<S>
 {
-    private final ImmutableSet<S> symbolSet;
+    private final ImmutableSet<S> symbols;
     private final S epsilon;
 
-    public SetAlphabet(MutableSet<S> definition, S epsilonSymbol)
+    public SetAlphabet(MutableSet<S> definition, S epsilon)
     {
-        Assertions.argumentNotNull(epsilonSymbol);
-        if (!definition.contains(epsilonSymbol)) {
+        Assertions.argumentNotNull(epsilon);
+        if (!definition.contains(epsilon)) {
             throw new IllegalArgumentException("epsilon symbol not found in the definition");
         }
         if (definition.contains(null)) {
             throw new IllegalArgumentException("a null reference found in the definition");
         }
 
-        symbolSet = definition.toImmutable();
-        epsilon = epsilonSymbol;
+        symbols = definition.toImmutable();
+        this.epsilon = epsilon;
     }
 
     @Override
     public int size()
     {
-        return symbolSet.size();
+        return symbols.size();
     }
 
     @Override
-    public S getEpsilonSymbol()
+    public S epsilon()
     {
         return epsilon;
     }
 
     @Override
-    public ImmutableSet<S> getSet()
+    public ImmutableSet<S> set()
     {
-        return symbolSet;
+        return symbols;
     }
 
     @Override
-    public ImmutableSet<S> getNoEpsilonSet()
+    public ImmutableSet<S> noEpsilonSet()
     {
-        return symbolSet.newWithout(epsilon);
+        return symbols.newWithout(epsilon);
     }
 }

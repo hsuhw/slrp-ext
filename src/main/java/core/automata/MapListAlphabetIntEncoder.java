@@ -2,7 +2,7 @@ package core.automata;
 
 import api.automata.Alphabet;
 import api.automata.Alphabets;
-import api.automata.IntAlphabetTranslator;
+import api.automata.AlphabetIntEncoder;
 import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
@@ -10,18 +10,18 @@ import org.eclipse.collections.api.map.primitive.ImmutableObjectIntMap;
 import org.eclipse.collections.api.set.primitive.IntSet;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 
-public class MapListIntAlphabetTranslator<S> implements IntAlphabetTranslator<S>
+public class MapListAlphabetIntEncoder<S> implements AlphabetIntEncoder<S>
 {
     private final ImmutableObjectIntMap<S> encoder;
     private final ImmutableList<S> decoder;
 
-    public MapListIntAlphabetTranslator(MutableList<S> definition, S epsilonSymbol)
+    public MapListAlphabetIntEncoder(MutableList<S> definition, S epsilon)
     {
-        Assertions.argumentNotNull(epsilonSymbol);
-        if (!definition.contains(epsilonSymbol)) {
+        Assertions.argumentNotNull(epsilon);
+        if (!definition.contains(epsilon)) {
             throw new IllegalArgumentException("epsilon symbol not found in the definition");
         }
-        if (definition.get(INT_EPSILON) != epsilonSymbol) {
+        if (definition.get(INT_EPSILON) != epsilon) {
             throw new IllegalArgumentException("epsilon symbol should be mapped to zero");
         }
         if (definition.contains(null)) {
@@ -41,26 +41,26 @@ public class MapListIntAlphabetTranslator<S> implements IntAlphabetTranslator<S>
     }
 
     @Override
-    public int intSymbolOf(S symbol)
-    {
-        return encoder.get(symbol);
-    }
-
-    @Override
-    public S originSymbolOf(int symbol)
-    {
-        return decoder.get(symbol);
-    }
-
-    @Override
-    public IntSet getIntAlphabet()
+    public IntSet encodedAlphabet()
     {
         return encoder.values().toSet();
     }
 
     @Override
-    public Alphabet<S> getOriginAlphabet()
+    public Alphabet<S> originAlphabet()
     {
-        return Alphabets.create(encoder.keysView().toSet(), getOriginEpsilonSymbol());
+        return Alphabets.create(encoder.keysView().toSet(), originEpsilon());
+    }
+
+    @Override
+    public int encode(S symbol)
+    {
+        return encoder.get(symbol);
+    }
+
+    @Override
+    public S decode(int symbol)
+    {
+        return decoder.get(symbol);
     }
 }

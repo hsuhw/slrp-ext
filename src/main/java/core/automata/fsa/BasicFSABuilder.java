@@ -196,7 +196,7 @@ public final class BasicFSABuilder<S> implements FSA.Builder<S>
     @Override
     public FSA<S> build(Alphabet<S> alphabet)
     {
-        if (!alphabet.getSet().containsAllIterable(alphabetBuilder.getAddedSymbols())) {
+        if (!alphabet.set().containsAllIterable(alphabetBuilder.addedSymbols())) {
             throw new IllegalArgumentException("given alphabet does not contain all the symbols");
         }
 

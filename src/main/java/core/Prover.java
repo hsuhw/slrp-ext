@@ -46,9 +46,9 @@ public class Prover
     private static Alphabet<Twin<String>> makeCombinationAlphabet(Alphabet<String> alphabet)
     {
         final int symbolNumber = alphabet.size() * alphabet.size();
-        final Twin<String> epsilon = Tuples.twin(alphabet.getEpsilonSymbol(), alphabet.getEpsilonSymbol());
+        final Twin<String> epsilon = Tuples.twin(alphabet.epsilon(), alphabet.epsilon());
         final Alphabet.Builder<Twin<String>> builder = Alphabets.builder(symbolNumber, epsilon);
-        final ImmutableSet<String> noEpsilonAlphabet = alphabet.getNoEpsilonSet();
+        final ImmutableSet<String> noEpsilonAlphabet = alphabet.noEpsilonSet();
         for (String s : noEpsilonAlphabet) {
             for (String t : noEpsilonAlphabet) {
                 builder.add(Tuples.twin(s, t));
@@ -288,7 +288,7 @@ public class Prover
         final FSAManipulator manipulator = FSAs.manipulator();
         final FSA<Twin<String>> smallerStepAvailable = manipulator.makeIntersection(transBehavior, relCand);
         final FSA<String> deptsWithSmallerStep = projectFSA(smallerStepAvailable,
-                                                            invCand.getAlphabet().getEpsilonSymbol(), Pair::getOne);
+                                                            invCand.getAlphabet().epsilon(), Pair::getOne);
         final FSA<String> deptsWithSmallerStepBar = manipulator.makeComplement(deptsWithSmallerStep);
         final FSA<String> nonfinalInv = manipulator.makeIntersection(invCand, nonfinalConfigs);
         final FSA<String> containmentCheck = manipulator.makeIntersection(nonfinalInv, deptsWithSmallerStepBar);
@@ -319,9 +319,9 @@ public class Prover
     public void prove() throws SatSolverTimeoutException
     {
         final Alphabet<String> alphabet = initialConfigs.getAlphabet();
-        final IntAlphabetTranslator<String> invSymbolEncoding = IntAlphabetTranslators.create(alphabet);
-        final IntAlphabetTranslator<Twin<String>> relSymbolEncoding = IntAlphabetTranslators.create(relationAlphabet);
-        final ImmutableSet<Twin<String>> reflexiveRelSymbols = alphabet.getSet().collect(s -> Tuples.twin(s, s));
+        final AlphabetIntEncoder<String> invSymbolEncoding = AlphabetIntEncoders.create(alphabet);
+        final AlphabetIntEncoder<Twin<String>> relSymbolEncoding = AlphabetIntEncoders.create(relationAlphabet);
+        final ImmutableSet<Twin<String>> reflexiveRelSymbols = alphabet.set().collect(s -> Tuples.twin(s, s));
 
         FSAEncoding<String> invGuessing;
         FSAEncoding<Twin<String>> relGuessing;
