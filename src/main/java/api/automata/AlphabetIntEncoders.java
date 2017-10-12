@@ -1,8 +1,8 @@
 package api.automata;
 
-import core.automata.MapListAlphabetIntEncoder;
 import org.eclipse.collections.api.list.MutableList;
-import org.eclipse.collections.impl.list.mutable.FastList;
+
+import java.util.ServiceLoader;
 
 public final class AlphabetIntEncoders
 {
@@ -12,15 +12,22 @@ public final class AlphabetIntEncoders
 
     public static <S> AlphabetIntEncoder<S> create(MutableList<S> definition, S epsilon)
     {
-        return new MapListAlphabetIntEncoder<>(definition, epsilon);
+        return Provider.INSTANCE.create(definition, epsilon);
     }
 
     public static <S> AlphabetIntEncoder<S> create(Alphabet<S> alphabet)
     {
-        final MutableList<S> definition = FastList.newList(alphabet.size());
-        definition.add(alphabet.epsilon());
-        definition.addAllIterable(alphabet.noEpsilonSet());
+        return Provider.INSTANCE.create(alphabet);
+    }
 
-        return create(definition, alphabet.epsilon());
+    private static final class Provider // Bill Pugh singleton pattern
+    {
+        private static final AlphabetIntEncoderProvider INSTANCE;
+
+        static {
+            ServiceLoader<AlphabetIntEncoderProvider> loader = ServiceLoader.load(AlphabetIntEncoderProvider.class);
+            INSTANCE = loader.stream().reduce((former, latter) -> latter) // get the last provider in classpath
+                             .orElseThrow(IllegalStateException::new).get();
+        }
     }
 }
