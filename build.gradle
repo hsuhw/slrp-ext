@@ -49,9 +49,13 @@ jacocoTestReport {
 
 jar.enabled = false
 
-task putJar(type: Copy) {
-    from shadowJar
-    into projectDir
+shadowJar {
+    destinationDir = projectDir
+    classifier = null
 }
 
-build.dependsOn putJar
+assemble.dependsOn shadowJar
+
+clean.doLast {
+    file("${projectDir}/${rootProject.name}.jar").delete()
+}
