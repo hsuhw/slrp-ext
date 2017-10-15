@@ -1,6 +1,7 @@
 package api.automata;
 
 import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.set.MutableSet;
 
 public interface Alphabet<S>
 {
@@ -19,5 +20,14 @@ public interface Alphabet<S>
         ImmutableSet<S> addedSymbols();
 
         Alphabet<S> build();
+    }
+
+    interface Provider
+    {
+        <S> Builder<S> builder(int sizeEstimate, S epsilon);
+
+        <S> Builder<S> builderOn(Alphabet<S> alphabet);
+
+        <S> Alphabet<S> create(MutableSet<S> definition, S epsilon);
     }
 }

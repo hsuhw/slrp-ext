@@ -20,7 +20,7 @@ public final class States
     public static ImmutableList<State> generate(int howMany)
     {
         if (howMany < 1) {
-            throw new IllegalArgumentException("given number smaller than one");
+            throw new IllegalArgumentException("amount cannot be less than 1");
         }
         return IntInterval.oneTo(howMany).collect(i -> new NamelessState());
     }

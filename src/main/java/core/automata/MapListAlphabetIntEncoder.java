@@ -1,8 +1,8 @@
 package core.automata;
 
 import api.automata.Alphabet;
-import api.automata.Alphabets;
 import api.automata.AlphabetIntEncoder;
+import api.automata.Alphabets;
 import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
@@ -22,10 +22,10 @@ public class MapListAlphabetIntEncoder<S> implements AlphabetIntEncoder<S>
             throw new IllegalArgumentException("epsilon symbol not found in the definition");
         }
         if (definition.get(INT_EPSILON) != epsilon) {
-            throw new IllegalArgumentException("epsilon symbol should be mapped to zero");
+            throw new IllegalArgumentException("epsilon symbol should be mapped to 0");
         }
         if (definition.contains(null)) {
-            throw new IllegalArgumentException("a null reference found in the definition");
+            throw new IllegalArgumentException("null found in the definition");
         }
 
         decoder = definition.toImmutable();

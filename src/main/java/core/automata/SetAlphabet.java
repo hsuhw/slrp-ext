@@ -17,7 +17,7 @@ public class SetAlphabet<S> implements Alphabet<S>
             throw new IllegalArgumentException("epsilon symbol not found in the definition");
         }
         if (definition.contains(null)) {
-            throw new IllegalArgumentException("a null reference found in the definition");
+            throw new IllegalArgumentException("null found in the definition");
         }
 
         symbols = definition.toImmutable();

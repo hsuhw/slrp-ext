@@ -1,12 +1,11 @@
 package core.automata;
 
 import api.automata.AlphabetEncoder;
-import api.automata.AlphabetEncoderProvider;
 import org.eclipse.collections.api.bimap.MutableBiMap;
 
 import static api.automata.AlphabetEncoder.Builder;
 
-public final class AlphabetEncoders implements AlphabetEncoderProvider
+public final class BiMapAlphabetEncoders implements AlphabetEncoder.Provider
 {
     public <S, T> Builder<S, T> builder(int sizeEstimate)
     {

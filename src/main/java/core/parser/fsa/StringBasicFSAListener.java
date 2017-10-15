@@ -41,7 +41,7 @@ public class StringBasicFSAListener extends ProblemBaseListener
         symbolCollectingPolicy = policy;
         predefinedAlphabet = alphabet;
         if (symbolCollectingPolicy == AGGREGATE) {
-            alphabetBuilder = Alphabets.builderBasedOn(alphabet);
+            alphabetBuilder = Alphabets.builderOn(alphabet);
         }
         queuedBuilds = FastList.newList(PARSER_PARSING_TARGET_CAPACITY);
         builtAutomata = FastList.newList(PARSER_PARSING_TARGET_CAPACITY);
@@ -102,7 +102,7 @@ public class StringBasicFSAListener extends ProblemBaseListener
     {
         final int heuristic = estimateCapacityFactor(ctx);
         if (symbolCollectingPolicy == SEPARATE) {
-            alphabetBuilder = Alphabets.builderBasedOn(predefinedAlphabet);
+            alphabetBuilder = Alphabets.builderOn(predefinedAlphabet);
         }
         stateNameTable = UnifiedMap.newMap(heuristic);
         fsaBuilder = FSAs.builder(heuristic, EPSILON_SYMBOL, heuristic);

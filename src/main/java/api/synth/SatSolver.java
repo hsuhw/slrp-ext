@@ -93,7 +93,7 @@ public interface SatSolver
     default void markAsGreaterEqualInBinary(int[] bitArray1, int[] bitArray2)
     {
         if (bitArray1.length == 0 || bitArray2.length == 0) {
-            throw new IllegalArgumentException("zero length arrays are given");
+            throw new IllegalArgumentException("zero length array given");
         }
         final int deltaLength = bitArray1.length - bitArray2.length;
         final int commonDigitLength = Math.min(bitArray1.length, bitArray2.length);

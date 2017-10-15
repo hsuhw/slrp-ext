@@ -20,7 +20,7 @@ public class BiMapAlphabetEncoder<S, T> implements AlphabetEncoder<S, T>
             throw new IllegalArgumentException("epsilon symbol not found in the definition");
         }
         if (definition.containsKey(null) || definition.containsValue(null)) {
-            throw new IllegalArgumentException("a null reference found in the definition");
+            throw new IllegalArgumentException("null found in the definition");
         }
 
         final ImmutableBiMap<S, T> symbolTable = (ImmutableBiMap<S, T>) definition.toImmutable();

@@ -35,7 +35,7 @@ public final class BasicFSABuilder<S> implements FSA.Builder<S>
 
     public BasicFSABuilder(MapMapDFSA<S> fsa)
     {
-        alphabetBuilder = Alphabets.builderBasedOn(fsa.getAlphabet());
+        alphabetBuilder = Alphabets.builderOn(fsa.getAlphabet());
         deltaBuilder = DeltaFunctions.builderBasedOn(fsa.getDeltaFunction());
 
         final int estimateSize = estimateExtendedSize(fsa.getStateNumber());
@@ -50,7 +50,7 @@ public final class BasicFSABuilder<S> implements FSA.Builder<S>
 
     public BasicFSABuilder(MapMapSetNFSA<S> fsa)
     {
-        alphabetBuilder = Alphabets.builderBasedOn(fsa.getAlphabet());
+        alphabetBuilder = Alphabets.builderOn(fsa.getAlphabet());
         deltaBuilder = DeltaFunctions.builderBasedOn(fsa.getDeltaFunction());
 
         final int estimateSize = estimateExtendedSize(fsa.getStateNumber());
@@ -117,7 +117,7 @@ public final class BasicFSABuilder<S> implements FSA.Builder<S>
     public Builder<S> addStartStates(SetIterable<State> states)
     {
         if (states.anySatisfy(Predicates.isNull())) {
-            throw new IllegalArgumentException("a null reference found in given set");
+            throw new IllegalArgumentException("null found in the given set");
         }
 
         this.states.addAllIterable(states);
@@ -149,7 +149,7 @@ public final class BasicFSABuilder<S> implements FSA.Builder<S>
     public Builder<S> addAcceptStates(SetIterable<State> states)
     {
         if (states.anySatisfy(Predicates.isNull())) {
-            throw new IllegalArgumentException("a null reference found in given set");
+            throw new IllegalArgumentException("null found in the given set");
         }
 
         this.states.addAllIterable(states);

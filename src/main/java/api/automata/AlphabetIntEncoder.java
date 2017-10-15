@@ -3,6 +3,7 @@ package api.automata;
 import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.ListIterable;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.set.primitive.IntSet;
 import org.eclipse.collections.impl.factory.primitive.IntLists;
@@ -52,5 +53,12 @@ public interface AlphabetIntEncoder<S>
     default ListIterable<S> decode(int... word)
     {
         return decode(IntLists.immutable.of(word));
+    }
+
+    interface Provider
+    {
+        <S> AlphabetIntEncoder<S> create(MutableList<S> definition, S epsilon);
+
+        <S> AlphabetIntEncoder<S> create(Alphabet<S> alphabet);
     }
 }
