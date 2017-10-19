@@ -7,7 +7,7 @@ import api.automata.fsa.FSAManipulator;
 import api.automata.fsa.FSAs;
 import api.synth.SatSolver;
 import com.mscharhag.oleaster.runner.OleasterRunner;
-import core.synth.ReferenceFSAEncoding;
+import core.synth.BasicFSAEncoding;
 import core.synth.Sat4jSolverAdapter;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.factory.Lists;
@@ -17,12 +17,12 @@ import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
 
 @RunWith(OleasterRunner.class)
-public class BasicFSAManipulatorTest
+public class MapMapSetFSAManipulatorTest
 {
     private final SatSolver solver = new Sat4jSolverAdapter();
     private final FSAManipulator manipulator = FSAs.manipulator();
     private AlphabetIntEncoder<String> alphabetEncoding;
-    private ReferenceFSAEncoding<String> encoding;
+    private BasicFSAEncoding<String> encoding;
 
     private void prepareAlphabet()
     {
@@ -31,9 +31,9 @@ public class BasicFSAManipulatorTest
 
     private void prepareFSAEncoding()
     {
-        encoding = new ReferenceFSAEncoding<>(solver, 2, alphabetEncoding);
-        encoding.ensureNoUnreachableStates();
-        encoding.ensureNoDeadEndStates();
+        encoding = new BasicFSAEncoding<>(solver, 2, alphabetEncoding);
+        encoding.ensureNoUnreachableState();
+        encoding.ensureNoDeadEndState();
     }
 
     {
@@ -55,7 +55,7 @@ public class BasicFSAManipulatorTest
                 encoding.ensureNotAcceptingWord(word3);
 
                 while (solver.findItSatisfiable()) {
-                    final FSA<String> instance = manipulator.makeComplete(encoding.resolveToFSA());
+                    final FSA<String> instance = manipulator.makeComplete(encoding.resolve());
                     expect(instance.isComplete()).toBeTrue();
                     expect(instance.accepts(word1)).toBeTrue();
                     expect(instance.accepts(word2)).toBeTrue();
@@ -73,7 +73,7 @@ public class BasicFSAManipulatorTest
                 encoding.ensureNotAcceptingWord(word3);
 
                 while (solver.findItSatisfiable()) {
-                    final FSA<String> instance = manipulator.makeComplement(encoding.resolveToFSA());
+                    final FSA<String> instance = manipulator.makeComplement(encoding.resolve());
                     expect(instance.isComplete()).toBeTrue();
                     expect(instance.accepts(word1)).toBeFalse();
                     expect(instance.accepts(word2)).toBeFalse();
@@ -88,11 +88,11 @@ public class BasicFSAManipulatorTest
                 final ImmutableList<String> word3 = Lists.immutable.of("3", "1");
                 encoding.ensureAcceptingWord(word1);
                 encoding.ensureNotAcceptingWord(word2);
-                final FSA<String> one = manipulator.makeComplement(encoding.resolveToFSA());
+                final FSA<String> one = manipulator.makeComplement(encoding.resolve());
                 encoding.ensureAcceptingWord(word3);
 
                 while (solver.findItSatisfiable()) {
-                    final FSA<String> two = encoding.resolveToFSA();
+                    final FSA<String> two = encoding.resolve();
                     final FSA<String> instance = manipulator.makeIntersection(one, two);
                     expect(instance.accepts(word1)).toBeFalse();
                     expect(instance.accepts(word2)).toBeFalse();
@@ -107,11 +107,11 @@ public class BasicFSAManipulatorTest
                 final ImmutableList<String> word3 = Lists.immutable.of("3", "1");
                 encoding.ensureAcceptingWord(word1);
                 encoding.ensureNotAcceptingWord(word2);
-                final FSA<String> one = manipulator.makeComplement(encoding.resolveToFSA());
+                final FSA<String> one = manipulator.makeComplement(encoding.resolve());
                 encoding.ensureAcceptingWord(word3);
 
                 while (solver.findItSatisfiable()) {
-                    final FSA<String> two = encoding.resolveToFSA();
+                    final FSA<String> two = encoding.resolve();
                     final FSA<String> instance = manipulator.makeUnion(one, two);
                     expect(instance.accepts(word1)).toBeTrue();
                     expect(instance.accepts(word2)).toBeTrue();

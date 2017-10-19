@@ -7,7 +7,7 @@ import java.io.InputStream;
 
 public interface Parser<T>
 {
-    enum SymbolCollectingPolicy
+    enum SymbolPolicy
     {
         PREDEFINED, AGGREGATE, SEPARATE
     }

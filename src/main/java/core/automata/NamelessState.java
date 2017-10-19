@@ -6,7 +6,8 @@ import static api.util.Values.randomAlphanumeric;
 
 public class NamelessState implements State
 {
-    private static final String NAME_PREFIX = "$";
+    public static final String NAME_PREFIX = "$";
+
     private static final int GENERATED_NAME_LENGTH = 4;
 
     private final String name;
@@ -17,8 +18,14 @@ public class NamelessState implements State
     }
 
     @Override
-    public String toString()
+    public String name()
     {
         return name;
+    }
+
+    @Override
+    public String toString()
+    {
+        return name();
     }
 }

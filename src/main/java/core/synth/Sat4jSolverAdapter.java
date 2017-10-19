@@ -7,9 +7,9 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.api.set.primitive.IntSet;
-import org.eclipse.collections.impl.block.factory.primitive.IntPredicates;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
+import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 import org.sat4j.core.VecInt;
 import org.sat4j.minisat.SolverFactory;
 import org.sat4j.specs.ContradictionException;
@@ -84,13 +84,12 @@ public class Sat4jSolverAdapter implements SatSolver
     public ImmutableIntList newFreeVariables(int howMany)
     {
         if (howMany < 1) {
-            final String msg = "asking for " + howMany + " new variables";
-            throw new IllegalArgumentException(msg);
+            throw new IllegalArgumentException("number given cannot be less than 1");
         }
         if (nextFreeVariableId + howMany > SAT_SOLVER_MAX_VARIABLE_NUMBER) {
-            final String msg = "ran out of available free variables";
-            throw new IllegalArgumentException(msg);
+            throw new IllegalArgumentException("ran out of available free variables");
         }
+
         final int from = nextFreeVariableId;
         nextFreeVariableId += howMany;
         final int to = nextFreeVariableId - 1;
@@ -183,15 +182,14 @@ public class Sat4jSolverAdapter implements SatSolver
     public ImmutableIntSet getModelTruthyVariables()
     {
         assertModelValid();
-        return model.select(IntPredicates.greaterThan(0));
+        return model.select(x -> x > 0);
     }
 
     @Override
     public IntSet getModelFalsyVariables()
     {
         assertModelValid();
-        ImmutableIntSet falsyVariablesAsSet = model.select(IntPredicates.lessThan(0));
-        return falsyVariablesAsSet.collectInt(x -> -x, IntSets.mutable.empty()).toSet().toImmutable();
+        return model.select(x -> x < 0).collectInt(x -> -x, new IntHashSet(model.size())); // upper bound, one-off
     }
 
     @Override

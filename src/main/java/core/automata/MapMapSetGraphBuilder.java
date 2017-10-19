@@ -138,7 +138,7 @@ public class MapMapSetGraphBuilder<N, A> implements TransitionGraph.Builder<N, A
     }
 
     @Override
-    public TransitionGraph<N, A> build()
+    public MapMapSetGraph<N, A> build()
     {
         if (forwardGraph.isEmpty()) {
             throw new IllegalStateException("nothing has been specified");

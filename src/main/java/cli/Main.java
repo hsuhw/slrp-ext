@@ -3,7 +3,7 @@ package cli;
 import api.parser.Parser;
 import core.Problem;
 import core.Prover;
-import core.parser.ProblemParser;
+import core.parser.StringProblemParser;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -42,7 +42,7 @@ public class Main
             is = new FileInputStream(filename);
         }
 
-        Parser<Problem> parser = new ProblemParser();
+        Parser<Problem> parser = new StringProblemParser();
         Problem problem = parser.parse(is).getOnly();
 
 //        System.out.println(problem.getInitialConfigurations());

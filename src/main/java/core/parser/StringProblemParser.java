@@ -12,7 +12,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.list.ListIterable;
 
-public class ProblemParser extends AbstractAntlrParser<Problem> implements Parser<Problem>
+public class StringProblemParser extends AbstractAntlrParser<Problem> implements Parser<Problem>
 {
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -30,7 +30,7 @@ public class ProblemParser extends AbstractAntlrParser<Problem> implements Parse
 
         // build from the parsed tree
         final ParseTreeWalker walker = new ParseTreeWalker();
-        final ProblemListener collector = new ProblemListener();
+        final StringProblemListener collector = new StringProblemListener();
         walker.walk(collector, tree);
 
         final long endTime = System.currentTimeMillis();

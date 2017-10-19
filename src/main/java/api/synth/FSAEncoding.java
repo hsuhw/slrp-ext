@@ -1,15 +1,14 @@
 package api.synth;
 
-import api.automata.Deterministic;
 import api.automata.fsa.FSA;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.set.ImmutableSet;
 
-public interface FSAEncoding<S> extends Deterministic
+public interface FSAEncoding<S>
 {
-    void ensureNoUnreachableStates();
+    void ensureNoUnreachableState();
 
-    void ensureNoDeadEndStates();
+    void ensureNoDeadEndState();
 
     void ensureAcceptingWord(ImmutableList<S> word);
 
@@ -17,9 +16,9 @@ public interface FSAEncoding<S> extends Deterministic
 
     void whetherAcceptWord(int indicator, ImmutableList<S> word);
 
-    void ensureNoWordsPurelyMadeOf(ImmutableSet<S> symbols);
+    void ensureNoWordPurelyMadeOf(ImmutableSet<S> symbols);
 
-    void blockCurrentInstance() throws SatSolverTimeoutException;
+    void blockCurrentInstance();
 
-    FSA<S> resolveToFSA() throws SatSolverTimeoutException;
+    FSA<S> resolve() throws SatSolverTimeoutException;
 }

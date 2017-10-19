@@ -14,9 +14,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.list.ListIterable;
 
-import static api.parser.Parser.SymbolCollectingPolicy.SEPARATE;
+import static api.parser.Parser.SymbolPolicy.SEPARATE;
 
-public class StringBasicFSAListParser extends AbstractAntlrParser<FSA<String>> implements Parser<FSA<String>>
+public class StringFSAListParser extends AbstractAntlrParser<FSA<String>> implements Parser<FSA<String>>
 {
     private static final Logger LOGGER = LogManager.getLogger();
 
@@ -34,12 +34,12 @@ public class StringBasicFSAListParser extends AbstractAntlrParser<FSA<String>> i
 
         // build from the parsed tree
         final ParseTreeWalker walker = new ParseTreeWalker();
-        final StringBasicFSAListener automatonCollector = new StringBasicFSAListener(SEPARATE);
-        walker.walk(automatonCollector, tree);
+        final StringFSAListListener collector = new StringFSAListListener(SEPARATE);
+        walker.walk(collector, tree);
 
         final long endTime = System.currentTimeMillis();
         LOGGER.info("Source parsed in {}ms.", endTime - startTime);
 
-        return automatonCollector.getAutomata();
+        return collector.getAutomata();
     }
 }

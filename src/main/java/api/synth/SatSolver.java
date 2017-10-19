@@ -1,11 +1,10 @@
 package api.synth;
 
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
-import org.eclipse.collections.api.list.primitive.IntList;
 import org.eclipse.collections.api.list.primitive.MutableIntList;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.api.set.primitive.IntSet;
-import org.eclipse.collections.impl.factory.primitive.IntLists;
+import org.eclipse.collections.impl.list.mutable.primitive.IntArrayList;
 
 /**
  * The API definition for the SAT solver functionalities we use in programs.
@@ -72,7 +71,7 @@ public interface SatSolver
         markEachAsEquivalent(literals);
     }
 
-    private void encodeGreaterEqualThanAtCurrentDigit(int alreadyGreater, int greaterHere, int digit1, int digit2)
+    private void encodeGreaterEqualAt(int alreadyGreater, int greaterHere, int digit1, int digit2)
     {
         // -alreadyGreater --> (greater here) || (equal here)
         addImplicationIf(-alreadyGreater, digit2, digit1);
@@ -95,46 +94,41 @@ public interface SatSolver
         if (bitArray1.length == 0 || bitArray2.length == 0) {
             throw new IllegalArgumentException("zero length array given");
         }
-        final int deltaLength = bitArray1.length - bitArray2.length;
-        final int commonDigitLength = Math.min(bitArray1.length, bitArray2.length);
-        final IntList greaterAlreadyIndicators = newFreeVariables(commonDigitLength + 1);
-        if (deltaLength > 0) {
-            // array1 being longer
+        final int lengthDelta = bitArray1.length - bitArray2.length;
+        final int commonLength = Math.min(bitArray1.length, bitArray2.length);
+        final ImmutableIntList greaterAlreadyIndicators = newFreeVariables(commonLength + 1);
+        if (lengthDelta > 0) { // array1 being longer
 
-            // define the greater situation at longer part
-            final int[] longerPartHasValue = new int[deltaLength];
-            System.arraycopy(bitArray1, 0, longerPartHasValue, 0, deltaLength);
-            final int greaterAtLongerPart = greaterAlreadyIndicators.get(0);
-            // longerPartHasValue <--> greaterAtLongerPart
-            addClauseIf(greaterAtLongerPart, longerPartHasValue);
-            for (int i = 0; i < deltaLength; i++) {
-                addImplication(bitArray1[i], greaterAtLongerPart);
+            // define greater in the longer part
+            final int[] longerPartHasValue = new int[lengthDelta];
+            System.arraycopy(bitArray1, 0, longerPartHasValue, 0, lengthDelta);
+            final int longerPartGreater = greaterAlreadyIndicators.get(0);
+            // longerPartHasValue <--> longerPartGreater
+            addClauseIf(longerPartGreater, longerPartHasValue);
+            for (int i = 0; i < lengthDelta; i++) {
+                addImplication(bitArray1[i], longerPartGreater);
             }
 
-            // define the greater situation at common part
+            // define greater in the common part
             for (int i = 0; i < bitArray2.length; i++) {
                 final int alreadyGreater = greaterAlreadyIndicators.get(i);
                 final int greaterHere = greaterAlreadyIndicators.get(i + 1);
-                final int digit1 = bitArray1[deltaLength + i];
-                final int digit2 = bitArray2[i];
-                encodeGreaterEqualThanAtCurrentDigit(alreadyGreater, greaterHere, digit1, digit2);
+                encodeGreaterEqualAt(alreadyGreater, greaterHere, bitArray1[lengthDelta + i], bitArray2[i]);
             }
         } else {
-            final int absDeltaLength = -deltaLength;
+            final int absLengthDelta = -lengthDelta;
 
-            // define the greater situation at longer part
+            // define greater in the longer part
             setLiteralFalsy(greaterAlreadyIndicators.get(0));
-            for (int i = 0; i < absDeltaLength; i++) {
+            for (int i = 0; i < absLengthDelta; i++) {
                 setLiteralFalsy(bitArray2[i]);
             }
 
-            // define the greater situation at common part
+            // define greater in the common part
             for (int i = 0; i < bitArray1.length; i++) {
                 final int alreadyGreater = greaterAlreadyIndicators.get(i);
                 final int greaterHere = greaterAlreadyIndicators.get(i + 1);
-                final int digit1 = bitArray1[i];
-                final int digit2 = bitArray2[absDeltaLength + i];
-                encodeGreaterEqualThanAtCurrentDigit(alreadyGreater, greaterHere, digit1, digit2);
+                encodeGreaterEqualAt(alreadyGreater, greaterHere, bitArray1[i], bitArray2[absLengthDelta + i]);
             }
         }
     }
@@ -174,9 +168,10 @@ public interface SatSolver
      */
     default void addClauseIf(int indicator, int... clause)
     {
-        MutableIntList clauseAsList = IntLists.mutable.of(clause);
-        clauseAsList.add(-indicator);
-        addClause(clauseAsList.toArray());
+        final MutableIntList mutableClause = new IntArrayList(clause.length + 1);
+        mutableClause.addAll(clause);
+        mutableClause.add(-indicator);
+        addClause(mutableClause.toArray());
     }
 
     /**
@@ -217,15 +212,16 @@ public interface SatSolver
      */
     default void addClauseAtLeastIf(int indicator, int degree, int... clause)
     {
-        final MutableIntList paddingAsList = newFreeVariables(degree).toList();
-        final MutableIntList clauseAsList = IntLists.mutable.of(clause);
-        clauseAsList.addAll(paddingAsList);
-        final int[] paddedClause = clauseAsList.toArray();
-        addClauseAtLeast(degree, paddedClause);
+        final MutableIntList padding = new IntArrayList(degree + 1);
+        padding.addAll(newFreeVariables(degree));
+        final MutableIntList paddedClause = new IntArrayList(clause.length + padding.size());
+        paddedClause.addAll(clause);
+        paddedClause.addAll(padding);
+        addClauseAtLeast(degree, paddedClause.toArray());
 
-        paddingAsList.add(-indicator);
-        final int[] switches = paddingAsList.toArray();
-        syncLiterals(switches);
+        // make the indicator the switch of the padding
+        padding.add(-indicator);
+        syncLiterals(padding.toArray());
     }
 
     /**
@@ -266,15 +262,16 @@ public interface SatSolver
      */
     default void addClauseAtMostIf(int indicator, int degree, int... clause)
     {
-        final MutableIntList paddingAsList = newFreeVariables(clause.length - degree).toList();
-        final MutableIntList clauseAsList = IntLists.mutable.of(clause);
-        clauseAsList.addAll(paddingAsList);
-        final int[] paddedClause = clauseAsList.toArray();
-        addClauseAtMost(clause.length, paddedClause);
+        final int paddingLength = clause.length - degree;
+        final MutableIntList padding = new IntArrayList(paddingLength + 1);
+        padding.addAll(newFreeVariables(paddingLength));
+        final MutableIntList paddedClause = new IntArrayList(clause.length + padding.size());
+        paddedClause.addAll(clause);
+        paddedClause.addAll(padding);
+        addClauseAtMost(clause.length, paddedClause.toArray());
 
-        paddingAsList.add(indicator);
-        final int[] switches = paddingAsList.toArray();
-        syncLiterals(switches);
+        padding.add(indicator);
+        syncLiterals(padding.toArray());
     }
 
     /**
@@ -446,7 +443,7 @@ public interface SatSolver
      *
      * @return an {@link IntSet} containing the true variable IDs
      */
-    IntSet getModelTruthyVariables();
+    ImmutableIntSet getModelTruthyVariables();
 
     /**
      * Returns the variables in the model that have been assigned false of the

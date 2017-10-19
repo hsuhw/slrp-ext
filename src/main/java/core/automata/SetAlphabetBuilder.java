@@ -11,7 +11,7 @@ import static core.util.Parameters.estimateExtendedSize;
 public class SetAlphabetBuilder<S> implements Alphabet.Builder<S>
 {
     private final MutableSet<S> symbols;
-    private S epsilon;
+    private final S epsilon;
 
     public SetAlphabetBuilder(int sizeEstimate, S epsilon)
     {
@@ -25,6 +25,12 @@ public class SetAlphabetBuilder<S> implements Alphabet.Builder<S>
         symbols = UnifiedSet.newSet(estimateExtendedSize(alphabet.size()));
         symbols.addAllIterable(alphabet.set());
         epsilon = alphabet.epsilon();
+    }
+
+    @Override
+    public S epsilon()
+    {
+        return epsilon;
     }
 
     @Override
@@ -42,7 +48,7 @@ public class SetAlphabetBuilder<S> implements Alphabet.Builder<S>
     }
 
     @Override
-    public Alphabet<S> build()
+    public SetAlphabet<S> build()
     {
         return new SetAlphabet<>(symbols, epsilon);
     }

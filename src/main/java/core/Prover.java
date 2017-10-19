@@ -7,7 +7,7 @@ import api.automata.fsa.FSAs;
 import api.synth.FSAEncoding;
 import api.synth.SatSolver;
 import api.synth.SatSolverTimeoutException;
-import core.synth.ReferenceFSAEncoding;
+import core.synth.BasicFSAEncoding;
 import core.synth.Sat4jSolverAdapter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -64,10 +64,10 @@ public class Prover
         return FSAs.manipulator().makeProduct(one, two, combinationAlphabet, (s1, s2) -> {
             return s1.getTwo().equals(s2.getOne()) ? Tuples.twin(s1.getOne(), s2.getTwo()) : null;
         }, (stateMapping, builder) -> {
-            final SetIterable<State> startStates = AutomatonManipulator
-                .selectStatesFromProduct(stateMapping, one::isStartState, two::isStartState, AND);
-            final SetIterable<State> acceptStates = AutomatonManipulator
-                .selectStatesFromProduct(stateMapping, one::isAcceptState, two::isAcceptState, AND);
+            final ImmutableSet<State> startStates = AutomatonManipulator
+                .selectFromProduct(stateMapping, one::isStartState, two::isStartState, AND);
+            final ImmutableSet<State> acceptStates = AutomatonManipulator
+                .selectFromProduct(stateMapping, one::isAcceptState, two::isAcceptState, AND);
             builder.addStartStates(startStates);
             builder.addAcceptStates(acceptStates);
         });
@@ -79,7 +79,7 @@ public class Prover
         initialConfigs = manipulator.determinize(problem.getInitialConfigurations());
         nonfinalConfigs = manipulator.makeComplement(problem.getFinalConfigurations());
 
-        relationAlphabet = makeCombinationAlphabet(initialConfigs.getAlphabet());
+        relationAlphabet = makeCombinationAlphabet(initialConfigs.alphabet());
         final FSA<Twin<String>> scheduler = problem.getSchedulerBehavior();
         final FSA<Twin<String>> process = problem.getProcessBehavior();
         transBehavior = manipulator.determinize(composeTransducer(scheduler, process, relationAlphabet));
@@ -97,7 +97,7 @@ public class Prover
     {
         final FSAManipulator manipulator = FSAs.manipulator();
         final FSA<String> containmentCheck = manipulator.makeIntersection(initialConfigs, invCandBar);
-        if (manipulator.checkLanguageEmpty(containmentCheck)) {
+        if (manipulator.checkAcceptingNone(containmentCheck)) {
             return null;
         } else {
             return containmentCheck.enumerateOneShortestWord();
@@ -119,13 +119,13 @@ public class Prover
             return target.isAcceptState(state) ? blankSingleton : Sets.mutable.empty();
         }
 
-        final DeltaFunction<Twin<String>> delta = target.getDeltaFunction();
-        final int resultSizeBound = target.getAlphabetSize() * target.getStateNumber();
+        final TransitionGraph<State, Twin<String>> delta = target.transitionGraph();
+        final int resultSizeBound = target.alphabet().size() * target.states().size();
         final MutableSet<MutableList<String>> result = UnifiedSet.newSet(resultSizeBound); // upper bound
 
         String symbol1, symbol2, input, output;
         SetIterable<MutableList<String>> recursion;
-        for (Twin<String> ioTrans : delta.enabledSymbolsOn(state)) {
+        for (Twin<String> ioTrans : delta.enabledArcsOn(state)) {
             symbol1 = ioTrans.getOne();
             symbol2 = ioTrans.getTwo();
             input = opposite ? symbol2 : symbol1;
@@ -152,7 +152,7 @@ public class Prover
 
     private ImmutableSet<ImmutableList<String>> computePostImage(FSA<Twin<String>> target, ImmutableList<String> word)
     {
-        final State startState = target.getStartState();
+        final State startState = target.startState();
 
         return computeReversedPostImage(target, startState, word, false, word.size())
             .collect(this::reversedAndImmutable).toImmutable();
@@ -160,7 +160,7 @@ public class Prover
 
     private ImmutableSet<ImmutableList<String>> computePreImage(FSA<Twin<String>> target, ImmutableList<String> word)
     {
-        final State startState = target.getStartState();
+        final State startState = target.startState();
 
         return computeReversedPostImage(target, startState, word, true, word.size()).collect(this::reversedAndImmutable)
                                                                                     .toImmutable();
@@ -171,20 +171,19 @@ public class Prover
     {
         final FSAManipulator manipulator = FSAs.manipulator();
 
-        final FSA<String> postImage = manipulator
-            .makeProduct(invCand, transBehavior, invCand.getAlphabet(), (s1, s2) -> {
-                return s1.equals(s2.getOne()) ? s2.getTwo() : null;
-            }, (stateMapping, builder) -> {
-                final SetIterable<State> startStates = AutomatonManipulator
-                    .selectStatesFromProduct(stateMapping, invCand::isStartState, transBehavior::isStartState, AND);
-                final SetIterable<State> acceptStates = AutomatonManipulator
-                    .selectStatesFromProduct(stateMapping, invCand::isAcceptState, transBehavior::isAcceptState, AND);
-                builder.addStartStates(startStates);
-                builder.addAcceptStates(acceptStates);
-            });
+        final FSA<String> postImage = manipulator.makeProduct(invCand, transBehavior, invCand.alphabet(), (s1, s2) -> {
+            return s1.equals(s2.getOne()) ? s2.getTwo() : null;
+        }, (stateMapping, builder) -> {
+            final ImmutableSet<State> startStates = AutomatonManipulator
+                .selectFromProduct(stateMapping, invCand::isStartState, transBehavior::isStartState, AND);
+            final ImmutableSet<State> acceptStates = AutomatonManipulator
+                .selectFromProduct(stateMapping, invCand::isAcceptState, transBehavior::isAcceptState, AND);
+            builder.addStartStates(startStates);
+            builder.addAcceptStates(acceptStates);
+        });
 
         final FSA<String> containmentCheck = manipulator.makeIntersection(postImage, invCandBar);
-        if (manipulator.checkLanguageEmpty(containmentCheck)) {
+        if (manipulator.checkAcceptingNone(containmentCheck)) {
             return null;
         } else {
             final ImmutableList<String> witness = manipulator.determinize(containmentCheck).enumerateOneShortestWord();
@@ -211,20 +210,20 @@ public class Prover
         final FSAManipulator manipulator = FSAs.manipulator();
 
         final FSA<Twin<String>> twoStepRelation = manipulator
-            .makeProduct(relCand, relCand, relCand.getAlphabet(), (s1, s2) -> {
+            .makeProduct(relCand, relCand, relCand.alphabet(), (s1, s2) -> {
                 return s1.getTwo().equals(s2.getOne()) ? Tuples.twin(s1.getOne(), s2.getTwo()) : null;
             }, (stateMapping, builder) -> {
-                final SetIterable<State> startStates = AutomatonManipulator
-                    .selectStatesFromProduct(stateMapping, relCand::isStartState, relCand::isStartState, AND);
-                final SetIterable<State> acceptStates = AutomatonManipulator
-                    .selectStatesFromProduct(stateMapping, relCand::isAcceptState, relCand::isAcceptState, AND);
+                final ImmutableSet<State> startStates = AutomatonManipulator
+                    .selectFromProduct(stateMapping, relCand::isStartState, relCand::isStartState, AND);
+                final ImmutableSet<State> acceptStates = AutomatonManipulator
+                    .selectFromProduct(stateMapping, relCand::isAcceptState, relCand::isAcceptState, AND);
                 builder.addStartStates(startStates);
                 builder.addAcceptStates(acceptStates);
             });
 
         final FSA<Twin<String>> relCandBar = manipulator.makeComplement(relCand);
         final FSA<Twin<String>> containmentCheck = manipulator.makeIntersection(twoStepRelation, relCandBar);
-        if (manipulator.checkLanguageEmpty(containmentCheck)) {
+        if (manipulator.checkAcceptingNone(containmentCheck)) {
             return null;
         } else {
             final ImmutableList<Twin<String>> witness = manipulator.determinize(containmentCheck)
@@ -267,12 +266,12 @@ public class Prover
 
     private <S, R> FSA<R> projectFSA(FSA<S> target, R epsilonSymbol, Function<S, R> projector)
     {
-        final FSA.Builder<R> builder = FSAs.builder(target.getAlphabetSize(), epsilonSymbol, target.getStateNumber());
-        builder.addStartStates(target.getStartStates());
-        builder.addAcceptStates(target.getAcceptStates());
-        final DeltaFunction<S> delta = target.getDeltaFunction();
-        for (State dept : target.getStates()) {
-            for (S symbol : delta.enabledSymbolsOn(dept)) {
+        final FSA.Builder<R> builder = FSAs.builder(target.states().size(), target.alphabet().size(), epsilonSymbol);
+        builder.addStartStates(target.startStates());
+        builder.addAcceptStates(target.acceptStates());
+        final TransitionGraph<State, S> delta = target.transitionGraph();
+        for (State dept : target.states()) {
+            for (S symbol : delta.enabledArcsOn(dept)) {
                 for (State dest : delta.successorsOf(dept, symbol)) {
                     builder.addTransition(dept, dest, projector.apply(symbol));
                 }
@@ -287,12 +286,12 @@ public class Prover
     {
         final FSAManipulator manipulator = FSAs.manipulator();
         final FSA<Twin<String>> smallerStepAvailable = manipulator.makeIntersection(transBehavior, relCand);
-        final FSA<String> deptsWithSmallerStep = projectFSA(smallerStepAvailable,
-                                                            invCand.getAlphabet().epsilon(), Pair::getOne);
+        final FSA<String> deptsWithSmallerStep = projectFSA(smallerStepAvailable, invCand.alphabet().epsilon(),
+                                                            Pair::getOne);
         final FSA<String> deptsWithSmallerStepBar = manipulator.makeComplement(deptsWithSmallerStep);
         final FSA<String> nonfinalInv = manipulator.makeIntersection(invCand, nonfinalConfigs);
         final FSA<String> containmentCheck = manipulator.makeIntersection(nonfinalInv, deptsWithSmallerStepBar);
-        if (manipulator.checkLanguageEmpty(containmentCheck)) {
+        if (manipulator.checkAcceptingNone(containmentCheck)) {
             return null;
         } else {
             final ImmutableList<String> witness = containmentCheck.enumerateOneShortestWord().toImmutable();
@@ -318,7 +317,7 @@ public class Prover
 
     public void prove() throws SatSolverTimeoutException
     {
-        final Alphabet<String> alphabet = initialConfigs.getAlphabet();
+        final Alphabet<String> alphabet = initialConfigs.alphabet();
         final AlphabetIntEncoder<String> invSymbolEncoding = AlphabetIntEncoders.create(alphabet);
         final AlphabetIntEncoder<Twin<String>> relSymbolEncoding = AlphabetIntEncoders.create(relationAlphabet);
         final ImmutableSet<Twin<String>> reflexiveRelSymbols = alphabet.set().collect(s -> Tuples.twin(s, s));
@@ -341,18 +340,18 @@ public class Prover
                     }
 
                     LOGGER.info("Searching advice bits in state spaces {} & {} ..", invSearching, relSearching);
-                    invGuessing = new ReferenceFSAEncoding<>(solver, invSearching, invSymbolEncoding);
-                    invGuessing.ensureNoDeadEndStates();
-                    invGuessing.ensureNoUnreachableStates();
-                    relGuessing = new ReferenceFSAEncoding<>(solver, relSearching, relSymbolEncoding);
-                    relGuessing.ensureNoDeadEndStates();
-                    relGuessing.ensureNoUnreachableStates();
-                    relGuessing.ensureNoWordsPurelyMadeOf(reflexiveRelSymbols);
+                    invGuessing = new BasicFSAEncoding<>(solver, invSearching, invSymbolEncoding);
+                    invGuessing.ensureNoDeadEndState();
+                    invGuessing.ensureNoUnreachableState();
+                    relGuessing = new BasicFSAEncoding<>(solver, relSearching, relSymbolEncoding);
+                    relGuessing.ensureNoDeadEndState();
+                    relGuessing.ensureNoUnreachableState();
+                    relGuessing.ensureNoWordPurelyMadeOf(reflexiveRelSymbols);
 
                     while (solver.findItSatisfiable()) {
-                        invCand = invGuessing.resolveToFSA();
+                        invCand = invGuessing.resolve();
                         invCandBar = FSAs.manipulator().makeComplement(invCand);
-                        relCand = relGuessing.resolveToFSA();
+                        relCand = relGuessing.resolve();
 
                         if ((counterexample1 = verifyL1(invCandBar)) != null) {
                             applyCE1(invGuessing, counterexample1);

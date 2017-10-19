@@ -1,10 +1,8 @@
 package api.automata;
 
-import core.automata.NamedState;
-import core.automata.NamelessState;
-import org.eclipse.collections.api.list.ImmutableList;
-import org.eclipse.collections.impl.factory.Lists;
-import org.eclipse.collections.impl.list.primitive.IntInterval;
+import java.util.ServiceLoader;
+
+import static api.automata.State.Provider;
 
 public final class States
 {
@@ -12,48 +10,24 @@ public final class States
     {
     }
 
-    public static State generate()
-    {
-        return new NamelessState();
-    }
-
-    public static ImmutableList<State> generate(int howMany)
-    {
-        if (howMany < 1) {
-            throw new IllegalArgumentException("amount cannot be less than 1");
-        }
-        return IntInterval.oneTo(howMany).collect(i -> new NamelessState());
-    }
-
     public static State create(String name)
     {
-        return new NamedState(name);
+        return Singleton.INSTANCE.create(name);
     }
 
-    public static ImmutableList<State> of(String one, String two)
+    public static State generate()
     {
-        return Lists.immutable.of(new NamedState(one), new NamedState(two));
+        return Singleton.INSTANCE.generate();
     }
 
-    public static ImmutableList<State> of(String one, String two, String three)
+    private static final class Singleton
     {
-        return Lists.immutable.of(new NamedState(one), new NamedState(two), new NamedState(three));
-    }
+        private static final Provider INSTANCE;
 
-    public static ImmutableList<State> of(String one, String two, String three, String four)
-    {
-        return Lists.immutable
-            .of(new NamedState(one), new NamedState(two), new NamedState(three), new NamedState(four));
-    }
-
-    public static ImmutableList<State> of(String one, String two, String three, String four, String five)
-    {
-        return Lists.immutable.of(new NamedState(one), new NamedState(two), new NamedState(three), new NamedState(four),
-                                  new NamedState(five));
-    }
-
-    public static ImmutableList<State> of(String... states)
-    {
-        return Lists.immutable.of(states).collect(NamedState::new);
+        static {
+            ServiceLoader<Provider> loader = ServiceLoader.load(Provider.class);
+            INSTANCE = loader.stream().reduce((former, latter) -> latter) // get the last provider in classpath
+                             .orElseThrow(IllegalStateException::new).get();
+        }
     }
 }

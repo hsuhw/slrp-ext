@@ -1,88 +1,45 @@
 package api.automata;
 
-import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.set.ImmutableSet;
-import org.eclipse.collections.api.set.SetIterable;
-
-import static api.util.Values.NOT_IMPLEMENTED_YET;
 
 public interface Automaton<S>
 {
-    default boolean isDeterministic()
+    Alphabet<S> alphabet();
+
+    ImmutableSet<State> states();
+
+    ImmutableSet<State> startStates();
+
+    default State startState()
     {
-        return this instanceof Deterministic;
-    }
-
-    Alphabet<S> getAlphabet();
-
-    default int getAlphabetSize()
-    {
-        return getAlphabet().size();
-    }
-
-    ImmutableSet<State> getStates();
-
-    default int getStateNumber()
-    {
-        return getStates().size();
-    }
-
-    SetIterable<State> getStartStates();
-
-    default State getStartState()
-    {
-        if (getStartStates().size() != 1) {
+        if (startStates().size() != 1) {
             throw new UnsupportedOperationException("more than one start states");
         }
 
-        return getStartStates().getOnly();
+        return startStates().getOnly();
     }
 
     default boolean isStartState(State state)
     {
-        return getStartStates().contains(state);
+        return startStates().contains(state);
     }
 
-    SetIterable<State> getAcceptStates();
+    ImmutableSet<State> acceptStates();
 
     default boolean isAcceptState(State state)
     {
-        return getAcceptStates().contains(state);
+        return acceptStates().contains(state);
     }
 
-    default SetIterable<State> getNonAcceptStates()
+    default ImmutableSet<State> nonAcceptStates()
     {
-        return getStates().newWithoutAll(getAcceptStates());
+        return states().newWithoutAll(acceptStates());
     }
 
-    DeltaFunction<S> getDeltaFunction();
+    TransitionGraph<State, S> transitionGraph();
 
-    default boolean accepts(ImmutableList<S> word)
-    {
-        if (!isDeterministic()) {
-            throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
-        }
-        if (!getAlphabet().set().containsAllIterable(word)) {
-            return false;
-        }
-
-        State currState = getStartState(), nextState;
-        S symbol;
-        final DeltaFunction<S> delta = getDeltaFunction();
-        for (int readHead = 0; readHead < word.size(); readHead++) {
-            symbol = word.get(readHead);
-            if (symbol.equals(getAlphabet().epsilon())) {
-                continue;
-            }
-            nextState = delta.successorOf(currState, symbol);
-            if (nextState == null) {
-                return false;
-            }
-            currState = nextState;
-        }
-
-        return isAcceptState(currState);
-    }
+    @Override
+    String toString();
 
     interface Builder<S>
     {
@@ -94,13 +51,13 @@ public interface Automaton<S>
 
         Builder<S> addStartState(State state);
 
-        Builder<S> addStartStates(SetIterable<State> states);
+        Builder<S> addStartStates(ImmutableSet<State> states);
 
         Builder<S> resetStartStates();
 
         Builder<S> addAcceptState(State state);
 
-        Builder<S> addAcceptStates(SetIterable<State> states);
+        Builder<S> addAcceptStates(ImmutableSet<State> states);
 
         Builder<S> resetAcceptStates();
 

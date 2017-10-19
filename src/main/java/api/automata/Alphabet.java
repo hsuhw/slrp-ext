@@ -15,6 +15,8 @@ public interface Alphabet<S>
 
     interface Builder<S>
     {
+        S epsilon();
+
         Builder<S> add(S symbol);
 
         ImmutableSet<S> addedSymbols();

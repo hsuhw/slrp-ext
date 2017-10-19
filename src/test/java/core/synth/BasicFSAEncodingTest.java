@@ -13,11 +13,11 @@ import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
 
 @RunWith(OleasterRunner.class)
-public class ReferenceFSAEncodingTest
+public class BasicFSAEncodingTest
 {
     private final SatSolver solver = new Sat4jSolverAdapter();
     private AlphabetIntEncoder<String> alphabetEncoding;
-    private ReferenceFSAEncoding<String> encoding;
+    private BasicFSAEncoding<String> encoding;
 
     private void prepareAlphabet()
     {
@@ -26,9 +26,9 @@ public class ReferenceFSAEncodingTest
 
     private void prepareFSAEncoding()
     {
-        encoding = new ReferenceFSAEncoding<>(solver, 2, alphabetEncoding);
-        encoding.ensureNoUnreachableStates();
-        encoding.ensureNoDeadEndStates();
+        encoding = new BasicFSAEncoding<>(solver, 2, alphabetEncoding);
+        encoding.ensureNoUnreachableState();
+        encoding.ensureNoDeadEndState();
     }
 
     {
@@ -50,7 +50,7 @@ public class ReferenceFSAEncodingTest
                 encoding.ensureNotAcceptingWord(word3);
 
                 while (solver.findItSatisfiable()) {
-                    final FSA<String> instance = encoding.resolveToFSA();
+                    final FSA<String> instance = encoding.resolve();
                     expect(instance.accepts(word1)).toBeTrue();
                     expect(instance.accepts(word2)).toBeTrue();
                     expect(instance.accepts(word3)).toBeFalse();
@@ -69,7 +69,7 @@ public class ReferenceFSAEncodingTest
                 encoding.whetherAcceptWord(no, word2);
 
                 while (solver.findItSatisfiable()) {
-                    final FSA<String> instance = encoding.resolveToFSA();
+                    final FSA<String> instance = encoding.resolve();
                     expect(instance.accepts(word1)).toBeTrue();
                     expect(instance.accepts(word2)).toBeFalse();
                     encoding.blockCurrentInstance();
@@ -77,7 +77,7 @@ public class ReferenceFSAEncodingTest
             });
 
             it("should find correct FSAs with no-words-purely-made-of constraints", () -> {
-                encoding.ensureNoWordsPurelyMadeOf(alphabetEncoding.originAlphabet().set());
+                encoding.ensureNoWordPurelyMadeOf(alphabetEncoding.originAlphabet().set());
                 expect(solver.findItSatisfiable()).toBeFalse();
             });
 

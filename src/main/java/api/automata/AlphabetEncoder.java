@@ -42,18 +42,20 @@ public interface AlphabetEncoder<S, T>
         return word.collect(this::decode);
     }
 
-    interface Builder<O, T>
+    interface Builder<S, T>
     {
-        Builder<O, T> define(O origin, T target);
+        T encodedEpsilon();
 
-        Builder<O, T> defineEpsilon(O origin, T target);
+        S originEpsilon();
 
-        AlphabetEncoder<O, T> build();
+        Builder<S, T> define(S origin, T target);
+
+        AlphabetEncoder<S, T> build();
     }
 
     interface Provider
     {
-        <S, T> Builder<S, T> builder(int sizeEstimate);
+        <S, T> Builder<S, T> builder(int sizeEstimate, S originEpsilon, T targetEpsilon);
 
         <S, T> AlphabetEncoder<S, T> create(MutableBiMap<S, T> definition, S originEpsilon);
     }

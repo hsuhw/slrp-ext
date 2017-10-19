@@ -25,25 +25,25 @@ public interface FSAManipulator extends AutomatonManipulator
 
     default <S> FSA<S> makeComplete(FSA<S> target)
     {
-        if (target instanceof Nondeterministic) {
+        if (!target.isDeterministic()) {
             throw new IllegalArgumentException("only available on deterministic instances");
         }
 
-        final SetIterable<State> incomplete = target.getIncompleteStates();
+        final SetIterable<State> incomplete = target.incompleteStates();
         if (incomplete.isEmpty()) {
             return target;
         }
 
         // complete the ignored transitions of those states
-        final FSA.Builder<S> builder = FSAs.builderBasedOn(target);
+        final FSA.Builder<S> builder = FSAs.builderOn(target);
         final State deadEndState = States.generate();
-        final ImmutableSet<S> completeAlphabet = target.getAlphabet().noEpsilonSet();
+        final ImmutableSet<S> completeAlphabet = target.alphabet().noEpsilonSet();
         completeAlphabet.forEach(symbol -> {
             builder.addTransition(deadEndState, deadEndState, symbol);
         });
-        final DeltaFunction<S> delta = target.getDeltaFunction();
+        final TransitionGraph<State, S> delta = target.transitionGraph();
         incomplete.forEach(state -> {
-            completeAlphabet.newWithoutAll(delta.enabledSymbolsOn(state)).forEach(symbol -> {
+            completeAlphabet.newWithoutAll(delta.enabledArcsOn(state)).forEach(symbol -> {
                 builder.addTransition(state, deadEndState, symbol);
             });
         });
@@ -57,7 +57,7 @@ public interface FSAManipulator extends AutomatonManipulator
     {
         final FSA<S> fsa = makeComplete(determinize(target));
 
-        return FSAs.builderBasedOn(fsa).resetAcceptStates().addAcceptStates(fsa.getNonAcceptStates()).build();
+        return FSAs.builderOn(fsa).resetAcceptStates().addAcceptStates(fsa.nonAcceptStates()).build();
     }
 
     private <S> S matchedSymbol(S one, S two)
@@ -67,11 +67,11 @@ public interface FSAManipulator extends AutomatonManipulator
 
     default <S> FSA<S> makeIntersection(FSA<S> one, FSA<S> two)
     {
-        return makeProduct(one, two, one.getAlphabet(), this::matchedSymbol, (stateMapping, builder) -> {
-            final SetIterable<State> startStates = AutomatonManipulator
-                .selectStatesFromProduct(stateMapping, one::isStartState, two::isStartState, AND);
-            final SetIterable<State> acceptStates = AutomatonManipulator
-                .selectStatesFromProduct(stateMapping, one::isAcceptState, two::isAcceptState, AND);
+        return makeProduct(one, two, one.alphabet(), this::matchedSymbol, (stateMapping, builder) -> {
+            final ImmutableSet<State> startStates = AutomatonManipulator
+                .selectFromProduct(stateMapping, one::isStartState, two::isStartState, AND);
+            final ImmutableSet<State> acceptStates = AutomatonManipulator
+                .selectFromProduct(stateMapping, one::isAcceptState, two::isAcceptState, AND);
             builder.addStartStates(startStates);
             builder.addAcceptStates(acceptStates);
         });
@@ -79,31 +79,31 @@ public interface FSAManipulator extends AutomatonManipulator
 
     default <S> FSA<S> makeUnion(FSA<S> one, FSA<S> two)
     {
-        return makeProduct(one, two, one.getAlphabet(), this::matchedSymbol, (stateMapping, builder) -> {
+        return makeProduct(one, two, one.alphabet(), this::matchedSymbol, (stateMapping, builder) -> {
             stateMapping.forEachKeyValue((state, statePair) -> {
-                final SetIterable<State> startStates = AutomatonManipulator
-                    .selectStatesFromProduct(stateMapping, one::isStartState, two::isStartState, AND);
-                final SetIterable<State> acceptStates = AutomatonManipulator
-                    .selectStatesFromProduct(stateMapping, one::isAcceptState, two::isAcceptState, OR);
+                final ImmutableSet<State> startStates = AutomatonManipulator
+                    .selectFromProduct(stateMapping, one::isStartState, two::isStartState, AND);
+                final ImmutableSet<State> acceptStates = AutomatonManipulator
+                    .selectFromProduct(stateMapping, one::isAcceptState, two::isAcceptState, OR);
                 builder.addStartStates(startStates);
                 builder.addAcceptStates(acceptStates);
             });
         });
     }
 
-    default <S> boolean checkLanguageEmpty(FSA<S> target)
+    default <S> boolean checkAcceptingNone(FSA<S> target)
     {
-        return trimUnreachableStates(target).getAcceptStates().size() == 0;
+        return trimUnreachableStates(target).acceptStates().size() == 0;
     }
 
-    default <S> boolean checkLanguageSigmaStar(FSA<S> target)
+    default <S> boolean checkAcceptingAll(FSA<S> target)
     {
-        return checkLanguageEmpty(makeComplement(target));
+        return checkAcceptingNone(makeComplement(target));
     }
 
     default <S> boolean checkLanguageContainment(FSA<S> container, FSA<S> subset)
     {
-        return checkLanguageEmpty(makeIntersection(container, makeComplement(subset)));
+        return checkAcceptingNone(makeIntersection(container, makeComplement(subset)));
     }
 
     interface Decorator extends FSAManipulator
@@ -134,16 +134,16 @@ public interface FSAManipulator extends AutomatonManipulator
             return delegated;
         }
 
-        <S, T, R> FSA<R> makeProductDelegated(Automaton<S> one, Automaton<T> two, Alphabet<R> targetAlphabet,
+        <S, T, R> FSA<R> makeProductDelegated(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
                                               BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer);
 
         @Override
-        default <S, T, R> FSA<R> makeProduct(Automaton<S> one, Automaton<T> two, Alphabet<R> targetAlphabet,
+        default <S, T, R> FSA<R> makeProduct(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
                                              BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer)
         {
-            final FSA<R> delegated = makeProductDelegated(one, two, targetAlphabet, transitionDecider, finalizer);
+            final FSA<R> delegated = makeProductDelegated(one, two, alphabet, transitionDecider, finalizer);
             if (delegated == null) {
-                return getDecoratee().makeProduct(one, two, targetAlphabet, transitionDecider, finalizer);
+                return getDecoratee().makeProduct(one, two, alphabet, transitionDecider, finalizer);
             }
             return delegated;
         }
@@ -236,30 +236,30 @@ public interface FSAManipulator extends AutomatonManipulator
 
         default <S> Boolean checkLanguageEmptyDelegated(FSA<S> target)
         {
-            return FSAManipulator.super.checkLanguageEmpty(target);
+            return FSAManipulator.super.checkAcceptingNone(target);
         }
 
         @Override
-        default <S> boolean checkLanguageEmpty(FSA<S> target)
+        default <S> boolean checkAcceptingNone(FSA<S> target)
         {
             final Boolean delegated = checkLanguageEmptyDelegated(target);
             if (delegated == null) {
-                return getDecoratee().checkLanguageEmpty(target);
+                return getDecoratee().checkAcceptingNone(target);
             }
             return delegated;
         }
 
         default <S> Boolean checkLanguageSigmaStarDelegated(FSA<S> target)
         {
-            return FSAManipulator.super.checkLanguageSigmaStar(target);
+            return FSAManipulator.super.checkAcceptingAll(target);
         }
 
         @Override
-        default <S> boolean checkLanguageSigmaStar(FSA<S> target)
+        default <S> boolean checkAcceptingAll(FSA<S> target)
         {
             final Boolean delegated = checkLanguageSigmaStarDelegated(target);
             if (delegated == null) {
-                return getDecoratee().checkLanguageSigmaStar(target);
+                return getDecoratee().checkAcceptingAll(target);
             }
             return delegated;
         }

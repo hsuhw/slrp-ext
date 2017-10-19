@@ -1,5 +1,6 @@
 package api.automata;
 
+import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
@@ -20,6 +21,8 @@ public interface TransitionGraph<N, A>
     boolean arcDeterministic();
 
     SetIterable<A> enabledArcsOn(N node);
+
+    ImmutableSet<A> nonEpsilonArcsOn(N node);
 
     boolean hasSomeArc(N node, A arcLabel);
 
@@ -77,6 +80,8 @@ public interface TransitionGraph<N, A>
 
     @Override
     String toString();
+
+    String toString(ImmutableMap<N, String> nodeNameOverride);
 
     interface Builder<N, A>
     {

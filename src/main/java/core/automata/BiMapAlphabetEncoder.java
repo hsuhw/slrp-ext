@@ -70,4 +70,9 @@ public class BiMapAlphabetEncoder<S, T> implements AlphabetEncoder<S, T>
     {
         return decoder.get(symbol);
     }
+
+    final ImmutableBiMap<S, T> biMap()
+    {
+        return encoder;
+    }
 }

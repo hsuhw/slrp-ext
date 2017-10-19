@@ -13,9 +13,9 @@ public final class AlphabetEncoders
     {
     }
 
-    public static <S, T> Builder<S, T> builder(int sizeEstimate)
+    public static <S, T> Builder<S, T> builder(int sizeEstimate, S originEpsilon, T targetEpsilon)
     {
-        return Singleton.INSTANCE.builder(sizeEstimate);
+        return Singleton.INSTANCE.builder(sizeEstimate, originEpsilon, targetEpsilon);
     }
 
     public static <S, T> AlphabetEncoder<S, T> create(MutableBiMap<S, T> definition, S originEpsilon)
