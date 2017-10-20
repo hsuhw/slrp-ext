@@ -39,35 +39,35 @@ public abstract class AbstractSatSolverTest
 
         describe("#newFreeVariables()", () -> {
 
-            it("should provide an integer interval of the new variables in question", () -> {
+            it("meets a minimum expectation", () -> {
                 final ImmutableIntList interval = solver.newFreeVariables(3);
                 expect(interval).toBeNotNull();
                 expect(interval.size()).toEqual(3);
                 expect(interval.containsAll(1, 2, 3)).toBeTrue();
             });
 
-            it("should provide an singleton interval when called with one", () -> {
+            it("provides a singleton when called with 1", () -> {
                 final ImmutableIntList singletonInterval = solver.newFreeVariables(1);
                 expect(singletonInterval).toBeNotNull();
                 expect(singletonInterval.size()).toEqual(1);
                 expect(singletonInterval.contains(1)).toBeTrue();
             });
 
-            it("should throw an exception when called with zero or a negative integer number", () -> {
+            it("only accepts positive integer", () -> {
                 expect(() -> solver.newFreeVariables(0)).toThrow(IllegalArgumentException.class);
                 expect(() -> solver.newFreeVariables(-1)).toThrow(IllegalArgumentException.class);
             });
 
-            it("should throw an exception when the solver instance runs out of free variables", () -> {
+            it("complains when the solver runs out of its variables", () -> {
                 expect(() -> solver.newFreeVariables(SAT_SOLVER_MAX_CLAUSE_NUMBER + 1))
                     .toThrow(IllegalArgumentException.class);
             });
 
         });
 
-        describe("#addClause(ImmutableIntList)", () -> {
+        describe("#addClause(IntList)", () -> {
 
-            it("should work the same as #addClause(int...)", () -> {
+            it("is #addClause(int...)", () -> {
                 solver.addClause(solver.newFreeVariables(2));
                 solver.addClause(-2);
                 expectModelExists();
@@ -77,18 +77,18 @@ public abstract class AbstractSatSolverTest
                 expectNoModelExists();
             });
 
-            it("should throw an exception when the clause causes an immediate contradiction", () -> {
+            it("complains when it causes trivial contradictions", () -> {
                 solver.addClause(-1);
-                expect(() -> solver.addClause(solver.newFreeVariables(1))).toThrow(IllegalArgumentException.class);
+                expect(() -> solver.addClause(solver.newFreeVariables(1))).toThrow(Exception.class);
             });
 
         });
 
-        describe("#addClauseIf(int, ImmutableIntList)", () -> {
+        describe("#addClauseIf(int, IntList)", () -> {
 
             describe("when activated", () -> {
 
-                it("should work the same as #addClauseIf(int, int...)", () -> {
+                it("is #addClauseIf(int, int...)", () -> {
                     final int yes = solver.newFreeVariables(1).getFirst();
                     solver.addClause(yes);
                     solver.addClauseIf(yes, solver.newFreeVariables(2));
@@ -100,7 +100,7 @@ public abstract class AbstractSatSolverTest
                     expectNoModelExists();
                 });
 
-                it("should throw an exception when the clause causes an immediate contradiction", () -> {
+                it("complains when causing trivial contradictions", () -> {
                     expect(() -> {
                         final int yes = solver.newFreeVariables(1).getFirst();
                         solver.addClause(yes);
@@ -111,9 +111,9 @@ public abstract class AbstractSatSolverTest
 
             });
 
-            describe("when not activated", () -> {
+            describe("when inactivated", () -> {
 
-                it("should not affect the established satisfiability", () -> {
+                it("does not affect SAT", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     expectModelExists();
@@ -128,7 +128,7 @@ public abstract class AbstractSatSolverTest
                     expect(model().contains(2)).toBeTrue();
                 });
 
-                it("should not affect the established unsatisfiability", () -> {
+                it("does not affect UNSAT", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     solver.addClause(-2);
@@ -140,7 +140,7 @@ public abstract class AbstractSatSolverTest
                     expectNoModelExists();
                 });
 
-                it("should not throw an exception when the clause causes an immediate contradiction", () -> {
+                it("never causes a contradiction", () -> {
                     final int wellNeverMind = solver.newFreeVariables(1).getFirst();
                     solver.addClause(-wellNeverMind);
                     solver.addClause(-2);
@@ -153,7 +153,7 @@ public abstract class AbstractSatSolverTest
 
         describe("#setLiteralTruthy(int)", () -> {
 
-            it("should ensure the given literal be assigned true in the model", () -> {
+            it("ensures the literal be assigned true in the model", () -> {
                 solver.addClause(1, 2);
                 solver.setLiteralTruthy(-2);
                 expectModelExists();
@@ -163,7 +163,7 @@ public abstract class AbstractSatSolverTest
                 expectNoModelExists();
             });
 
-            it("should throw an exception when the setting causes an immediate contradiction", () -> {
+            it("complains when it causes trivial contradictions", () -> {
                 solver.addClause(1);
                 expect(() -> solver.setLiteralTruthy(-1)).toThrow(IllegalArgumentException.class);
             });
@@ -172,7 +172,7 @@ public abstract class AbstractSatSolverTest
 
         describe("#setLiteralsTruthy(int...)", () -> {
 
-            it("should ensure the given literals be assigned true in the model", () -> {
+            it("ensures the literals be assigned true in the model", () -> {
                 solver.addClause(1, 2, 3);
                 solver.setLiteralsTruthy(-2, -3);
                 expectModelExists();
@@ -182,7 +182,7 @@ public abstract class AbstractSatSolverTest
                 expectNoModelExists();
             });
 
-            it("should throw an exception when the setting causes an immediate contradiction", () -> {
+            it("complains when it causes trivial contradictions", () -> {
                 solver.setLiteralsTruthy(1, 2);
                 expect(() -> solver.setLiteralsTruthy(-1, -2)).toThrow(IllegalArgumentException.class);
             });
@@ -191,7 +191,7 @@ public abstract class AbstractSatSolverTest
 
         describe("#setLiteralFalsy(int)", () -> {
 
-            it("should ensure the given literal be assigned true in the model", () -> {
+            it("ensures the literal be assigned false in the model", () -> {
                 solver.addClause(1, 2);
                 solver.setLiteralFalsy(2);
                 expectModelExists();
@@ -201,7 +201,7 @@ public abstract class AbstractSatSolverTest
                 expectNoModelExists();
             });
 
-            it("should throw an exception when the setting causes an immediate contradiction", () -> {
+            it("complains when it causes trivial contradictions", () -> {
                 solver.addClause(1);
                 expect(() -> solver.setLiteralFalsy(1)).toThrow(IllegalArgumentException.class);
             });
@@ -210,7 +210,7 @@ public abstract class AbstractSatSolverTest
 
         describe("#setLiteralsFalsy(int...)", () -> {
 
-            it("should ensure the given literals be assigned true in the model", () -> {
+            it("ensures the literals be assigned false in the model", () -> {
                 solver.addClause(1, 2, 3);
                 solver.setLiteralsFalsy(2, 3);
                 expectModelExists();
@@ -220,7 +220,7 @@ public abstract class AbstractSatSolverTest
                 expectNoModelExists();
             });
 
-            it("should throw an exception when the setting causes an immediate contradiction", () -> {
+            it("complains when it causes trivial contradictions", () -> {
                 solver.setLiteralsFalsy(1, 2);
                 expect(() -> solver.setLiteralsFalsy(-1, -2)).toThrow(IllegalArgumentException.class);
             });
@@ -229,21 +229,21 @@ public abstract class AbstractSatSolverTest
 
         describe("#markAsEquivalent(int, int)", () -> {
 
-            it("should ensure the literals be assigned the same value (the true case)", () -> {
+            it("ensures the literals be assigned the same value (as true)", () -> {
                 solver.addClause(-1, -2);
                 solver.markAsEquivalent(1, 2);
                 solver.addClause(1);
                 expectNoModelExists();
             });
 
-            it("should ensure the literals be assigned the same value (the false case)", () -> {
+            it("ensures the literals be assigned the same value (as false)", () -> {
                 solver.addClause(1, 2);
                 solver.markAsEquivalent(1, 2);
                 solver.addClause(-1);
                 expectNoModelExists();
             });
 
-            it("should throw an exception when the setting causes an immediate contradiction", () -> {
+            it("complains when it causes trivial contradictions", () -> {
                 solver.addClause(1);
                 solver.addClause(-2);
                 expect(() -> solver.markAsEquivalent(1, 2)).toThrow(IllegalArgumentException.class);
@@ -253,7 +253,7 @@ public abstract class AbstractSatSolverTest
 
         describe("#markEachAsEquivalent(int...)", () -> {
 
-            it("should ensure the literals be assigned the same value (the true case)", () -> {
+            it("ensures the literals be assigned the same value (as true)", () -> {
                 // same as true
                 solver.addClause(-1, -2, -3);
                 solver.markEachAsEquivalent(1, 2, 3);
@@ -261,14 +261,14 @@ public abstract class AbstractSatSolverTest
                 expectNoModelExists();
             });
 
-            it("should ensure the literals be assigned the same value (the false case)", () -> {
+            it("ensures the literals be assigned the same value (as false)", () -> {
                 solver.addClause(1, 2, 3);
                 solver.markEachAsEquivalent(1, 2, 3);
                 solver.addClause(-1);
                 expectNoModelExists();
             });
 
-            it("should throw an exception when the setting causes an immediate contradiction", () -> {
+            it("complains when it causes trivial contradictions", () -> {
                 solver.addClause(1);
                 solver.addClause(-2);
                 solver.addClause(3);
@@ -277,9 +277,9 @@ public abstract class AbstractSatSolverTest
 
         });
 
-        describe("#markAsGreaterEqualInBinary(ImmutableIntList, ImmutableIntList)", () -> {
+        describe("#markAsGreaterEqualInBinary(IntList, IntList)", () -> {
 
-            it("should encode the greater situation correctly (case 1)", () -> {
+            it("encodes the greater situation 1", () -> {
                 final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
                 final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
@@ -290,7 +290,7 @@ public abstract class AbstractSatSolverTest
                 expect(model().contains(bitArray2.get(0))).toBeFalse();
             });
 
-            it("should encode the greater situation correctly (case 2)", () -> {
+            it("encodes the greater situation 2", () -> {
                 final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
                 final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
@@ -299,7 +299,7 @@ public abstract class AbstractSatSolverTest
                 expect(model().contains(bitArray1.get(0))).toBeTrue();
             });
 
-            it("should encode the greater situation correctly (case 3)", () -> {
+            it("encodes the greater situation 3", () -> {
                 final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
                 final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
@@ -308,7 +308,7 @@ public abstract class AbstractSatSolverTest
                 expectNoModelExists();
             });
 
-            it("should encode the equal situation correctly", () -> {
+            it("encodes the equal situation", () -> {
                 final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
                 final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
@@ -320,7 +320,7 @@ public abstract class AbstractSatSolverTest
                 }
             });
 
-            it("should handle array1 longer than array2 correctly", () -> {
+            it("handles array1 longer than array2", () -> {
                 final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
                 final ImmutableIntList bitArray2 = solver.newFreeVariables(1);
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
@@ -330,7 +330,7 @@ public abstract class AbstractSatSolverTest
                 }
             });
 
-            it("should handle array1 shorter than array2 correctly", () -> {
+            it("handles array1 shorter than array2", () -> {
                 final ImmutableIntList bitArray1 = solver.newFreeVariables(1);
                 final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
@@ -343,9 +343,9 @@ public abstract class AbstractSatSolverTest
 
         });
 
-        describe("#addClauseAtLeast(int, ImmutableIntList)", () -> {
+        describe("#addClauseAtLeast(int, IntList)", () -> {
 
-            it("should work the same as #addClauseAtLeast(int, int...)", () -> {
+            it("is #addClauseAtLeast(int, int...)", () -> {
                 solver.addClauseAtLeast(2, solver.newFreeVariables(4));
                 solver.addClause(-1);
                 solver.addClause(-2);
@@ -356,7 +356,7 @@ public abstract class AbstractSatSolverTest
                 expectNoModelExists();
             });
 
-            it("should not affect the established unsatisfiability", () -> {
+            it("does not affect UNSAT", () -> {
                 solver.addClause(solver.newFreeVariables(2));
                 solver.addClause(-1);
                 solver.addClause(-2);
@@ -366,11 +366,11 @@ public abstract class AbstractSatSolverTest
 
         });
 
-        describe("#addClauseAtLeastIf(int, int, ImmutableIntList)", () -> {
+        describe("#addClauseAtLeastIf(int, int, IntList)", () -> {
 
             describe("when activated", () -> {
 
-                it("should work the same as #addClauseAtLeast(int, ImmutableIntList)", () -> {
+                it("is #addClauseAtLeast(int, IntList)", () -> {
                     final int yes = solver.newFreeVariables(1).getFirst();
                     solver.addClause(yes);
                     solver.addClauseAtLeastIf(yes, 2, solver.newFreeVariables(4));
@@ -383,7 +383,7 @@ public abstract class AbstractSatSolverTest
                     expectNoModelExists();
                 });
 
-                it("should not affect the established unsatisfiability", () -> {
+                it("does not affect UNSAT", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     solver.addClause(-2);
@@ -397,9 +397,9 @@ public abstract class AbstractSatSolverTest
 
             });
 
-            describe("when not activated", () -> {
+            describe("when inactivated", () -> {
 
-                it("should not affect the established satisfiability", () -> {
+                it("does not affect SAT", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     expectModelExists();
@@ -416,7 +416,7 @@ public abstract class AbstractSatSolverTest
                     expect(model().contains(2)).toBeTrue();
                 });
 
-                it("should not affect the established unsatisfiability", () -> {
+                it("does not affect UNSAT", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     solver.addClause(-2);
@@ -432,9 +432,9 @@ public abstract class AbstractSatSolverTest
 
         });
 
-        describe("#addClauseAtMost(ImmutableIntList)", () -> {
+        describe("#addClauseAtMost(IntList)", () -> {
 
-            it("should work the same as #addClauseAtMost(int...)", () -> {
+            it("is #addClauseAtMost(int...)", () -> {
                 solver.addClauseAtMost(2, solver.newFreeVariables(4));
                 solver.addClause(1);
                 solver.addClause(2);
@@ -445,7 +445,7 @@ public abstract class AbstractSatSolverTest
                 expectNoModelExists();
             });
 
-            it("should allow zero true assignments in the given clause", () -> {
+            it("allows no true in the clause", () -> {
                 solver.addClauseAtMost(2, solver.newFreeVariables(4));
                 solver.addClause(-1);
                 solver.addClause(-2);
@@ -455,7 +455,7 @@ public abstract class AbstractSatSolverTest
                 expect(model().containsAll(-1, -2, -3, -4)).toBeTrue();
             });
 
-            it("should not affect the established unsatisfiability", () -> {
+            it("does not affect UNSAT", () -> {
                 solver.addClause(solver.newFreeVariables(2));
                 solver.addClause(-1);
                 solver.addClause(-2);
@@ -465,11 +465,11 @@ public abstract class AbstractSatSolverTest
 
         });
 
-        describe("#addClauseAtMostIf(int, int, ImmutableIntList)", () -> {
+        describe("#addClauseAtMostIf(int, int, IntList)", () -> {
 
             describe("when activated", () -> {
 
-                it("should work the same as #addClauseAtMost(int, ImmutableIntList)", () -> {
+                it("is #addClauseAtMost(int, IntList)", () -> {
                     final int yes = solver.newFreeVariables(1).getFirst();
                     solver.addClause(yes);
                     solver.addClauseAtMostIf(yes, 2, solver.newFreeVariables(4));
@@ -482,7 +482,7 @@ public abstract class AbstractSatSolverTest
                     expectNoModelExists();
                 });
 
-                it("should allow zero true assignments in the given clause", () -> {
+                it("allows no true in the clause", () -> {
                     final int yes = solver.newFreeVariables(1).getFirst();
                     solver.addClause(yes);
                     solver.addClauseAtMostIf(yes, 2, solver.newFreeVariables(4));
@@ -494,7 +494,7 @@ public abstract class AbstractSatSolverTest
                     expect(model().containsAll(-2, -3, -4, -5)).toBeTrue();
                 });
 
-                it("should not affect the established unsatisfiability", () -> {
+                it("does not affect UNSAT", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     solver.addClause(-2);
@@ -508,9 +508,9 @@ public abstract class AbstractSatSolverTest
 
             });
 
-            describe("when not activated", () -> {
+            describe("when inactivated", () -> {
 
-                it("should not affect the established satisfiability", () -> {
+                it("does not affect SAT", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     expectModelExists();
@@ -526,7 +526,7 @@ public abstract class AbstractSatSolverTest
                     expect(model().contains(2)).toBeTrue();
                 });
 
-                it("should not affect the established unsatisfiability", () -> {
+                it("does not affect UNSAT", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     solver.addClause(-2);
@@ -542,9 +542,9 @@ public abstract class AbstractSatSolverTest
 
         });
 
-        describe("#addClauseExactly(int, ImmutableIntList)", () -> {
+        describe("#addClauseExactly(int, IntList)", () -> {
 
-            it("should ensure no more than the given degree", () -> {
+            it("ensures no-more-than the degree", () -> {
                 solver.addClauseExactly(2, solver.newFreeVariables(4));
                 solver.addClause(1);
                 solver.addClause(2);
@@ -555,7 +555,7 @@ public abstract class AbstractSatSolverTest
                 expectNoModelExists();
             });
 
-            it("should ensure no less than the given degree", () -> {
+            it("ensures no-less-than the degree", () -> {
                 solver.addClauseExactly(2, solver.newFreeVariables(4));
                 solver.addClause(-1);
                 solver.addClause(-2);
@@ -566,7 +566,7 @@ public abstract class AbstractSatSolverTest
                 expectNoModelExists();
             });
 
-            it("should not affect the established unsatisfiability", () -> {
+            it("does not affect UNSAT", () -> {
                 solver.addClause(1, 2);
                 solver.addClause(-1);
                 solver.addClause(-2);
@@ -578,11 +578,11 @@ public abstract class AbstractSatSolverTest
 
         });
 
-        describe("#addClauseExactlyIf(int, int, ImmutableIntList)", () -> {
+        describe("#addClauseExactlyIf(int, int, IntList)", () -> {
 
             describe("when activated", () -> {
 
-                it("should ensure no more than the given degree", () -> {
+                it("ensures no-more-than the degree", () -> {
                     final int yes = solver.newFreeVariables(1).getFirst();
                     solver.addClause(yes);
                     solver.addClauseExactlyIf(yes, 2, solver.newFreeVariables(4));
@@ -595,7 +595,7 @@ public abstract class AbstractSatSolverTest
                     expectNoModelExists();
                 });
 
-                it("should ensure no less than the given degree", () -> {
+                it("ensures no-less-than the degree", () -> {
                     final int yes = solver.newFreeVariables(1).getFirst();
                     solver.addClause(yes);
                     solver.addClauseExactlyIf(yes, 2, solver.newFreeVariables(4));
@@ -608,7 +608,7 @@ public abstract class AbstractSatSolverTest
                     expectNoModelExists();
                 });
 
-                it("should not affect the established unsatisfiability", () -> {
+                it("does not affect UNSAT", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     solver.addClause(-2);
@@ -622,9 +622,9 @@ public abstract class AbstractSatSolverTest
 
             });
 
-            describe("when not activated", () -> {
+            describe("when inactivated", () -> {
 
-                it("should not affect the established satisfiability", () -> {
+                it("does not affect SAT", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     expectModelExists();
@@ -640,7 +640,7 @@ public abstract class AbstractSatSolverTest
                     expect(model().contains(2)).toBeTrue();
                 });
 
-                it("should not affect the established unsatisfiability", () -> {
+                it("does not affect UNSAT", () -> {
                     solver.addClause(solver.newFreeVariables(2));
                     solver.addClause(-1);
                     solver.addClause(-2);
@@ -656,9 +656,9 @@ public abstract class AbstractSatSolverTest
 
         });
 
-        describe("#addClauseBlocking(ImmutableIntSet)", () -> {
+        describe("#addClauseBlocking(IntSet)", () -> {
 
-            it("should prevent the given clause showing up as an model", () -> {
+            it("prevents the clause showing up as an model", () -> {
                 solver.addClause(1, 2);
                 solver.addClauseBlocking(IntSets.immutable.of(1, 2));
                 solver.addClauseBlocking(IntSets.immutable.of(-1, 2));
@@ -669,7 +669,7 @@ public abstract class AbstractSatSolverTest
                 expectNoModelExists();
             });
 
-            it("can loop to keep blocking a problem until it is made unsatisfiable", () -> {
+            it("can keep blocking a problem till it's UNSAT", () -> {
                 solver.addClause(1, 2, 3);
                 while (modelExists()) {
                     solver.addClauseBlocking(model());
@@ -678,11 +678,11 @@ public abstract class AbstractSatSolverTest
 
         });
 
-        describe("#addClauseBlockingIf(int, ImmutableIntSet)", () -> {
+        describe("#addClauseBlockingIf(int, IntSet)", () -> {
 
             describe("when activated", () -> {
 
-                it("should work the same as #addClauseBlocking(ImmutableIntSet)", () -> {
+                it("is #addClauseBlocking(IntSet)", () -> {
                     solver.addClause(1);
                     solver.addClause(2, 3);
                     solver.addClauseBlockingIf(1, IntSets.immutable.of(2, 3));
@@ -694,7 +694,7 @@ public abstract class AbstractSatSolverTest
                     expectNoModelExists();
                 });
 
-                it("should not affect the established unsatisfiability", () -> {
+                it("does not affect UNSAT", () -> {
                     solver.addClause(1, 2);
                     solver.addClause(-1);
                     solver.addClause(-2);
@@ -707,9 +707,9 @@ public abstract class AbstractSatSolverTest
 
             });
 
-            describe("when not activated", () -> {
+            describe("when inactivated", () -> {
 
-                it("should not affect the established satisfiability", () -> {
+                it("does not affect SAT", () -> {
                     solver.addClause(1, 2);
                     solver.addClause(-1);
                     expectModelExists();
@@ -723,7 +723,7 @@ public abstract class AbstractSatSolverTest
                     expect(model().contains(2)).toBeTrue();
                 });
 
-                it("should not affect the established unsatisfiability", () -> {
+                it("does not affect UNSAT", () -> {
                     solver.addClause(1, 2);
                     solver.addClause(-1);
                     solver.addClause(-2);
@@ -740,7 +740,7 @@ public abstract class AbstractSatSolverTest
 
         describe("#addImplications(int, int...)", () -> {
 
-            it("should add the implication as expected (true antecedent)", () -> {
+            it("adds the implication (true antecedent)", () -> {
                 solver.addClause(1, 2, 3, 4);
                 solver.addImplications(1, 2, 3);
                 solver.addClause(1);
@@ -751,7 +751,7 @@ public abstract class AbstractSatSolverTest
                 expectNoModelExists();
             });
 
-            it("should add the implication as expected (false antecedent)", () -> {
+            it("adds the implication (false antecedent)", () -> {
                 solver.addClause(1, 2, 3, 4);
                 solver.addImplications(1, 2, 3);
                 solver.addClause(-1);
@@ -760,7 +760,7 @@ public abstract class AbstractSatSolverTest
                 expectModelExists();
             });
 
-            it("should not affect the established satisfiability", () -> {
+            it("does not affect SAT", () -> {
                 solver.addClause(1, 2);
                 solver.addClause(-1);
                 expectModelExists();
@@ -771,7 +771,7 @@ public abstract class AbstractSatSolverTest
                 expect(model().contains(2)).toBeTrue();
             });
 
-            it("should not affect the established unsatisfiability", () -> {
+            it("does not affect UNSAT", () -> {
                 solver.addClause(1, 2);
                 solver.addClause(-1);
                 solver.addClause(-2);
@@ -787,7 +787,7 @@ public abstract class AbstractSatSolverTest
 
             describe("when activated", () -> {
 
-                it("should add the implication as expected (true antecedent)", () -> {
+                it("adds the implication (true antecedent)", () -> {
                     solver.addClause(1);
                     solver.addClause(2, 3, 4, 5);
                     solver.addImplicationsIf(1, 2, 3, 4);
@@ -799,7 +799,7 @@ public abstract class AbstractSatSolverTest
                     expectNoModelExists();
                 });
 
-                it("should add the implication as expected (false antecedent)", () -> {
+                it("adds the implication (false antecedent)", () -> {
                     solver.addClause(1);
                     solver.addClause(2, 3, 4, 5);
                     solver.addImplicationsIf(1, 2, 3, 4);
@@ -809,7 +809,7 @@ public abstract class AbstractSatSolverTest
                     expectModelExists();
                 });
 
-                it("should not affect the established unsatisfiability", () -> {
+                it("does not affect UNSAT", () -> {
                     solver.addClause(1, 2);
                     solver.addClause(-1);
                     solver.addClause(-2);
@@ -822,9 +822,9 @@ public abstract class AbstractSatSolverTest
 
             });
 
-            describe("when not activated", () -> {
+            describe("when inactivated", () -> {
 
-                it("should not affect the established satisfiability", () -> {
+                it("does not affect SAT", () -> {
                     solver.addClause(1, 2);
                     solver.addClause(-1);
                     expectModelExists();
@@ -839,7 +839,7 @@ public abstract class AbstractSatSolverTest
                     expect(model().contains(2)).toBeTrue();
                 });
 
-                it("should not affect the established unsatisfiability", () -> {
+                it("does not affect UNSAT", () -> {
                     solver.addClause(1, 2);
                     solver.addClause(-1);
                     solver.addClause(-2);

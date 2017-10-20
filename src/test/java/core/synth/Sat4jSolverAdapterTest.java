@@ -15,14 +15,14 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
 
         describe("#isVerbose() & #setVerbose()", () -> {
 
-            it("should change the verbosity of the solver consistently (case 1)", () -> {
+            it("changes the verbosity (case 1)", () -> {
                 solver.setVerbose(true);
                 expect(solver.isVerbose()).toBeTrue();
                 solver.setVerbose(false);
                 expect(solver.isVerbose()).toBeFalse();
             });
 
-            it("should change the verbosity of the solver consistently (case 2)", () -> {
+            it("changes the verbosity (case 2)", () -> {
                 solver.setVerbose(false);
                 expect(solver.isVerbose()).toBeFalse();
                 solver.setVerbose(true);
@@ -33,14 +33,14 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
 
         describe("#get/setTimeout*()", () -> {
 
-            it("should change the timeout setting of the solver in seconds", () -> {
+            it("changes the second timeout setting", () -> {
                 solver.setTimeoutInSec(12);
                 expect(solver.getTimeoutInSec()).toEqual(12);
                 solver.setTimeoutInSec(34);
                 expect(solver.getTimeoutInSec()).toEqual(34);
             });
 
-            it("should change the timeout setting of the solver in milliseconds", () -> {
+            it("changes the millisecond timeout setting", () -> {
                 solver.setTimeoutInMs(1200);
                 expect(solver.getTimeoutInMs()).toEqual(1200);
                 solver.setTimeoutInMs(3400);
@@ -51,40 +51,40 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
 
         describe("#addClauseAtLeast(int, int...)", () -> {
 
-            it("should throw an exception when the clause causes an immediate contradiction", () -> {
+            it("complains when it causes trivial contradictions", () -> {
                 solver.addClause(-1);
                 solver.addClause(-2);
                 solver.addClause(-3);
-                expect(() -> solver.addClauseAtLeast(2, 1, 2, 3)).toThrow(IllegalArgumentException.class);
+                expect(() -> solver.addClauseAtLeast(2, 1, 2, 3)).toThrow(Exception.class);
             });
 
         });
 
         describe("#addClauseAtMost(int, int...)", () -> {
 
-            it("should throw an exception when the clause causes an immediate contradiction", () -> {
+            it("complains when it causes trivial contradictions", () -> {
                 solver.addClause(1);
                 solver.addClause(2);
                 solver.addClause(3);
-                expect(() -> solver.addClauseAtMost(2, 1, 2, 3)).toThrow(IllegalArgumentException.class);
+                expect(() -> solver.addClauseAtMost(2, 1, 2, 3)).toThrow(Exception.class);
             });
 
         });
 
         describe("#addClauseExactly(int, int...)", () -> {
 
-            it("should throw an exception when the clause causes an immediate contradiction", () -> {
+            it("complains when it causes trivial contradictions", () -> {
                 solver.addClause(1);
                 solver.addClause(2);
                 solver.addClause(3);
-                expect(() -> solver.addClauseExactly(2, 1, 2, 3)).toThrow(IllegalArgumentException.class);
+                expect(() -> solver.addClauseExactly(2, 1, 2, 3)).toThrow(Exception.class);
             });
 
         });
 
         describe("#findItSatisfiable()", () -> {
 
-            it("should return positive consistently when a problem is satisfiable", () -> {
+            it("returns true when SAT", () -> {
                 solver.addClause(1, 2);
                 final boolean satisfiable1 = solver.findItSatisfiable();
                 expect(satisfiable1).toBeTrue();
@@ -92,7 +92,7 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
                 expect(satisfiable1).toEqual(satisfiable2);
             });
 
-            it("should return negative consistently when a problem is unsatisfiable", () -> {
+            it("returns false when UNSAT", () -> {
                 solver.addClause(1, 2);
                 solver.addClause(-1);
                 solver.addClause(-2);
@@ -106,7 +106,7 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
 
         describe("#getModelTruthyVariables", () -> {
 
-            it("should provide the truthy variables in the model", () -> {
+            it("returns the truthy variables in the model", () -> {
                 solver.addClause(1, 2);
                 solver.addClause(-1);
                 expectModelExists();
@@ -115,14 +115,14 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
                 expect(solver.getModelTruthyVariables().contains(2)).toBeTrue();
             });
 
-            it("should throw an exception when called if there is no model to be found", () -> {
+            it("complains when no model exists", () -> {
                 solver.addClause(1, 2);
                 solver.addClause(-1);
                 solver.addClause(-2);
                 expect(() -> solver.getModelTruthyVariables()).toThrow(IllegalStateException.class);
             });
 
-            it("should throw an exception when called if the problem has not been solved", () -> {
+            it("complains if the problem is yet solved", () -> {
                 expect(() -> solver.getModelTruthyVariables()).toThrow(IllegalStateException.class);
             });
 
@@ -130,7 +130,7 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
 
         describe("#getModelFalsyVariables", () -> {
 
-            it("should provide the falsy variables in the model", () -> {
+            it("returns the falsy variables in the model", () -> {
                 solver.addClause(1, 2);
                 solver.addClause(-1);
                 expectModelExists();
@@ -139,14 +139,14 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
                 expect(solver.getModelFalsyVariables().contains(2)).toBeFalse();
             });
 
-            it("should throw an exception when called if there is no model to be found", () -> {
+            it("complains when no model exists", () -> {
                 solver.addClause(1, 2);
                 solver.addClause(-1);
                 solver.addClause(-2);
                 expect(() -> solver.getModelFalsyVariables()).toThrow(IllegalStateException.class);
             });
 
-            it("should throw an exception when called if the problem has not been solved", () -> {
+            it("complains if the problem is yet solved", () -> {
                 expect(() -> solver.getModelFalsyVariables()).toThrow(IllegalStateException.class);
             });
 

@@ -21,7 +21,7 @@ public class BasicFSAEncodingTest
 
     private void prepareAlphabet()
     {
-        alphabetEncoding = AlphabetIntEncoders.create(Lists.mutable.of("e", "1", "2", "3"), "e");
+        alphabetEncoding = AlphabetIntEncoders.create(Lists.mutable.of("e", "1", "2"), "e");
     }
 
     private void prepareFSAEncoding()
@@ -34,17 +34,17 @@ public class BasicFSAEncodingTest
     {
         prepareAlphabet();
 
-        describe("When NUS, NDES are ensured", () -> {
+        describe("No-dangling ensured", () -> {
 
             beforeEach(() -> {
                 solver.reset();
                 prepareFSAEncoding();
             });
 
-            it("should find correct FSAs with accepting (or not accepting) constraints", () -> {
-                final ImmutableList<String> word1 = Lists.immutable.of("1", "3");
+            it("finds correct FSAs with accepting or not constraints", () -> {
+                final ImmutableList<String> word1 = Lists.immutable.of("1", "2");
                 final ImmutableList<String> word2 = Lists.immutable.of("2", "2");
-                final ImmutableList<String> word3 = Lists.immutable.of("3", "1");
+                final ImmutableList<String> word3 = Lists.immutable.of("2", "1");
                 encoding.ensureAcceptingWord(word1);
                 encoding.ensureAcceptingWord(word2);
                 encoding.ensureNotAcceptingWord(word3);
@@ -58,8 +58,8 @@ public class BasicFSAEncodingTest
                 }
             });
 
-            it("should find correct FSAs with whether-accept constraints", () -> {
-                final ImmutableList<String> word1 = Lists.immutable.of("1", "3");
+            it("finds correct FSAs with whether-accept constraints", () -> {
+                final ImmutableList<String> word1 = Lists.immutable.of("1", "2");
                 final ImmutableList<String> word2 = Lists.immutable.of("2", "2");
                 final int yes = solver.newFreeVariables(1).getFirst();
                 solver.setLiteralTruthy(yes);
@@ -76,16 +76,17 @@ public class BasicFSAEncodingTest
                 }
             });
 
-            it("should find correct FSAs with no-words-purely-made-of constraints", () -> {
+            it("finds correct FSAs with no-words-purely-made-of constraints", () -> {
                 encoding.ensureNoWordPurelyMadeOf(alphabetEncoding.originAlphabet().set());
                 expect(solver.findItSatisfiable()).toBeFalse();
             });
 
-            it("should find no FSAs with unsatisfiable constraints", () -> {
-                final ImmutableList<String> word1 = alphabetEncoding.decode(1, 3).toImmutable();
+            it("finds no FSAs when constraints UNSAT", () -> {
+                final ImmutableList<String> word1 = Lists.immutable.of("1", "2");
                 encoding.ensureAcceptingWord(word1);
                 encoding.ensureNotAcceptingWord(word1);
                 expect(solver.findItSatisfiable()).toBeFalse();
+                expect(encoding.resolve()).toBeNull();
             });
 
         });
