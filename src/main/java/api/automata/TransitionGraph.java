@@ -24,7 +24,7 @@ public interface TransitionGraph<N, A>
 
     ImmutableSet<A> nonEpsilonArcsOn(N node);
 
-    boolean hasSomeArc(N node, A arcLabel);
+    boolean hasArc(N node, A arcLabel);
 
     SetIterable<N> successorsOf(N node);
 

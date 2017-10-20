@@ -16,6 +16,7 @@ public class MapMapSetGraph<N, A> implements TransitionGraph<N, A>
     private final ImmutableMap<N, ImmutableMap<A, ImmutableSet<N>>> backwardGraph;
     private final A epsilonLabel;
 
+    private int size = -1;
     private ImmutableSet<N> nodes;
     private ImmutableSet<A> arcLabels;
     private Boolean arcDeterministic;
@@ -37,7 +38,11 @@ public class MapMapSetGraph<N, A> implements TransitionGraph<N, A>
     @Override
     public int size()
     {
-        return (int) forwardGraph.collectLong(arcRecord -> arcRecord.collectInt(ImmutableSet::size).sum()).sum();
+        if (size == -1) {
+            size =  (int) forwardGraph.collectLong(arcRecord -> arcRecord.collectInt(ImmutableSet::size).sum()).sum();
+        }
+
+        return size;
     }
 
     @Override
@@ -95,7 +100,7 @@ public class MapMapSetGraph<N, A> implements TransitionGraph<N, A>
     }
 
     @Override
-    public boolean hasSomeArc(N node, A arc)
+    public boolean hasArc(N node, A arc)
     {
         return forwardGraph.containsKey(node) && forwardGraph.get(node).get(arc) != null;
     }

@@ -14,24 +14,22 @@ public class MapMapSetGraphTest extends AbstractTransitionGraphTest
     @Override
     protected Builder<Object, Object> builderForCommonTest()
     {
-        final int c = 3;
+        final int c = 4;
 
         return new MapMapSetGraphBuilder<>(c, c, epsilon);
     }
 
     {
-        describe("When its builder being create", () -> {
+        describe("Creating the builder", () -> {
 
             it("ensures taking a non-null epsilon label", () -> {
                 final int c = 1;
-
                 expect(() -> new MapMapSetGraphBuilder<>(c, c, nullArg)).toThrow(IllegalArgumentException.class);
             });
 
             it("accepts no negative capacity", () -> {
                 final int c = 1;
                 final int neg = -1;
-
                 expect(() -> new MapMapSetGraphBuilder<>(neg, c, epsilon)).toThrow(IllegalArgumentException.class);
                 expect(() -> new MapMapSetGraphBuilder<>(c, neg, epsilon)).toThrow(IllegalArgumentException.class);
             });
