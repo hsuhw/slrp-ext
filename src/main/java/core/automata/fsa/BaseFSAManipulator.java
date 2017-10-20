@@ -24,7 +24,7 @@ public final class BaseFSAManipulator implements FSAManipulator
     }
 
     @Override
-    public <S, T, R> FSA<R> makeProduct(Automaton<S> first, Automaton<T> after, Alphabet<R> targetAlphabet,
+    public <S, T, R> FSA<R> makeProduct(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
                                         BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer)
     {
         throw new UnsupportedOperationException(NO_MATCHED_IMPLEMENTATION_FOUND);

@@ -18,7 +18,7 @@ public interface FSAManipulator extends AutomatonManipulator
     <S> FSA<S> trimDeadEndStates(Automaton<S> target);
 
     @Override
-    <S, T, R> FSA<R> makeProduct(Automaton<S> one, Automaton<T> two, Alphabet<R> targetAlphabet,
+    <S, T, R> FSA<R> makeProduct(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
                                  BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer);
 
     <S> FSA<S> determinize(FSA<S> fsa);
@@ -110,7 +110,10 @@ public interface FSAManipulator extends AutomatonManipulator
     {
         FSAManipulator getDecoratee();
 
-        <S> FSA<S> trimUnreachableStatesDelegated(Automaton<S> target);
+        default <S> FSA<S> trimUnreachableStatesDelegated(Automaton<S> target)
+        {
+            return null;
+        }
 
         @Override
         default <S> FSA<S> trimUnreachableStates(Automaton<S> fsa)
@@ -122,7 +125,10 @@ public interface FSAManipulator extends AutomatonManipulator
             return delegated;
         }
 
-        <S> FSA<S> trimDeadEndStatesDelegated(Automaton<S> target);
+        default <S> FSA<S> trimDeadEndStatesDelegated(Automaton<S> target)
+        {
+            return null;
+        }
 
         @Override
         default <S> FSA<S> trimDeadEndStates(Automaton<S> target)
@@ -134,8 +140,11 @@ public interface FSAManipulator extends AutomatonManipulator
             return delegated;
         }
 
-        <S, T, R> FSA<R> makeProductDelegated(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
-                                              BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer);
+        default <S, T, R> FSA<R> makeProductDelegated(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
+                                                      BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer)
+        {
+            return null;
+        }
 
         @Override
         default <S, T, R> FSA<R> makeProduct(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
@@ -148,7 +157,10 @@ public interface FSAManipulator extends AutomatonManipulator
             return delegated;
         }
 
-        <S> FSA<S> determinizeDelegated(FSA<S> target);
+        default <S> FSA<S> determinizeDelegated(FSA<S> target)
+        {
+            return null;
+        }
 
         @Override
         default <S> FSA<S> determinize(FSA<S> target)
@@ -234,7 +246,7 @@ public interface FSAManipulator extends AutomatonManipulator
             return delegated;
         }
 
-        default <S> Boolean checkLanguageEmptyDelegated(FSA<S> target)
+        default <S> Boolean checkAcceptingNoneDelegated(FSA<S> target)
         {
             return FSAManipulator.super.checkAcceptingNone(target);
         }
@@ -242,14 +254,14 @@ public interface FSAManipulator extends AutomatonManipulator
         @Override
         default <S> boolean checkAcceptingNone(FSA<S> target)
         {
-            final Boolean delegated = checkLanguageEmptyDelegated(target);
+            final Boolean delegated = checkAcceptingNoneDelegated(target);
             if (delegated == null) {
                 return getDecoratee().checkAcceptingNone(target);
             }
             return delegated;
         }
 
-        default <S> Boolean checkLanguageSigmaStarDelegated(FSA<S> target)
+        default <S> Boolean checkAcceptingAllDelegated(FSA<S> target)
         {
             return FSAManipulator.super.checkAcceptingAll(target);
         }
@@ -257,7 +269,7 @@ public interface FSAManipulator extends AutomatonManipulator
         @Override
         default <S> boolean checkAcceptingAll(FSA<S> target)
         {
-            final Boolean delegated = checkLanguageSigmaStarDelegated(target);
+            final Boolean delegated = checkAcceptingAllDelegated(target);
             if (delegated == null) {
                 return getDecoratee().checkAcceptingAll(target);
             }
