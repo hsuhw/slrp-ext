@@ -28,7 +28,9 @@ public class BasicFSAEncodingTest
     {
         encoding = new BasicFSAEncoding<>(solver, 2, alphabetEncoding);
         encoding.ensureNoUnreachableState();
+        encoding.ensureNoUnreachableState(); // should be cached, hard to tell though
         encoding.ensureNoDeadEndState();
+        encoding.ensureNoDeadEndState(); // should be cached, hard to tell though
     }
 
     {

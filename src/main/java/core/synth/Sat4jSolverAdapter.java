@@ -93,6 +93,7 @@ public class Sat4jSolverAdapter implements SatSolver
         final int from = nextFreeVariableId;
         nextFreeVariableId += howMany;
         final int to = nextFreeVariableId - 1;
+
         return IntInterval.fromTo(from, to);
     }
 
@@ -150,6 +151,7 @@ public class Sat4jSolverAdapter implements SatSolver
         if (model != null) {
             return model != NONSOLUTION;
         }
+
         LOGGER.debug("Invoke a solving on SAT4J.");
         final long startTime = System.currentTimeMillis();
         long endTime;
@@ -158,16 +160,18 @@ public class Sat4jSolverAdapter implements SatSolver
                 endTime = System.currentTimeMillis();
                 LOGGER.info("SAT4J found a solution in {}ms.", endTime - startTime);
                 model = IntSets.immutable.of(solver.model());
+
                 return true;
             }
         } catch (TimeoutException e) {
             endTime = System.currentTimeMillis();
-            LOGGER.warn("SAT4J failed to solve the problem within {}ms.", endTime - startTime);
+            LOGGER.info("SAT4J failed to solve the problem within {}ms.", endTime - startTime);
             throw new SatSolverTimeoutException();
         }
         endTime = System.currentTimeMillis();
         LOGGER.info("SAT4J found it unsatisfiable in {}ms.", endTime - startTime);
         model = NONSOLUTION;
+
         return false;
     }
 
@@ -175,6 +179,7 @@ public class Sat4jSolverAdapter implements SatSolver
     public ImmutableIntSet getModel()
     {
         assertModelValid();
+
         return model;
     }
 
@@ -182,6 +187,7 @@ public class Sat4jSolverAdapter implements SatSolver
     public ImmutableIntSet getModelTruthyVariables()
     {
         assertModelValid();
+
         return model.select(x -> x > 0);
     }
 
@@ -189,6 +195,7 @@ public class Sat4jSolverAdapter implements SatSolver
     public IntSet getModelFalsyVariables()
     {
         assertModelValid();
+
         return model.select(x -> x < 0).collectInt(x -> -x, new IntHashSet(model.size())); // upper bound, one-off
     }
 

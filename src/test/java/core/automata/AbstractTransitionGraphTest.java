@@ -20,6 +20,12 @@ public abstract class AbstractTransitionGraphTest
     protected abstract Builder<Object, Object> builderForCommonTest();
 
     {
+        final Object n0 = new Object();
+        final Object n1 = new Object();
+        final Object n2 = new Object();
+        final Object n3 = new Object();
+        final Object label = new Object();
+
         describe("Using the builder", () -> {
 
             beforeEach(() -> {
@@ -33,9 +39,7 @@ public abstract class AbstractTransitionGraphTest
                 });
 
                 it("meets a minimum expectation", () -> {
-                    final Object n = new Object();
-                    final Object label = new Object();
-                    builder.addArc(n, n, label);
+                    builder.addArc(n0, n0, label);
                     expect(builder.build()).toBeInstanceOf(MapMapSetGraph.class);
                 });
 
@@ -55,15 +59,11 @@ public abstract class AbstractTransitionGraphTest
                 });
 
                 it("adds no epsilon self-loop", () -> {
-                    final Object n = new Object();
-                    builder.addArc(n, n, epsilon);
+                    builder.addArc(n0, n0, epsilon);
                     expect(builder::build).toThrow(IllegalStateException.class);
                 });
 
                 it("meets a minimum expectation", () -> {
-                    final Object n1 = new Object();
-                    final Object n2 = new Object();
-                    final Object label = new Object();
                     builder.addArc(n1, n1, label);
                     builder.addArc(n1, n2, label);
                     expect(builder.build().size()).toEqual(2);
@@ -85,9 +85,6 @@ public abstract class AbstractTransitionGraphTest
                 });
 
                 it("complains when removing non-existing arc", () -> {
-                    final Object n1 = new Object();
-                    final Object n2 = new Object();
-                    final Object label = new Object();
                     expect(() -> builder.removeArc(n1, n2, label)).toThrow(Exception.class);
 
                     builder.addArc(n1, n1, label);
@@ -95,9 +92,6 @@ public abstract class AbstractTransitionGraphTest
                 });
 
                 it("meets a minimum expectation", () -> {
-                    final Object n1 = new Object();
-                    final Object n2 = new Object();
-                    final Object label = new Object();
                     builder.addArc(n1, n1, label);
                     builder.addArc(n1, n2, label);
                     builder.removeArc(n1, n2, label);
@@ -115,22 +109,28 @@ public abstract class AbstractTransitionGraphTest
                     expect(() -> builder.removeNode(nullArg)).toThrow(IllegalArgumentException.class);
                 });
 
-                it("complains when removing non-existing node", () -> {
-                    final Object n1 = new Object();
-                    final Object n2 = new Object();
-                    final Object label = new Object();
+                it("complains when removing a non-existing node", () -> {
                     expect(() -> builder.removeNode(n1)).toThrow(Exception.class);
 
                     builder.addArc(n1, n1, label);
                     expect(() -> builder.removeNode(n2)).toThrow(Exception.class);
                 });
 
-                it("meets a minimum expectation", () -> {
-                    final Object n1 = new Object();
-                    final Object n2 = new Object();
-                    final Object label = new Object();
-                    builder.addArc(n1, n1, label);
+                it("removes forward-only nodes", () -> {
                     builder.addArc(n1, n2, label);
+                    builder.removeNode(n1);
+                    expect(builder::build).toThrow(IllegalStateException.class);
+                });
+
+                it("removes backward-only nodes", () -> {
+                    builder.addArc(n1, n2, label);
+                    builder.removeNode(n2);
+                    expect(builder::build).toThrow(IllegalStateException.class);
+                });
+
+                it("removes for/backward-removing nodes", () -> {
+                    builder.addArc(n1, n2, label);
+                    builder.addArc(n2, n1, label);
                     builder.removeNode(n1);
                     expect(builder::build).toThrow(IllegalStateException.class);
                 });
@@ -141,13 +141,8 @@ public abstract class AbstractTransitionGraphTest
 
         describe("arc-nondeterministic", () -> {
 
-            final Object n0 = new Object();
-            final Object n1 = new Object();
-            final Object n2 = new Object();
-            final Object n3 = new Object();
-            final Object label = new Object();
-
             before(() -> {
+                builder = builderForCommonTest();
                 builder.addArc(n0, n1, label);
                 builder.addArc(n1, n1, label);
                 builder.addArc(n1, n2, label);
@@ -193,9 +188,16 @@ public abstract class AbstractTransitionGraphTest
 
             describe("#arcDeterministic", () -> {
 
-                it("returns false", () -> {
+                it("returns false 1", () -> {
                     expect(instance.arcDeterministic()).toBeFalse();
                     expect(instance.arcDeterministic()).toBeFalse(); // should be cached, hard to tell though
+                });
+
+                it("returns false 2", () -> {
+                    builder = builderForCommonTest();
+                    builder.addArc(n1, n1, label);
+                    builder.addArc(n1, n2, label);
+                    expect(builder.build().arcDeterministic()).toBeFalse();
                 });
 
             });
@@ -426,6 +428,26 @@ public abstract class AbstractTransitionGraphTest
                 it("returns empty if an empty is given", () -> {
                     final ImmutableSet<Object> set = Sets.immutable.empty();
                     expect(instance.epsilonClosureOf(set, label).isEmpty()).toBeTrue();
+                });
+
+            });
+
+        });
+
+        describe("arc-deterministic", () -> {
+
+            before(() -> {
+                builder = builderForCommonTest();
+                builder.addArc(n0, n1, label);
+                builder.addArc(n1, n2, label);
+                instance = builder.build();
+            });
+
+            describe("#arcDeterministic", () -> {
+
+                it("returns true", () -> {
+                    expect(instance.arcDeterministic()).toBeTrue();
+                    expect(instance.arcDeterministic()).toBeTrue(); // should be cached, hard to tell though
                 });
 
             });

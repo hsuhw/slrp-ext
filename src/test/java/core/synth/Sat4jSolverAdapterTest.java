@@ -1,5 +1,6 @@
 package core.synth;
 
+import api.synth.SatSolverTimeoutException;
 import com.mscharhag.oleaster.runner.OleasterRunner;
 import org.junit.runner.RunWith;
 
@@ -102,6 +103,15 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
                 expect(satisfiable1).toEqual(satisfiable2);
             });
 
+            it("throw exception when time out", () -> {
+                final long t = solver.getTimeoutInMs();
+                solver.setTimeoutInMs(1);
+                solver.addClauseExactly(3, 1, 2, 3, 4, 5);
+                solver.addClauseExactly(3, -1, -5, 6, 7);
+                expect(() -> solver.findItSatisfiable()).toThrow(SatSolverTimeoutException.class);
+                solver.setTimeoutInMs(t);
+            });
+
         });
 
         describe("#getModelTruthyVariables", () -> {
@@ -110,7 +120,6 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
                 solver.addClause(1, 2);
                 solver.addClause(-1);
                 expectModelExists();
-
                 expect(solver.getModelTruthyVariables().contains(1)).toBeFalse();
                 expect(solver.getModelTruthyVariables().contains(2)).toBeTrue();
             });
@@ -119,6 +128,7 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
                 solver.addClause(1, 2);
                 solver.addClause(-1);
                 solver.addClause(-2);
+                expectNoModelExists();
                 expect(() -> solver.getModelTruthyVariables()).toThrow(IllegalStateException.class);
             });
 
@@ -134,7 +144,6 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
                 solver.addClause(1, 2);
                 solver.addClause(-1);
                 expectModelExists();
-
                 expect(solver.getModelFalsyVariables().contains(1)).toBeTrue();
                 expect(solver.getModelFalsyVariables().contains(2)).toBeFalse();
             });
@@ -143,6 +152,7 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
                 solver.addClause(1, 2);
                 solver.addClause(-1);
                 solver.addClause(-2);
+                expectNoModelExists();
                 expect(() -> solver.getModelFalsyVariables()).toThrow(IllegalStateException.class);
             });
 

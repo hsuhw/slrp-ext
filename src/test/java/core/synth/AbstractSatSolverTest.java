@@ -277,6 +277,16 @@ public abstract class AbstractSatSolverTest
 
         });
 
+        describe("#markAsGreaterEqualInBinary(int[], int[])", () -> {
+
+            it("complains when empty arrays given", () -> {
+                expect(() -> solver.markAsGreaterEqualInBinary(new int[0], new int[0])).toThrow(Exception.class);
+                expect(() -> solver.markAsGreaterEqualInBinary(new int[0], new int[1])).toThrow(Exception.class);
+                expect(() -> solver.markAsGreaterEqualInBinary(new int[1], new int[0])).toThrow(Exception.class);
+            });
+
+        });
+
         describe("#markAsGreaterEqualInBinary(IntList, IntList)", () -> {
 
             it("encodes the greater situation 1", () -> {

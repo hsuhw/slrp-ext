@@ -39,7 +39,7 @@ public class MapMapSetGraph<N, A> implements TransitionGraph<N, A>
     public int size()
     {
         if (size == -1) {
-            size =  (int) forwardGraph.collectLong(arcRecord -> arcRecord.collectInt(ImmutableSet::size).sum()).sum();
+            size = (int) forwardGraph.collectLong(arcRecord -> arcRecord.collectInt(ImmutableSet::size).sum()).sum();
         }
 
         return size;
