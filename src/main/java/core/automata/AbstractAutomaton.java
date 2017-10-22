@@ -23,7 +23,7 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
     private boolean generatedNamesSettled;
     private ImmutableMap<State, String> generatedStateNames;
     private ImmutableSet<String> startStatesDisplay;
-    private ImmutableSet<String> acceptStatesDislplay;
+    private ImmutableSet<String> acceptStatesDisplay;
 
     private static <S> boolean validateDefinition(Alphabet<S> sigma, ImmutableSet<State> states,
                                                   ImmutableSet<State> startStates, ImmutableSet<State> acceptStates,
@@ -100,7 +100,8 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
             }
             generatedStateNames = map.toImmutable();
             startStatesDisplay = startStates.collect(this::getStateNameOrSettleOne);
-            acceptStatesDislplay = acceptStates.collect(this::getStateNameOrSettleOne);
+            acceptStatesDisplay = acceptStates.collect(this::getStateNameOrSettleOne);
+            generatedNamesSettled = true;
         }
 
         return generatedStateNames;
@@ -118,7 +119,7 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
             + DISPLAY_NEWLINE //
             + transitionGraph.toString(generatedStateNames) //
             + DISPLAY_NEWLINE //
-            + DISPLAY_INDENT + "accept: " + acceptStatesDislplay + ";" + DISPLAY_NEWLINE //
+            + DISPLAY_INDENT + "accept: " + acceptStatesDisplay + ";" + DISPLAY_NEWLINE //
             + "}" + DISPLAY_NEWLINE;
     }
 }
