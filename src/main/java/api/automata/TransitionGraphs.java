@@ -27,7 +27,7 @@ public class TransitionGraphs
 
         static {
             ServiceLoader<Provider> loader = ServiceLoader.load(Provider.class);
-            INSTANCE = loader.stream().reduce((former, latter) -> latter) // get the last provider in classpath
+            INSTANCE = loader.stream().reduce((__, latter) -> latter) // get the last provider in classpath
                              .orElseThrow(IllegalStateException::new).get();
         }
     }
