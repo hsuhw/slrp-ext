@@ -8,6 +8,7 @@ import api.automata.fsa.FSAs;
 import api.synth.FSAEncoding;
 import api.synth.SatSolver;
 import api.synth.SatSolverTimeoutException;
+import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.set.ImmutableSet;
@@ -80,6 +81,8 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
 
     public BasicFSAEncoding(SatSolver solver, int stateNumber, AlphabetIntEncoder<S> intAlphabet)
     {
+        Assertions.argumentNotNull(solver, intAlphabet);
+
         this.solver = solver;
         this.stateNumber = stateNumber;
         this.intAlphabet = intAlphabet;

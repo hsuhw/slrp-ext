@@ -13,7 +13,6 @@ public abstract class AbstractTransitionGraphTest
 {
     protected final Object nullArg = null;
     protected final Object epsilon = new Object();
-
     protected Builder<Object, Object> builder;
     protected TransitionGraph<Object, Object> instance;
 
