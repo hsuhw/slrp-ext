@@ -71,6 +71,18 @@ public class MapMapSetGraphBuilder<N, A> implements TransitionGraph.Builder<N, A
     }
 
     @Override
+    public int currentSize()
+    {
+        return (int) forwardGraph.collectLong(arcRecord -> arcRecord.collectInt(MutableSet::size).sum()).sum();
+    }
+
+    @Override
+    public boolean isEmpty()
+    {
+        return forwardGraph.isEmpty();
+    }
+
+    @Override
     public Builder<N, A> addArc(N from, N to, A arcLabel)
     {
         Assertions.argumentNotNull(from, to, arcLabel);
@@ -140,10 +152,6 @@ public class MapMapSetGraphBuilder<N, A> implements TransitionGraph.Builder<N, A
     @Override
     public MapMapSetGraph<N, A> build()
     {
-        if (forwardGraph.isEmpty()) {
-            throw new IllegalStateException("nothing has been specified");
-        }
-
         return new MapMapSetGraph<>(this);
     }
 

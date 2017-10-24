@@ -12,6 +12,11 @@ public interface TransitionGraph<N, A>
 {
     int size();
 
+    default boolean isEmpty()
+    {
+        return size() == 0;
+    }
+
     ImmutableSet<N> referredNodes();
 
     ImmutableSet<A> referredArcLabels();
@@ -85,6 +90,10 @@ public interface TransitionGraph<N, A>
 
     interface Builder<N, A>
     {
+        int currentSize();
+
+        boolean isEmpty();
+
         Builder<N, A> addArc(N from, N to, A arcLabel);
 
         Builder<N, A> removeArc(N from, N to, A arcLabel);

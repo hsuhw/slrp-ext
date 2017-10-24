@@ -31,15 +31,29 @@ public abstract class AbstractTransitionGraphTest
                 builder = builderForCommonTest();
             });
 
-            describe("#build", () -> {
+            describe("#currentSize", () -> {
 
-                it("complains when nothing has been specified", () -> {
-                    expect(builder::build).toThrow(IllegalStateException.class);
+                it("returns the added arc number", () -> {
+                    expect(builder.currentSize()).toEqual(0);
+
+                    builder.addArc(n0, n0, label);
+                    builder.addArc(n0, n1, epsilon);
+                    builder.addArc(n1, n0, label);
+                    expect(builder.currentSize()).toEqual(3);
+
+                    builder.addArc(n1, n0, epsilon);
+                    expect(builder.currentSize()).toEqual(4);
                 });
 
+            });
+
+            describe("#isEmpty", () -> {
+
                 it("meets a minimum expectation", () -> {
+                    expect(builder.isEmpty()).toBeTrue();
+
                     builder.addArc(n0, n0, label);
-                    expect(builder.build()).toBeInstanceOf(MapMapSetGraph.class);
+                    expect(builder.isEmpty()).toBeFalse();
                 });
 
             });
@@ -59,13 +73,13 @@ public abstract class AbstractTransitionGraphTest
 
                 it("adds no epsilon self-loop", () -> {
                     builder.addArc(n0, n0, epsilon);
-                    expect(builder::build).toThrow(IllegalStateException.class);
+                    expect(builder.currentSize()).toEqual(0);
                 });
 
                 it("meets a minimum expectation", () -> {
                     builder.addArc(n1, n1, label);
                     builder.addArc(n1, n2, label);
-                    expect(builder.build().size()).toEqual(2);
+                    expect(builder.currentSize()).toEqual(2);
                 });
 
             });
@@ -94,10 +108,10 @@ public abstract class AbstractTransitionGraphTest
                     builder.addArc(n1, n1, label);
                     builder.addArc(n1, n2, label);
                     builder.removeArc(n1, n2, label);
-                    expect(builder.build().size()).toEqual(1);
+                    expect(builder.currentSize()).toEqual(1);
 
                     builder.removeArc(n1, n1, label);
-                    expect(builder::build).toThrow(IllegalStateException.class);
+                    expect(builder.currentSize()).toEqual(0);
                 });
 
             });
@@ -109,31 +123,50 @@ public abstract class AbstractTransitionGraphTest
                 });
 
                 it("complains when removing a non-existing node", () -> {
-                    expect(() -> builder.removeNode(n1)).toThrow(Exception.class);
+                    expect(() -> builder.removeNode(n1)).toThrow(IllegalArgumentException.class);
 
                     builder.addArc(n1, n1, label);
-                    expect(() -> builder.removeNode(n2)).toThrow(Exception.class);
+                    expect(() -> builder.removeNode(n2)).toThrow(IllegalArgumentException.class);
                 });
 
                 it("removes forward-only nodes", () -> {
                     builder.addArc(n1, n2, label);
                     builder.removeNode(n1);
-                    expect(builder::build).toThrow(IllegalStateException.class);
+                    expect(builder.currentSize()).toEqual(0);
                 });
 
                 it("removes backward-only nodes", () -> {
                     builder.addArc(n1, n2, label);
                     builder.removeNode(n2);
-                    expect(builder::build).toThrow(IllegalStateException.class);
+                    expect(builder.currentSize()).toEqual(0);
                 });
 
                 it("removes for/backward-removing nodes", () -> {
                     builder.addArc(n1, n2, label);
                     builder.addArc(n2, n1, label);
                     builder.removeNode(n1);
-                    expect(builder::build).toThrow(IllegalStateException.class);
+                    expect(builder.currentSize()).toEqual(0);
                 });
 
+            });
+
+            describe("#build", () -> {
+
+                it("meets a minimum expectation", () -> {
+                    expect(builder.build().isEmpty()).toBeTrue();
+
+                    builder.addArc(n0, n0, label);
+                    expect(builder.build().isEmpty()).toBeFalse();
+                });
+
+            });
+
+        });
+
+        describe("#arcDeterministic", () -> {
+
+            it("returns true on empty", () -> {
+                expect(builderForCommonTest().build().arcDeterministic()).toBeTrue();
             });
 
         });
@@ -155,6 +188,15 @@ public abstract class AbstractTransitionGraphTest
                 it("returns the number of its arcs", () -> {
                     expect(instance.size()).toEqual(5);
                     expect(instance.size()).toEqual(5); // should be cached, hard to tell though
+                });
+
+            });
+
+            describe("#isEmpty", () -> {
+
+                it("meets a minimum expectation", () -> {
+                    expect(builderForCommonTest().build().isEmpty()).toBeTrue();
+                    expect(instance.isEmpty()).toBeFalse();
                 });
 
             });
@@ -447,6 +489,24 @@ public abstract class AbstractTransitionGraphTest
                 it("returns true", () -> {
                     expect(instance.arcDeterministic()).toBeTrue();
                     expect(instance.arcDeterministic()).toBeTrue(); // should be cached, hard to tell though
+                });
+
+            });
+
+            describe("#epsilonClosureOf(nodes)", () -> {
+
+                it("complains", () -> {
+                    final ImmutableSet<Object> set = Sets.immutable.of(n0);
+                    expect(() -> instance.epsilonClosureOf(set)).toThrow(UnsupportedOperationException.class);
+                });
+
+            });
+
+            describe("#epsilonClosureOf(nodes, label)", () -> {
+
+                it("complains", () -> {
+                    final ImmutableSet<Object> set = Sets.immutable.of(n0);
+                    expect(() -> instance.epsilonClosureOf(set, label)).toThrow(UnsupportedOperationException.class);
                 });
 
             });
