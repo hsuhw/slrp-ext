@@ -35,17 +35,21 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
         describe("#get/setTimeout*()", () -> {
 
             it("changes the second timeout setting", () -> {
+                final int t = solver.getTimeoutInSec();
                 solver.setTimeoutInSec(12);
                 expect(solver.getTimeoutInSec()).toEqual(12);
                 solver.setTimeoutInSec(34);
                 expect(solver.getTimeoutInSec()).toEqual(34);
+                solver.setTimeoutInSec(t);
             });
 
             it("changes the millisecond timeout setting", () -> {
+                final long t = solver.getTimeoutInMs();
                 solver.setTimeoutInMs(1200);
                 expect(solver.getTimeoutInMs()).toEqual(1200);
                 solver.setTimeoutInMs(3400);
                 expect(solver.getTimeoutInMs()).toEqual(3400);
+                solver.setTimeoutInMs(t);
             });
 
         });
