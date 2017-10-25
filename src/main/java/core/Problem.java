@@ -32,32 +32,32 @@ public class Problem
         orderRelationSearchSpace = sortIntIntPair(relationSearchSpace);
     }
 
-    public FSA<String> getInitialConfigurations()
+    public FSA<String> initialConfigurations()
     {
         return initialConfigurations;
     }
 
-    public FSA<String> getFinalConfigurations()
+    public FSA<String> finalConfigurations()
     {
         return finalConfigurations;
     }
 
-    public FSA<Twin<String>> getSchedulerBehavior()
+    public FSA<Twin<String>> schedulerBehavior()
     {
         return schedulerBehavior;
     }
 
-    public FSA<Twin<String>> getProcessBehavior()
+    public FSA<Twin<String>> processBehavior()
     {
         return processBehavior;
     }
 
-    public IntIntPair getInvariantConfigSearchSpace()
+    public IntIntPair invariantConfigSearchSpace()
     {
         return invariantConfigSearchSpace;
     }
 
-    public IntIntPair getOrderRelationSearchSpace()
+    public IntIntPair orderRelationSearchSpace()
     {
         return orderRelationSearchSpace;
     }

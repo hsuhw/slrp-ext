@@ -76,16 +76,16 @@ public class Prover
     public Prover(Problem problem)
     {
         final FSAManipulator manipulator = FSAs.manipulator();
-        initialConfigs = manipulator.determinize(problem.getInitialConfigurations());
-        nonfinalConfigs = manipulator.makeComplement(problem.getFinalConfigurations());
+        initialConfigs = manipulator.determinize(problem.initialConfigurations());
+        nonfinalConfigs = manipulator.makeComplement(problem.finalConfigurations());
 
         relationAlphabet = makeCombinationAlphabet(initialConfigs.alphabet());
-        final FSA<Twin<String>> scheduler = problem.getSchedulerBehavior();
-        final FSA<Twin<String>> process = problem.getProcessBehavior();
+        final FSA<Twin<String>> scheduler = problem.schedulerBehavior();
+        final FSA<Twin<String>> process = problem.processBehavior();
         transBehavior = manipulator.determinize(composeTransducer(scheduler, process, relationAlphabet));
 
-        final IntIntPair invSearchBound = problem.getInvariantConfigSearchSpace();
-        final IntIntPair relSearchBound = problem.getOrderRelationSearchSpace();
+        final IntIntPair invSearchBound = problem.invariantConfigSearchSpace();
+        final IntIntPair relSearchBound = problem.orderRelationSearchSpace();
         invariantSizeBegin = invSearchBound.getOne();
         invariantSizeBound = invSearchBound.getTwo();
         relationSizeBegin = relSearchBound.getOne();
