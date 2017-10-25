@@ -3,6 +3,9 @@ package core.automata.fsa;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAManipulator;
 
+import java.util.LinkedList;
+import java.util.List;
+
 public class BasicFSAs implements FSA.Provider
 {
     @Override
@@ -28,7 +31,19 @@ public class BasicFSAs implements FSA.Provider
         private static final FSAManipulator INSTANCE;
 
         static {
-            INSTANCE = new MapMapSetFSAManipulator(new BaseFSAManipulator());
+            final List<Class<? extends FSAManipulator.Decorator>> decorators = new LinkedList<>();
+            decorators.add(BasicFSAManipulator.class); // order matters
+
+            FSAManipulator decoratee = new BaseFSAManipulator();
+            try {
+                for (Class<? extends FSAManipulator.Decorator> decorator : decorators) {
+                    decoratee = decorator.getConstructor(FSAManipulator.class).newInstance(decoratee);
+                }
+            } catch (Exception e) {
+                throw new IllegalStateException();
+            }
+
+            INSTANCE = decoratee;
         }
     }
 }
