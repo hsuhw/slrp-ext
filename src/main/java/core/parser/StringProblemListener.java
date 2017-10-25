@@ -6,7 +6,6 @@ import api.automata.fsa.FSA;
 import core.Problem;
 import core.parser.fsa.FSAListener;
 import generated.ProblemBaseListener;
-import generated.ProblemParser;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
@@ -53,31 +52,31 @@ public class StringProblemListener extends ProblemBaseListener
     }
 
     @Override
-    public void enterInitialStatesRepr(ProblemParser.InitialStatesReprContext ctx)
+    public void enterInitialStatesRepr(InitialStatesReprContext ctx)
     {
         ctx.automaton().enterRule(initialConfigListener);
     }
 
     @Override
-    public void enterFinalStatesRepr(ProblemParser.FinalStatesReprContext ctx)
+    public void enterFinalStatesRepr(FinalStatesReprContext ctx)
     {
         ctx.automaton().enterRule(finalConfigListener);
     }
 
     @Override
-    public void enterSchedulerRepr(ProblemParser.SchedulerReprContext ctx)
+    public void enterSchedulerRepr(SchedulerReprContext ctx)
     {
         ctx.transducer().enterRule(schedulerListener);
     }
 
     @Override
-    public void enterProcessRepr(ProblemParser.ProcessReprContext ctx)
+    public void enterProcessRepr(ProcessReprContext ctx)
     {
         ctx.transducer().enterRule(processListener);
     }
 
     @Override
-    public void enterInvariantSearchSpace(ProblemParser.InvariantSearchSpaceContext ctx)
+    public void enterInvariantSearchSpace(InvariantSearchSpaceContext ctx)
     {
         final int from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 1);
         final int to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 1);
@@ -85,7 +84,7 @@ public class StringProblemListener extends ProblemBaseListener
     }
 
     @Override
-    public void enterRelationSearchSpace(ProblemParser.RelationSearchSpaceContext ctx)
+    public void enterRelationSearchSpace(RelationSearchSpaceContext ctx)
     {
         final int from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 1);
         final int to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 1);
@@ -110,6 +109,10 @@ public class StringProblemListener extends ProblemBaseListener
         public void enterAutomaton(AutomatonContext ctx)
         {
             impl.enterAutomaton(ctx.getStart().getLine(), ctx.getStop().getLine());
+            ctx.startStates().enterRule(this);
+            ctx.transitions().transition().forEach(transCtx -> transCtx.enterRule(this));
+            ctx.acceptStates().enterRule(this);
+            ctx.exitRule(this);
         }
 
         @Override
@@ -156,13 +159,17 @@ public class StringProblemListener extends ProblemBaseListener
         }
 
         @Override
-        public void enterAutomaton(AutomatonContext ctx)
+        public void enterTransducer(TransducerContext ctx)
         {
             impl.enterAutomaton(ctx.getStart().getLine(), ctx.getStop().getLine());
+            ctx.startStates().enterRule(this);
+            ctx.transducerTransitions().transducerTransition().forEach(transCtx -> transCtx.enterRule(this));
+            ctx.acceptStates().enterRule(this);
+            ctx.exitRule(this);
         }
 
         @Override
-        public void exitAutomaton(AutomatonContext ctx)
+        public void exitTransducer(TransducerContext ctx)
         {
             impl.exitAutomaton();
         }
