@@ -167,8 +167,10 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
         noDeadEndStateEnsured = true;
     }
 
-    private void ensureAcceptWordIf(int activated, ImmutableIntList word)
+    private void ensureAcceptWordIf(int activated, ImmutableIntList wordGiven)
     {
+        final ImmutableIntList word = wordGiven.select(symbol -> symbol != EPSILON_SYMBOL_INDEX);
+
         // define each possible step over states on each input symbol read
         final ImmutableIntList[] stepIndicators = new ImmutableIntList[word.size() + 1];
         for (int readHead = 0; readHead < word.size() + 1; readHead++) {
@@ -210,8 +212,10 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
         solver.setLiteralTruthy(activated);
     }
 
-    private void ensureNotAcceptWordIf(int activated, ImmutableIntList word)
+    private void ensureNotAcceptWordIf(int activated, ImmutableIntList wordGiven)
     {
+        final ImmutableIntList word = wordGiven.select(symbol -> symbol != EPSILON_SYMBOL_INDEX);
+
         // prepare the failed-already indicators for each step of the input read
         final ImmutableIntList failedAlreadyIndicators = solver.newFreeVariables(word.size() + 1);
         final int initialStepNeverFailedAlready = -failedAlreadyIndicators.get(0);

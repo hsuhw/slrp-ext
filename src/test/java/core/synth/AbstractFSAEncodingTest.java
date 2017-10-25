@@ -25,11 +25,12 @@ public abstract class AbstractFSAEncodingTest
         final Object a1 = new Object();
         final Object a2 = new Object();
         alphabetEncoding = AlphabetIntEncoders.create(Lists.mutable.of(e, a1, a2), e);
+        final ImmutableList<Object> worde = Lists.immutable.of(e);
         final ImmutableList<Object> word0 = Lists.immutable.of(a1, a1, a1);
         final ImmutableList<Object> word1 = Lists.immutable.of(a1, a2);
-        final ImmutableList<Object> word2 = Lists.immutable.of(a2, a2);
-        final ImmutableList<Object> word3 = Lists.immutable.of(a2, a1);
-        final ImmutableList<Object> word4 = Lists.immutable.of(a2, a2, a2, a2);
+        final ImmutableList<Object> word2 = Lists.immutable.of(a2, a2, e);
+        final ImmutableList<Object> word3 = Lists.immutable.of(a2, e, a1);
+        final ImmutableList<Object> word4 = Lists.immutable.of(a2, a2, e, a2, a2);
 
         describe("No-dangling ensured", () -> {
 
@@ -43,12 +44,14 @@ public abstract class AbstractFSAEncodingTest
             });
 
             it("finds FSAs with accepting or not constraints", () -> {
+                encoding.ensureAcceptingWord(worde);
                 encoding.ensureAcceptingWord(word1);
                 encoding.ensureAcceptingWord(word2);
                 encoding.ensureNotAcceptingWord(word3);
 
                 while (solver.findItSatisfiable()) {
                     final FSA<Object> instance = encoding.resolve();
+                    expect(instance.accepts(worde)).toBeTrue();
                     expect(instance.accepts(word1)).toBeTrue();
                     expect(instance.accepts(word2)).toBeTrue();
                     expect(instance.accepts(word3)).toBeFalse();

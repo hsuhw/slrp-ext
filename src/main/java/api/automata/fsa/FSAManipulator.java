@@ -1,6 +1,7 @@
 package api.automata.fsa;
 
 import api.automata.*;
+import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.set.ImmutableSet;
 
 import java.util.function.BiFunction;
@@ -104,20 +105,37 @@ public interface FSAManipulator extends AutomatonManipulator
 
     default <S> boolean checkLanguageSubset(FSA<S> toInclude, FSA<S> toSubsume)
     {
-        final boolean emptyInclude = checkAcceptingNone(toInclude);
-        final boolean emptySubsume = checkAcceptingNone(toSubsume);
-        if (emptySubsume) {
+        final boolean emptyToInclude = checkAcceptingNone(toInclude);
+        final boolean emptyToSubsume = checkAcceptingNone(toSubsume);
+        if (emptyToSubsume) {
             return true;
         }
-        if (emptyInclude) {
+        if (emptyToInclude) {
             return false;
         }
-        final FSA<S> includeBar = makeComplement(toInclude);
-        if (checkAcceptingNone(includeBar)) {
-            return true;
-        }
+        final FSA<S> toIncludeBar = makeComplement(toInclude);
+        return checkAcceptingNone(toIncludeBar) || checkAcceptingNone(makeIntersection(toIncludeBar, toSubsume));
+    }
 
-        return checkAcceptingNone(makeIntersection(includeBar, toSubsume));
+    default <S> ImmutableList<S> witnessLanguageNotSubset(FSA<S> toInclude, FSA<S> toSubsume)
+    {
+        final boolean emptyToInclude = checkAcceptingNone(toInclude);
+        final boolean emptyToSubsume = checkAcceptingNone(toSubsume);
+        if (emptyToSubsume) {
+            return null;
+        }
+        if (emptyToInclude) {
+            return toSubsume.enumerateOneShortestWord();
+        }
+        final FSA<S> toIncludeBar = makeComplement(toInclude);
+        if (checkAcceptingNone(toIncludeBar)) {
+            return null;
+        }
+        final FSA<S> outliers = makeIntersection(toIncludeBar, toSubsume);
+        if (checkAcceptingNone(outliers)) {
+            return null;
+        }
+        return outliers.enumerateOneShortestWord();
     }
 
     interface Decorator extends FSAManipulator
