@@ -7,6 +7,7 @@ import api.synth.FSAEncoding;
 import api.synth.SatSolver;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.factory.Lists;
+import org.eclipse.collections.impl.factory.Sets;
 
 import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
@@ -24,6 +25,11 @@ public abstract class AbstractFSAEncodingTest
         final Object a1 = new Object();
         final Object a2 = new Object();
         alphabetEncoding = AlphabetIntEncoders.create(Lists.mutable.of(e, a1, a2), e);
+        final ImmutableList<Object> word0 = Lists.immutable.of(a1, a1, a1);
+        final ImmutableList<Object> word1 = Lists.immutable.of(a1, a2);
+        final ImmutableList<Object> word2 = Lists.immutable.of(a2, a2);
+        final ImmutableList<Object> word3 = Lists.immutable.of(a2, a1);
+        final ImmutableList<Object> word4 = Lists.immutable.of(a2, a2, a2, a2);
 
         describe("No-dangling ensured", () -> {
 
@@ -36,10 +42,7 @@ public abstract class AbstractFSAEncodingTest
                 encoding.ensureNoDeadEndState(); // should be cached, hard to tell though
             });
 
-            it("finds correct FSAs with accepting or not constraints", () -> {
-                final ImmutableList<Object> word1 = Lists.immutable.of(a1, a2);
-                final ImmutableList<Object> word2 = Lists.immutable.of(a2, a2);
-                final ImmutableList<Object> word3 = Lists.immutable.of(a2, a1);
+            it("finds FSAs with accepting or not constraints", () -> {
                 encoding.ensureAcceptingWord(word1);
                 encoding.ensureAcceptingWord(word2);
                 encoding.ensureNotAcceptingWord(word3);
@@ -53,9 +56,7 @@ public abstract class AbstractFSAEncodingTest
                 }
             });
 
-            it("finds correct FSAs with whether-accept constraints", () -> {
-                final ImmutableList<Object> word1 = Lists.immutable.of(a1, a2);
-                final ImmutableList<Object> word2 = Lists.immutable.of(a2, a2);
+            it("finds FSAs with whether-accept constraints", () -> {
                 final int yes = solver.newFreeVariables(1).getFirst();
                 solver.setLiteralTruthy(yes);
                 final int no = solver.newFreeVariables(1).getFirst();
@@ -71,13 +72,22 @@ public abstract class AbstractFSAEncodingTest
                 }
             });
 
-            it("finds correct FSAs with no-words-purely-made-of constraints", () -> {
-                encoding.ensureNoWordPurelyMadeOf(alphabetEncoding.originAlphabet().set());
-                expect(solver.findItSatisfiable()).toBeFalse();
+            it("finds FSAs with no-words-purely-made-of constraints", () -> {
+                encoding.ensureNoWordPurelyMadeOf(Sets.immutable.of(a2));
+                encoding.ensureAcceptingWord(word3);
+
+                boolean someAcceptsWord0 = false;
+                while (solver.findItSatisfiable()) {
+                    final FSA<Object> instance = encoding.resolve();
+                    someAcceptsWord0 = instance.accepts(word0) || someAcceptsWord0;
+                    expect(instance.accepts(word3)).toBeTrue();
+                    expect(instance.accepts(word4)).toBeFalse();
+                    encoding.blockCurrentInstance();
+                }
+                expect(someAcceptsWord0).toBeTrue();
             });
 
             it("finds no FSAs when constraints UNSAT", () -> {
-                final ImmutableList<Object> word1 = Lists.immutable.of(a1, a2);
                 encoding.ensureAcceptingWord(word1);
                 encoding.ensureNotAcceptingWord(word1);
                 expect(solver.findItSatisfiable()).toBeFalse();
