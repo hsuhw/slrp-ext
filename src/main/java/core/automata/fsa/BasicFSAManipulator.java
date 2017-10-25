@@ -20,11 +20,11 @@ import java.util.function.Function;
 
 import static api.util.Values.NOT_IMPLEMENTED_YET;
 
-public class MapMapSetFSAManipulator implements FSAManipulator.Decorator
+public class BasicFSAManipulator implements FSAManipulator.Decorator
 {
     private final FSAManipulator decoratee;
 
-    public MapMapSetFSAManipulator(FSAManipulator decoratee)
+    public BasicFSAManipulator(FSAManipulator decoratee)
     {
         this.decoratee = decoratee;
     }
@@ -114,18 +114,15 @@ public class MapMapSetFSAManipulator implements FSAManipulator.Decorator
         final FSA<T> fsa2 = (FSA<T>) two;
         final int size = fsa1.states().size() * fsa2.states().size(); // upper bound
         final ProductDeltaBuilder<S, T, R> deltaBuilder = new ProductDeltaBuilder<>(size, fsa1, fsa2);
-        final MapMapSetFSABuilder<R> builder = new MapMapSetFSABuilder<>(size, alphabet.size(), alphabet.epsilon());
+        final FSA.Builder<R> builder = FSAs.builder(size, alphabet.size(), alphabet.epsilon());
         finalizer.apply(deltaBuilder.run(builder, transitionDecider), builder);
 
-        return builder.acceptStates().isEmpty() ? FSAs.thatAcceptsNone(alphabet) : builder.build();
+        return builder.currentAcceptStateNumber() == 0 ? FSAs.thatAcceptsNone(alphabet) : builder.build();
     }
 
     @Override
     public <S> FSA<S> determinizeDelegated(FSA<S> target)
     {
-        if (!(target instanceof MapMapSetFSA<?>)) {
-            return null;
-        }
         if (target.isDeterministic()) {
             return target;
         }
@@ -166,10 +163,6 @@ public class MapMapSetFSAManipulator implements FSAManipulator.Decorator
     @Override
     public <S> FSA<S> minimizeDelegated(FSA<S> target)
     {
-        if (!isFSA(target)) {
-            return null;
-        }
-
         throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
     }
 

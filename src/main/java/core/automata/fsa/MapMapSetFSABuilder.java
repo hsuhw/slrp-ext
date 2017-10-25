@@ -57,6 +57,30 @@ public class MapMapSetFSABuilder<S> implements FSA.Builder<S>
     }
 
     @Override
+    public int currentStateNumber()
+    {
+        return states.size();
+    }
+
+    @Override
+    public int currentStartStateNumber()
+    {
+        return startStates.size();
+    }
+
+    @Override
+    public int currentAcceptStateNumber()
+    {
+        return acceptStates.size();
+    }
+
+    @Override
+    public int currentTransitionNumber()
+    {
+        return deltaBuilder.currentSize();
+    }
+
+    @Override
     public Builder<S> addSymbol(S symbol)
     {
         Assertions.argumentNotNull(symbol);

@@ -168,6 +168,14 @@ public interface FSA<S> extends Automaton<S>
     {
         Alphabet<S> currentAlphabet();
 
+        int currentStateNumber();
+
+        int currentStartStateNumber();
+
+        int currentAcceptStateNumber();
+
+        int currentTransitionNumber();
+
         @Override
         Builder<S> addSymbol(S symbol);
 

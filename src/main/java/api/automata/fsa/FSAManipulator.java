@@ -2,7 +2,6 @@ package api.automata.fsa;
 
 import api.automata.*;
 import org.eclipse.collections.api.set.ImmutableSet;
-import org.eclipse.collections.api.set.SetIterable;
 
 import java.util.function.BiFunction;
 
@@ -29,7 +28,7 @@ public interface FSAManipulator extends AutomatonManipulator
             throw new IllegalArgumentException("only available on deterministic instances");
         }
 
-        final SetIterable<State> incomplete = target.incompleteStates();
+        final ImmutableSet<State> incomplete = target.incompleteStates();
         if (incomplete.isEmpty()) {
             return target;
         }
@@ -79,12 +78,14 @@ public interface FSAManipulator extends AutomatonManipulator
 
     default <S> FSA<S> makeUnion(FSA<S> one, FSA<S> two)
     {
-        return makeProduct(one, two, one.alphabet(), this::matchedSymbol, (stateMapping, builder) -> {
+        final FSA<S> oneFixed = makeComplete(determinize(one));
+        final FSA<S> twoFixed = makeComplete(determinize(two));
+        return makeProduct(oneFixed, twoFixed, oneFixed.alphabet(), this::matchedSymbol, (stateMapping, builder) -> {
             stateMapping.forEachKeyValue((state, statePair) -> {
                 final ImmutableSet<State> startStates = AutomatonManipulator
-                    .selectFromProduct(stateMapping, one::isStartState, two::isStartState, AND);
+                    .selectFromProduct(stateMapping, oneFixed::isStartState, twoFixed::isStartState, AND);
                 final ImmutableSet<State> acceptStates = AutomatonManipulator
-                    .selectFromProduct(stateMapping, one::isAcceptState, two::isAcceptState, OR);
+                    .selectFromProduct(stateMapping, oneFixed::isAcceptState, twoFixed::isAcceptState, OR);
                 builder.addStartStates(startStates);
                 builder.addAcceptStates(acceptStates);
             });
@@ -101,9 +102,22 @@ public interface FSAManipulator extends AutomatonManipulator
         return checkAcceptingNone(makeComplement(target));
     }
 
-    default <S> boolean checkLanguageContainment(FSA<S> container, FSA<S> subset)
+    default <S> boolean checkLanguageSubset(FSA<S> toInclude, FSA<S> toSubsume)
     {
-        return checkAcceptingNone(makeIntersection(container, makeComplement(subset)));
+        final boolean emptyInclude = checkAcceptingNone(toInclude);
+        final boolean emptySubsume = checkAcceptingNone(toSubsume);
+        if (emptySubsume) {
+            return true;
+        }
+        if (emptyInclude) {
+            return false;
+        }
+        final FSA<S> includeBar = makeComplement(toInclude);
+        if (checkAcceptingNone(includeBar)) {
+            return true;
+        }
+
+        return checkAcceptingNone(makeIntersection(includeBar, toSubsume));
     }
 
     interface Decorator extends FSAManipulator
@@ -187,7 +201,10 @@ public interface FSAManipulator extends AutomatonManipulator
             return delegated;
         }
 
-        <S> FSA<S> minimizeDelegated(FSA<S> target);
+        default <S> FSA<S> minimizeDelegated(FSA<S> target)
+        {
+            return null;
+        }
 
         @Override
         default <S> FSA<S> minimize(FSA<S> target)
@@ -237,9 +254,7 @@ public interface FSAManipulator extends AutomatonManipulator
         @Override
         default <S> FSA<S> makeUnion(FSA<S> one, FSA<S> two)
         {
-            final FSA<S> completeOne = makeComplete(one);
-            final FSA<S> completeTwo = makeComplete(two);
-            final FSA<S> delegated = makeUnionDelegated(completeOne, completeTwo);
+            final FSA<S> delegated = makeUnionDelegated(one, two);
             if (delegated == null) {
                 return getDecoratee().makeUnion(one, two);
             }
@@ -276,17 +291,17 @@ public interface FSAManipulator extends AutomatonManipulator
             return delegated;
         }
 
-        default <S> Boolean checkLanguageContainmentDelegated(FSA<S> container, FSA<S> subset)
+        default <S> Boolean checkLanguageSubsetDelegated(FSA<S> toInclude, FSA<S> toSubsume)
         {
-            return FSAManipulator.super.checkLanguageContainment(container, subset);
+            return FSAManipulator.super.checkLanguageSubset(toInclude, toSubsume);
         }
 
         @Override
-        default <S> boolean checkLanguageContainment(FSA<S> container, FSA<S> subset)
+        default <S> boolean checkLanguageSubset(FSA<S> toInclude, FSA<S> toSubsume)
         {
-            final Boolean delegated = checkLanguageContainmentDelegated(container, subset);
+            final Boolean delegated = checkLanguageSubsetDelegated(toInclude, toSubsume);
             if (delegated == null) {
-                return getDecoratee().checkLanguageContainment(container, subset);
+                return getDecoratee().checkLanguageSubset(toInclude, toSubsume);
             }
             return delegated;
         }
