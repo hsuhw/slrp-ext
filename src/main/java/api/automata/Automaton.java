@@ -41,6 +41,8 @@ public interface Automaton<S>
     @Override
     String toString();
 
+    String toString(boolean maskStateNames);
+
     interface Builder<S>
     {
         Builder<S> addSymbol(S symbol);

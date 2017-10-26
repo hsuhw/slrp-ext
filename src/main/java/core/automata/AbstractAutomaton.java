@@ -20,10 +20,9 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
     private final ImmutableSet<State> startStates;
     private final ImmutableSet<State> acceptStates;
     private final TransitionGraph<State, S> transitionGraph;
-    private boolean generatedNamesSettled;
-    private ImmutableMap<State, String> generatedStateNames;
-    private ImmutableSet<String> startStatesDisplay;
-    private ImmutableSet<String> acceptStatesDisplay;
+    private ImmutableMap<State, String> maskedStateNames;
+    private String rawDisplay;
+    private String nameMaskedDisplay;
 
     private static <S> boolean validateDefinition(Alphabet<S> sigma, ImmutableSet<State> states,
                                                   ImmutableSet<State> startStates, ImmutableSet<State> acceptStates,
@@ -84,42 +83,68 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
         return transitionGraph;
     }
 
-    private String getStateNameOrSettleOne(State state)
-    {
-        return state instanceof NamedState ? state.toString() : generatedStateNames.get(state);
-    }
-
-    protected final ImmutableMap<State, String> generatedStateNames()
-    {
-        if (!generatedNamesSettled) {
-            final MutableMap<State, String> map = UnifiedMap.newMap(states.size()); // upper bound
-            int i = 0;
-            for (State generated : states.selectInstancesOf(NamelessState.class)) {
-                map.put(generated, BasicStates.GENERATED_PREFIX + i);
-                i++;
-            }
-            generatedStateNames = map.toImmutable();
-            startStatesDisplay = startStates.collect(this::getStateNameOrSettleOne);
-            acceptStatesDisplay = acceptStates.collect(this::getStateNameOrSettleOne);
-            generatedNamesSettled = true;
-        }
-
-        return generatedStateNames;
-    }
-
     @Override
     public String toString()
     {
-        if (generatedStateNames == null) {
-            generatedStateNames = generatedStateNames();
+        return toString(true);
+    }
+
+    protected final ImmutableMap<State, String> maskedStateNames()
+    {
+        if (maskedStateNames == null) {
+            final MutableMap<State, String> names = UnifiedMap.newMap(states.size()); // upper bound
+            int i = 0;
+            for (State generated : states.selectInstancesOf(NamelessState.class)) {
+                names.put(generated, BasicStates.GENERATED_PREFIX + i);
+                i++;
+            }
+            maskedStateNames = names.toImmutable();
         }
 
-        return "{" + DISPLAY_NEWLINE //
-            + DISPLAY_INDENT + "start: " + startStatesDisplay + ";" + DISPLAY_NEWLINE //
-            + DISPLAY_NEWLINE //
-            + transitionGraph.toString(generatedStateNames) //
-            + DISPLAY_NEWLINE //
-            + DISPLAY_INDENT + "accept: " + acceptStatesDisplay + ";" + DISPLAY_NEWLINE //
-            + "}" + DISPLAY_NEWLINE;
+        return maskedStateNames;
+    }
+
+    private String rawDisplay()
+    {
+        if (rawDisplay == null) {
+            rawDisplay = "{" + DISPLAY_NEWLINE //
+                + DISPLAY_INDENT + "start: " + startStates + ";" + DISPLAY_NEWLINE //
+                + DISPLAY_NEWLINE //
+                + transitionGraph //
+                + DISPLAY_NEWLINE //
+                + DISPLAY_INDENT + "accept: " + acceptStates + ";" + DISPLAY_NEWLINE //
+                + "}" + DISPLAY_NEWLINE;
+        }
+
+        return rawDisplay;
+    }
+
+    private String determineStateName(State state)
+    {
+        return state instanceof NamedState ? state.toString() : maskedStateNames.get(state);
+    }
+
+    private String nameMaskedDisplay()
+    {
+        maskedStateNames();
+        final String startStateNames = startStates.collect(this::determineStateName).toString();
+        final String acceptStateNames = acceptStates.collect(this::determineStateName).toString();
+        if (nameMaskedDisplay == null) {
+            nameMaskedDisplay = "{" + DISPLAY_NEWLINE //
+                + DISPLAY_INDENT + "start: " + startStateNames + ";" + DISPLAY_NEWLINE //
+                + DISPLAY_NEWLINE //
+                + transitionGraph.toString(maskedStateNames) //
+                + DISPLAY_NEWLINE //
+                + DISPLAY_INDENT + "accept: " + acceptStateNames + ";" + DISPLAY_NEWLINE //
+                + "}" + DISPLAY_NEWLINE;
+        }
+
+        return nameMaskedDisplay;
+    }
+
+    @Override
+    public String toString(boolean maskStateNames)
+    {
+        return maskStateNames ? nameMaskedDisplay() : rawDisplay();
     }
 }
