@@ -6,6 +6,7 @@ import api.automata.fsa.FSA;
 import api.automata.fsa.FSAManipulator;
 
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 import static api.util.Values.NO_MATCHED_IMPLEMENTATION_FOUND;
 
@@ -19,6 +20,18 @@ public final class BaseFSAManipulator implements FSAManipulator
 
     @Override
     public <S> FSA<S> trimDeadEndStates(Automaton<S> target)
+    {
+        throw new UnsupportedOperationException(NO_MATCHED_IMPLEMENTATION_FOUND);
+    }
+
+    @Override
+    public <S> FSA<S> trimStates(Automaton<S> target)
+    {
+        throw new UnsupportedOperationException(NO_MATCHED_IMPLEMENTATION_FOUND);
+    }
+
+    @Override
+    public <S, R> FSA<R> project(Automaton<S> target, Alphabet<R> alphabet, Function<S, R> projector)
     {
         throw new UnsupportedOperationException(NO_MATCHED_IMPLEMENTATION_FOUND);
     }

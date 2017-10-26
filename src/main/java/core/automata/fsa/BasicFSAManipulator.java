@@ -18,6 +18,9 @@ import java.util.Queue;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static api.automata.fsa.FSA.Builder;
+import static api.automata.fsa.FSAs.builder;
+import static api.automata.fsa.FSAs.builderOn;
 import static api.util.Values.NOT_IMPLEMENTED_YET;
 
 public class BasicFSAManipulator implements FSAManipulator.Decorator
@@ -54,9 +57,9 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
         }
     }
 
-    private <S> FSA<S> trim(FSA<S> targetFSA, ImmutableSet<State> toBeTrimmed)
+    private static <S> FSA<S> removeStates(FSA<S> targetFSA, ImmutableSet<State> toBeTrimmed)
     {
-        final FSA.Builder<S> builder = FSAs.builderOn(targetFSA);
+        final Builder<S> builder = builderOn(targetFSA);
         toBeTrimmed.forEach(builder::removeState);
 
         return builder.build();
@@ -79,7 +82,7 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
         pendingChecks.addAll(startStates.castToSet());
         computeStateReachability(fsa.transitionGraph()::successorsOf, reachable, pendingChecks);
 
-        return reachable.size() == stateNumber ? fsa : trim(fsa, target.states().newWithoutAll(reachable));
+        return reachable.size() == stateNumber ? fsa : removeStates(fsa, target.states().newWithoutAll(reachable));
     }
 
     @Override
@@ -99,7 +102,7 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
         pendingChecks.addAll(acceptStates.castToSet());
         computeStateReachability(fsa.transitionGraph()::predecessorsOf, reachable, pendingChecks);
 
-        return reachable.size() == stateNumber ? fsa : trim(fsa, target.states().newWithoutAll(reachable));
+        return reachable.size() == stateNumber ? fsa : removeStates(fsa, target.states().newWithoutAll(reachable));
     }
 
     @Override
@@ -114,10 +117,10 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
         final FSA<T> fsa2 = (FSA<T>) two;
         final int size = fsa1.states().size() * fsa2.states().size(); // upper bound
         final ProductDeltaBuilder<S, T, R> deltaBuilder = new ProductDeltaBuilder<>(size, fsa1, fsa2);
-        final FSA.Builder<R> builder = FSAs.builder(size, alphabet.size(), alphabet.epsilon());
+        final Builder<R> builder = builder(size, alphabet.size(), alphabet.epsilon());
         finalizer.apply(deltaBuilder.run(builder, transitionDecider), builder);
 
-        return builder.currentAcceptStateNumber() == 0 ? FSAs.thatAcceptsNone(alphabet) : builder.build();
+        return builder.currentAcceptStateNumber() == 0 ? FSAs.thatAcceptsNone(alphabet) : builder.build(alphabet);
     }
 
     @Override
@@ -130,7 +133,7 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
         final Alphabet<S> alphabet = target.alphabet();
         final TransitionGraph<State, S> delta = target.transitionGraph();
         final int capacity = target.states().size() * target.states().size(); // heuristic
-        final FSA.Builder<S> builder = FSAs.builder(capacity, alphabet.size(), alphabet.epsilon());
+        final Builder<S> builder = builder(capacity, alphabet.size(), alphabet.epsilon());
         final MutableBiMap<MutableSet<State>, State> stateMapping = new HashBiMap<>(capacity);
         final Queue<MutableSet<State>> pendingStateSets = new LinkedList<>();
 
@@ -202,7 +205,7 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
             return getState(Tuples.twin(state1, state2));
         }
 
-        private void handleEpsilonTransitions(FSA.Builder<R> carrier, Twin<State> statePair, R epsilonP)
+        private void handleEpsilonTransitions(Builder<R> carrier, Twin<State> statePair, R epsilonP)
         {
             final State deptP = getState(statePair);
             final State dept1 = statePair.getOne();
@@ -215,11 +218,11 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
             });
         }
 
-        private MutableBiMap<Twin<State>, State> run(FSA.Builder<R> carrier, BiFunction<S, T, R> transitionDecider)
+        private MutableBiMap<Twin<State>, State> run(Builder<R> carrier, BiFunction<S, T, R> transitionDecider)
         {
             final R epsilonP = transitionDecider.apply(epsilon1, epsilon2);
 
-            // FIXME: currently only single start state FSAs can be handled
+            // FIXME: currently only handles the single start state FSAs
             final Twin<State> startStatePair = Tuples.twin(fsa1.startState(), fsa2.startState());
             stateMapping.put(startStatePair, States.generate());
             pendingProductStates.add(startStatePair);

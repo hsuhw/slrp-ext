@@ -9,8 +9,10 @@ import api.automata.fsa.FSAManipulator;
 import com.mscharhag.oleaster.runner.OleasterRunner;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.Sets;
+import org.eclipse.collections.impl.tuple.Tuples;
 import org.junit.runner.RunWith;
 
 import static com.mscharhag.oleaster.matcher.Matchers.expect;
@@ -28,6 +30,10 @@ public class BasicFSAManipulatorTest
         final Object e = new Object();
         final Object a1 = new Object();
         final Object a2 = new Object();
+        final State s1 = States.generate();
+        final State s2 = States.generate();
+        final State s3 = States.generate();
+        final State s4 = States.generate();
 
         describe("#getDecoratee", () -> {
 
@@ -43,9 +49,6 @@ public class BasicFSAManipulatorTest
 
             it("meets a minimum expectation", () -> {
                 final FSA.Builder<Object> builder = provider.builder(3, 3, e);
-                final State s1 = States.generate();
-                final State s2 = States.generate();
-                final State s3 = States.generate();
                 builder.addTransition(s1, s2, a1).addStartState(s2).addTransition(s2, s3, a1);
                 final ImmutableSet<State> states = manipulator.trimUnreachableStates(builder.build()).states();
                 expect(states.contains(s1)).toBeFalse();
@@ -58,13 +61,23 @@ public class BasicFSAManipulatorTest
 
             it("meets a minimum expectation", () -> {
                 final FSA.Builder<Object> builder = provider.builder(3, 3, e);
-                final State s1 = States.generate();
-                final State s2 = States.generate();
-                final State s3 = States.generate();
                 builder.addTransition(s1, s2, a1).addStartState(s1).addAcceptState(s2).addTransition(s2, s3, a1);
                 final ImmutableSet<State> states = manipulator.trimDeadEndStates(builder.build()).states();
                 expect(states.containsAllArguments(s1, s2)).toBeTrue();
-                expect(states.containsAllArguments(s3)).toBeFalse();
+                expect(states.contains(s3)).toBeFalse();
+            });
+
+        });
+
+        describe("#trimStates", () -> {
+
+            it("meets a minimum expectation", () -> {
+                final FSA.Builder<Object> builder = provider.builder(3, 3, e);
+                builder.addTransition(s1, s2, a1).addTransition(s2, s3, a1).addTransition(s3, s4, a1);
+                builder.addStartState(s2).addAcceptState(s3);
+                final ImmutableSet<State> states = manipulator.trimDeadEndStates(builder.build()).states();
+                expect(states.containsAllArguments(s2, s3)).toBeTrue();
+                expect(states.containsAllArguments(s1, s4)).toBeFalse();
             });
 
         });
@@ -74,6 +87,29 @@ public class BasicFSAManipulatorTest
         final ImmutableList<Object> word2 = Lists.immutable.of(a1, a1);
         final ImmutableList<Object> word3 = Lists.immutable.of(a1, a2, a1);
         final ImmutableList<Object> word4 = Lists.immutable.of(a2, a1, a2);
+
+        describe("#project", () -> {
+
+            final Twin<Object> pe = Tuples.twin(e, e);
+            final Twin<Object> p1 = Tuples.twin(a1, a1);
+            final Twin<Object> p2 = Tuples.twin(a1, a2);
+            final Twin<Object> p3 = Tuples.twin(a2, a1);
+            final Twin<Object> p4 = Tuples.twin(a2, a2);
+            final Alphabet<Twin<Object>> alph = Alphabets.builder(5, pe) //
+                                                         .add(p1).add(p2).add(p3).add(p4).build();
+
+            it("meets a minimum expectation", () -> {
+                final ImmutableList<Twin<Object>> pword1 = Lists.immutable.of(p1, p2);
+                final ImmutableList<Twin<Object>> pword2 = Lists.immutable.of(p3, p2, p1);
+                final FSA<Twin<Object>> tfsa = provider.thatAcceptsOnly(alph, Sets.immutable.of(pword1, pword2));
+                final FSA<Object> fsa = provider.manipulator().project(tfsa, alphabet, Twin::getTwo);
+                expect(fsa.accepts(word1)).toBeTrue();
+                expect(fsa.accepts(word2)).toBeFalse();
+                expect(fsa.accepts(word3)).toBeTrue();
+                expect(fsa.accepts(word4)).toBeFalse();
+            });
+
+        });
 
         describe("#determinize", () -> {
 

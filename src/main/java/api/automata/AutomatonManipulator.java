@@ -8,6 +8,7 @@ import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
 import java.util.function.BiFunction;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static api.automata.Automaton.Builder;
@@ -30,6 +31,10 @@ public interface AutomatonManipulator
     <S> Automaton<S> trimUnreachableStates(Automaton<S> target);
 
     <S> Automaton<S> trimDeadEndStates(Automaton<S> target);
+
+    <S> Automaton<S> trimStates(Automaton<S> target);
+
+    <S, R> Automaton<R> project(Automaton<S> target, Alphabet<R> alphabet, Function<S, R> projector);
 
     <S, T, R> Automaton<R> makeProduct(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
                                        BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer);
