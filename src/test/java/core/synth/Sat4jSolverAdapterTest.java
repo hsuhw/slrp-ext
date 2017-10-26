@@ -1,5 +1,6 @@
 package core.synth;
 
+import api.synth.SatSolver;
 import api.synth.SatSolverTimeoutException;
 import com.mscharhag.oleaster.runner.OleasterRunner;
 import org.junit.runner.RunWith;
@@ -105,15 +106,6 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
                 expect(satisfiable1).toBeFalse();
                 final boolean satisfiable2 = solver.findItSatisfiable();
                 expect(satisfiable1).toEqual(satisfiable2);
-            });
-
-            it("throw exception when time out", () -> {
-                final long t = solver.getTimeoutInMs();
-                solver.setTimeoutInMs(1);
-                solver.addClauseExactly(3, 1, 2, 3, 4, 5);
-                solver.addClauseExactly(3, -1, -5, 6, 7);
-                expect(() -> solver.findItSatisfiable()).toThrow(SatSolverTimeoutException.class);
-                solver.setTimeoutInMs(t);
             });
 
         });
