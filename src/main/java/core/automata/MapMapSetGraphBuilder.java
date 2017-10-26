@@ -128,12 +128,8 @@ public class MapMapSetGraphBuilder<N, A> implements TransitionGraph.Builder<N, A
     public Builder<N, A> removeNode(N node)
     {
         Assertions.argumentNotNull(node);
-        final boolean inForward = forwardGraph.containsKey(node);
-        if (!inForward && !backwardGraph.containsKey(node)) {
-            throw new IllegalArgumentException("non-existing target given");
-        }
 
-        if (inForward) {
+        if (forwardGraph.containsKey(node)) {
             forwardGraph.get(node).forEach((arc, dests) -> {
                 dests.forEach(dest -> removeArcFrom(backwardGraph, dest, node, arc));
             });

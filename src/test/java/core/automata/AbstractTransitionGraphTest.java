@@ -122,13 +122,6 @@ public abstract class AbstractTransitionGraphTest
                     expect(() -> builder.removeNode(nullArg)).toThrow(IllegalArgumentException.class);
                 });
 
-                it("complains when removing a non-existing node", () -> {
-                    expect(() -> builder.removeNode(n1)).toThrow(IllegalArgumentException.class);
-
-                    builder.addArc(n1, n1, label);
-                    expect(() -> builder.removeNode(n2)).toThrow(IllegalArgumentException.class);
-                });
-
                 it("removes forward-only nodes", () -> {
                     builder.addArc(n1, n2, label);
                     builder.removeNode(n1);
