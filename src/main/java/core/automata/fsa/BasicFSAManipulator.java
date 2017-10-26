@@ -91,13 +91,16 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
         if (!isFSA(target)) {
             return null;
         }
+        final ImmutableSet<State> acceptStates = target.acceptStates();
+        if (acceptStates.isEmpty()) {
+            return FSAs.thatAcceptsNone(target.alphabet());
+        }
 
         // mark all the reachable states by a backward BFS
         final FSA<S> fsa = (FSA<S>) target;
         final int stateNumber = target.states().size();
         final MutableSet<State> reachable = UnifiedSet.newSet(stateNumber); // upper bound
         final Queue<State> pendingChecks = new LinkedList<>();
-        final ImmutableSet<State> acceptStates = fsa.acceptStates();
         reachable.addAllIterable(acceptStates);
         pendingChecks.addAll(acceptStates.castToSet());
         computeStateReachability(fsa.transitionGraph()::predecessorsOf, reachable, pendingChecks);
