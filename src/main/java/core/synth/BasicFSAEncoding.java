@@ -278,6 +278,10 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     {
         final ImmutableIntList encodedSymbols = intAlphabet.encode(symbols.toList().toImmutable());
 
+        if (encodedSymbols.contains(EPSILON_SYMBOL_INDEX)) {
+            solver.setLiteralsFalsy(acceptStateIndicators.get(0));
+        }
+
         final ImmutableIntList canBePurelyMadeUntil = solver.newFreeVariables(stateNumber + 1);
         final int initialStepAlwaysPossible = canBePurelyMadeUntil.get(START_STATE_INDEX);
         solver.setLiteralTruthy(initialStepAlwaysPossible);
