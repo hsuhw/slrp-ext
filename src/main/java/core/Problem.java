@@ -3,33 +3,30 @@ package core;
 import api.automata.fsa.FSA;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
-import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 
 public class Problem
 {
     private final FSA<String> initialConfigurations;
     private final FSA<String> finalConfigurations;
+    private final FSA<String> invariant;
     private final FSA<Twin<String>> schedulerBehavior;
     private final FSA<Twin<String>> processBehavior;
-    private final IntIntPair invariantConfigSearchSpace;
-    private final IntIntPair orderRelationSearchSpace;
+    private final FSA<Twin<String>> orderRelation;
+    private final IntIntPair invariantSizeBound;
+    private final IntIntPair orderRelationSizeBound;
 
-    private static IntIntPair sortIntIntPair(IntIntPair pair)
+    public Problem(FSA<String> initialConfigs, FSA<String> finalConfigs, FSA<String> invariant,
+                   FSA<Twin<String>> scheduler, FSA<Twin<String>> process, FSA<Twin<String>> relation,
+                   IntIntPair invariantBound, IntIntPair relationBound)
     {
-        final int one = pair.getOne();
-        final int two = pair.getTwo();
-        return one > two ? PrimitiveTuples.pair(two, one) : pair;
-    }
-
-    public Problem(FSA<String> initialConfig, FSA<String> finalConfig, FSA<Twin<String>> player1,
-                   FSA<Twin<String>> player2, IntIntPair invariantSearchSpace, IntIntPair relationSearchSpace)
-    {
-        initialConfigurations = initialConfig;
-        finalConfigurations = finalConfig;
-        schedulerBehavior = player1;
-        processBehavior = player2;
-        invariantConfigSearchSpace = sortIntIntPair(invariantSearchSpace);
-        orderRelationSearchSpace = sortIntIntPair(relationSearchSpace);
+        initialConfigurations = initialConfigs;
+        finalConfigurations = finalConfigs;
+        this.invariant = invariant;
+        schedulerBehavior = scheduler;
+        processBehavior = process;
+        orderRelation = relation;
+        invariantSizeBound = invariantBound;
+        orderRelationSizeBound = relationBound;
     }
 
     public FSA<String> initialConfigurations()
@@ -42,6 +39,11 @@ public class Problem
         return finalConfigurations;
     }
 
+    public FSA<String> invariant()
+    {
+        return invariant;
+    }
+
     public FSA<Twin<String>> schedulerBehavior()
     {
         return schedulerBehavior;
@@ -52,13 +54,18 @@ public class Problem
         return processBehavior;
     }
 
-    public IntIntPair invariantConfigSearchSpace()
+    public FSA<Twin<String>> orderRelation()
     {
-        return invariantConfigSearchSpace;
+        return orderRelation;
     }
 
-    public IntIntPair orderRelationSearchSpace()
+    public IntIntPair invariantSizeBound()
     {
-        return orderRelationSearchSpace;
+        return invariantSizeBound;
+    }
+
+    public IntIntPair orderRelationSizeBound()
+    {
+        return orderRelationSizeBound;
     }
 }

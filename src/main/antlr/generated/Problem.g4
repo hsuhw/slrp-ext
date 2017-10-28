@@ -7,7 +7,7 @@ package generated;
 }
 
 problem
-    : initialStatesRepr finalStatesRepr schedulerRepr processRepr verifierOptions
+    : initialStatesRepr finalStatesRepr schedulerRepr processRepr invariantRepr relationRepr verifierOptions
     ;
 
 initialStatesRepr
@@ -28,6 +28,14 @@ schedulerRepr
 
 processRepr
     : 'P2' transducer
+    ;
+
+invariantRepr
+    : 'A' automaton
+    ;
+
+relationRepr
+    : 'T' transducer
     ;
 
 verifierOptions

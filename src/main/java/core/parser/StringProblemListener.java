@@ -22,22 +22,26 @@ public class StringProblemListener extends ProblemBaseListener
     private static final Twin<String> TRANSDUCER_EPSILON_SYMBOL = Tuples.twin(EPSILON_SYMBOL, EPSILON_SYMBOL);
 
     private int commonCapacity;
-    private FSAPartListener initialConfigListener;
-    private FSAPartListener finalConfigListener;
+    private FSAPartListener initialConfigsListener;
+    private FSAPartListener finalConfigsListener;
+    private FSAPartListener invariantListener;
     private TransducerPartListener schedulerListener;
     private TransducerPartListener processListener;
+    private TransducerPartListener relationListener;
     private IntIntPair invariantBound;
     private IntIntPair relationBound;
 
     public ListIterable<Problem> getProblem()
     {
-        final FSA<String> initialCfg = initialConfigListener.getAutomata().getOnly();
-        final FSA<String> finalCfg = finalConfigListener.getAutomata().getOnly();
-        final FSA<Twin<String>> p1 = schedulerListener.getAutomata().getOnly();
-        final FSA<Twin<String>> p2 = processListener.getAutomata().getOnly();
-        final Problem result = new Problem(initialCfg, finalCfg, p1, p2, invariantBound, relationBound);
+        final FSA<String> initCfg = initialConfigsListener.getAutomata().getOnly();
+        final FSA<String> finalCfg = finalConfigsListener.getAutomata().getOnly();
+        final FSA<String> inv = invariantListener.getAutomata().getOnly();
+        final FSA<Twin<String>> sched = schedulerListener.getAutomata().getOnly();
+        final FSA<Twin<String>> proc = processListener.getAutomata().getOnly();
+        final FSA<Twin<String>> rel = relationListener.getAutomata().getOnly();
+        final Problem problem = new Problem(initCfg, finalCfg, inv, sched, proc, rel, invariantBound, relationBound);
 
-        return Lists.immutable.of(result);
+        return Lists.immutable.of(problem);
     }
 
     @Override
@@ -45,22 +49,24 @@ public class StringProblemListener extends ProblemBaseListener
     {
         commonCapacity = (ctx.getStop().getLine() - ctx.getStart().getLine()) / 4; // loose upper bound
         final Alphabet.Builder<String> alphabetRecorder = Alphabets.builder(commonCapacity, EPSILON_SYMBOL);
-        initialConfigListener = new FSAPartListener(alphabetRecorder);
-        finalConfigListener = new FSAPartListener(alphabetRecorder);
+        initialConfigsListener = new FSAPartListener(alphabetRecorder);
+        finalConfigsListener = new FSAPartListener(alphabetRecorder);
+        invariantListener = new FSAPartListener(alphabetRecorder);
         schedulerListener = new TransducerPartListener();
         processListener = new TransducerPartListener();
+        relationListener = new TransducerPartListener();
     }
 
     @Override
     public void enterInitialStatesRepr(InitialStatesReprContext ctx)
     {
-        ctx.automaton().enterRule(initialConfigListener);
+        ctx.automaton().enterRule(initialConfigsListener);
     }
 
     @Override
     public void enterFinalStatesRepr(FinalStatesReprContext ctx)
     {
-        ctx.automaton().enterRule(finalConfigListener);
+        ctx.automaton().enterRule(finalConfigsListener);
     }
 
     @Override
@@ -76,11 +82,28 @@ public class StringProblemListener extends ProblemBaseListener
     }
 
     @Override
+    public void enterInvariantRepr(InvariantReprContext ctx)
+    {
+        ctx.automaton().enterRule(invariantListener);
+    }
+
+    @Override
+    public void enterRelationRepr(RelationReprContext ctx)
+    {
+        ctx.transducer().enterRule(relationListener);
+    }
+
+    private static IntIntPair sortedIntIntPair(int one, int two)
+    {
+        return one > two ? PrimitiveTuples.pair(two, one) : PrimitiveTuples.pair(one, two);
+    }
+
+    @Override
     public void enterInvariantSearchSpace(InvariantSearchSpaceContext ctx)
     {
         final int from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 1);
         final int to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 1);
-        invariantBound = PrimitiveTuples.pair(from, to);
+        invariantBound = sortedIntIntPair(from, to);
     }
 
     @Override
@@ -88,7 +111,7 @@ public class StringProblemListener extends ProblemBaseListener
     {
         final int from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 1);
         final int to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 1);
-        relationBound = PrimitiveTuples.pair(from, to);
+        relationBound = sortedIntIntPair(from, to);
     }
 
     private class FSAPartListener extends ProblemBaseListener
