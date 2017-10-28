@@ -1,7 +1,7 @@
 package core.parser;
 
 import api.parser.Parser;
-import core.Problem;
+import core.proof.Problem;
 import generated.ProblemLexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;

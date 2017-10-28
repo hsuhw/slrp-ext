@@ -1,13 +1,13 @@
-package core.synth;
+package core.proof;
 
 import api.automata.AlphabetIntEncoder;
 import api.automata.State;
 import api.automata.States;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
-import api.synth.FSAEncoding;
-import api.synth.SatSolver;
-import api.synth.SatSolverTimeoutException;
+import api.proof.FSAEncoding;
+import api.proof.SatSolver;
+import api.proof.SatSolverTimeoutException;
 import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;

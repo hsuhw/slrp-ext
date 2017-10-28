@@ -1,6 +1,6 @@
-package core.synth;
+package core.proof;
 
-import api.synth.FSAEncoding;
+import api.proof.FSAEncoding;
 import com.mscharhag.oleaster.runner.OleasterRunner;
 import org.junit.runner.RunWith;
 

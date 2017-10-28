@@ -1,4 +1,4 @@
-package api.synth;
+package api.proof;
 
 public final class SatSolverTimeoutException extends Exception
 {

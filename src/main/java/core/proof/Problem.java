@@ -1,4 +1,4 @@
-package core;
+package core.proof;
 
 import api.automata.fsa.FSA;
 import org.eclipse.collections.api.tuple.Twin;

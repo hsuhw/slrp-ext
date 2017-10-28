@@ -1,4 +1,4 @@
-package api.synth;
+package api.proof;
 
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.list.primitive.MutableIntList;

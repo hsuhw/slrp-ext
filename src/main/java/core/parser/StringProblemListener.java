@@ -3,7 +3,7 @@ package core.parser;
 import api.automata.Alphabet;
 import api.automata.Alphabets;
 import api.automata.fsa.FSA;
-import core.Problem;
+import core.proof.Problem;
 import core.parser.fsa.FSAListener;
 import generated.ProblemBaseListener;
 import org.eclipse.collections.api.list.ListIterable;

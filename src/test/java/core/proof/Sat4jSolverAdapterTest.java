@@ -1,7 +1,5 @@
-package core.synth;
+package core.proof;
 
-import api.synth.SatSolver;
-import api.synth.SatSolverTimeoutException;
 import com.mscharhag.oleaster.runner.OleasterRunner;
 import org.junit.runner.RunWith;
 

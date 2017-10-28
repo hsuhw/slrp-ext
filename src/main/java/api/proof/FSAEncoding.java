@@ -1,4 +1,4 @@
-package api.synth;
+package api.proof;
 
 import api.automata.fsa.FSA;
 import org.eclipse.collections.api.list.ImmutableList;

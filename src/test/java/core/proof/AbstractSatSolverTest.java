@@ -1,7 +1,7 @@
-package core.synth;
+package core.proof;
 
-import api.synth.SatSolver;
-import api.synth.SatSolverTimeoutException;
+import api.proof.SatSolver;
+import api.proof.SatSolverTimeoutException;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntSets;

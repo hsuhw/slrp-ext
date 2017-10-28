@@ -1,7 +1,7 @@
-package core.synth;
+package core.proof;
 
-import api.synth.SatSolver;
-import api.synth.SatSolverTimeoutException;
+import api.proof.SatSolver;
+import api.proof.SatSolverTimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;

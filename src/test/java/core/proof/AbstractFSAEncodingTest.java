@@ -1,10 +1,10 @@
-package core.synth;
+package core.proof;
 
 import api.automata.AlphabetIntEncoder;
 import api.automata.AlphabetIntEncoders;
 import api.automata.fsa.FSA;
-import api.synth.FSAEncoding;
-import api.synth.SatSolver;
+import api.proof.FSAEncoding;
+import api.proof.SatSolver;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.Sets;
