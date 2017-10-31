@@ -3,8 +3,8 @@ package core.parser;
 import api.automata.Alphabet;
 import api.automata.Alphabets;
 import api.automata.fsa.FSA;
-import core.proof.Problem;
 import core.parser.fsa.FSAListener;
+import core.proof.Problem;
 import generated.ProblemBaseListener;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.tuple.Twin;
@@ -35,10 +35,12 @@ public class StringProblemListener extends ProblemBaseListener
     {
         final FSA<String> initCfg = initialConfigsListener.getAutomata().getOnly();
         final FSA<String> finalCfg = finalConfigsListener.getAutomata().getOnly();
-        final FSA<String> inv = invariantListener.getAutomata().getOnly();
+        final ListIterable<FSA<String>> invParsed = invariantListener.getAutomata();
+        final FSA<String> inv = invParsed.notEmpty() ? invParsed.getOnly() : null;
         final FSA<Twin<String>> sched = schedulerListener.getAutomata().getOnly();
         final FSA<Twin<String>> proc = processListener.getAutomata().getOnly();
-        final FSA<Twin<String>> rel = relationListener.getAutomata().getOnly();
+        final ListIterable<FSA<Twin<String>>> relParsed = relationListener.getAutomata();
+        final FSA<Twin<String>> rel = relParsed.notEmpty() ? relParsed.getOnly() : null;
         final Problem problem = new Problem(initCfg, finalCfg, inv, sched, proc, rel, invariantBound, relationBound);
 
         return Lists.immutable.of(problem);
