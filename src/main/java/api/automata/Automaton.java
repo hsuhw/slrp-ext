@@ -1,6 +1,14 @@
 package api.automata;
 
 import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.api.set.SetIterable;
+import org.eclipse.collections.impl.factory.Sets;
+import org.eclipse.collections.impl.set.mutable.UnifiedSet;
+
+import java.util.LinkedList;
+import java.util.Queue;
+import java.util.function.Function;
 
 public interface Automaton<S>
 {
@@ -24,6 +32,11 @@ public interface Automaton<S>
         return startStates().contains(state);
     }
 
+    default ImmutableSet<State> nonStartStates()
+    {
+        return states().newWithoutAll(startStates());
+    }
+
     ImmutableSet<State> acceptStates();
 
     default boolean isAcceptState(State state)
@@ -34,6 +47,42 @@ public interface Automaton<S>
     default ImmutableSet<State> nonAcceptStates()
     {
         return states().newWithoutAll(acceptStates());
+    }
+
+    default SetIterable<State> reachableStatesWith(ImmutableSet<State> base,
+                                                   Function<State, SetIterable<State>> stepFunction)
+    {
+        final MutableSet<State> reachable = UnifiedSet.newSet(states().size()); // upper bound
+        reachable.addAllIterable(base);
+        final Queue<State> pendingChecks = new LinkedList<>();
+        pendingChecks.addAll(base.castToSet());
+
+        State currState;
+        while ((currState = pendingChecks.poll()) != null) {
+            stepFunction.apply(currState).forEach(state -> {
+                if (!reachable.contains(state)) {
+                    reachable.add(state);
+                    pendingChecks.add(state);
+                }
+            });
+        }
+
+        return reachable; // one-off
+    }
+
+    default SetIterable<State> unreachableStates()
+    {
+        return states().newWithoutAll(reachableStatesWith(startStates(), transitionGraph()::successorsOf));
+    }
+
+    default SetIterable<State> deadEndStates()
+    {
+        return states().newWithoutAll(reachableStatesWith(acceptStates(), transitionGraph()::predecessorsOf));
+    }
+
+    default SetIterable<State> danglingStates()
+    {
+        return Sets.union(unreachableStates().toSet(), deadEndStates().toSet());
     }
 
     TransitionGraph<State, S> transitionGraph();

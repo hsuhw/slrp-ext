@@ -7,6 +7,7 @@ import api.automata.TransitionGraph;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 
 import static api.util.Values.DISPLAY_INDENT;
@@ -20,6 +21,12 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
     private final ImmutableSet<State> startStates;
     private final ImmutableSet<State> acceptStates;
     private final TransitionGraph<State, S> transitionGraph;
+
+    private ImmutableSet<State> nonStartStates;
+    private ImmutableSet<State> nonAcceptStates;
+    private SetIterable<State> unreachableStates;
+    private SetIterable<State> deadEndStates;
+    private SetIterable<State> danglingStates;
     private ImmutableMap<State, String> maskedStateNames;
     private String rawDisplay;
     private String nameMaskedDisplay;
@@ -72,9 +79,59 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
     }
 
     @Override
+    public ImmutableSet<State> nonStartStates()
+    {
+        if (nonStartStates == null) {
+            nonStartStates = Automaton.super.nonStartStates();
+        }
+
+        return nonStartStates;
+    }
+
+    @Override
     public ImmutableSet<State> acceptStates()
     {
         return acceptStates;
+    }
+
+    @Override
+    public ImmutableSet<State> nonAcceptStates()
+    {
+        if (nonAcceptStates == null) {
+            nonAcceptStates = Automaton.super.nonAcceptStates();
+        }
+
+        return nonAcceptStates;
+    }
+
+    @Override
+    public SetIterable<State> unreachableStates()
+    {
+        if (unreachableStates == null) {
+            unreachableStates = Automaton.super.unreachableStates();
+        }
+
+        return unreachableStates;
+    }
+
+    @Override
+    public SetIterable<State> deadEndStates()
+    {
+        if (deadEndStates == null) {
+            deadEndStates = Automaton.super.deadEndStates();
+        }
+
+        return deadEndStates;
+    }
+
+    @Override
+    public SetIterable<State> danglingStates()
+    {
+        if (danglingStates == null) {
+            danglingStates = Automaton.super.danglingStates();
+        }
+
+        return danglingStates;
     }
 
     @Override
@@ -108,11 +165,11 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
     {
         if (rawDisplay == null) {
             rawDisplay = "{" + DISPLAY_NEWLINE //
-                + DISPLAY_INDENT + "start: " + startStates + ";" + DISPLAY_NEWLINE //
+                + DISPLAY_INDENT + "start: " + startStates.makeString() + ";" + DISPLAY_NEWLINE //
                 + DISPLAY_NEWLINE //
                 + transitionGraph //
                 + DISPLAY_NEWLINE //
-                + DISPLAY_INDENT + "accept: " + acceptStates + ";" + DISPLAY_NEWLINE //
+                + DISPLAY_INDENT + "accept: " + acceptStates.makeString() + ";" + DISPLAY_NEWLINE //
                 + "}" + DISPLAY_NEWLINE;
         }
 
@@ -127,8 +184,8 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
     private String nameMaskedDisplay()
     {
         maskedStateNames();
-        final String startStateNames = startStates.collect(this::determineStateName).toString();
-        final String acceptStateNames = acceptStates.collect(this::determineStateName).toString();
+        final String startStateNames = startStates.collect(this::determineStateName).makeString();
+        final String acceptStateNames = acceptStates.collect(this::determineStateName).makeString();
         if (nameMaskedDisplay == null) {
             nameMaskedDisplay = "{" + DISPLAY_NEWLINE //
                 + DISPLAY_INDENT + "start: " + startStateNames + ";" + DISPLAY_NEWLINE //

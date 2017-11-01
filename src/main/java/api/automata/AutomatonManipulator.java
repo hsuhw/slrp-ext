@@ -32,7 +32,7 @@ public interface AutomatonManipulator
 
     <S> Automaton<S> trimDeadEndStates(Automaton<S> target);
 
-    <S> Automaton<S> trimStates(Automaton<S> target);
+    <S> Automaton<S> trimDanglingStates(Automaton<S> target);
 
     <S, R> Automaton<R> project(Automaton<S> target, Alphabet<R> alphabet, Function<S, R> projector);
 

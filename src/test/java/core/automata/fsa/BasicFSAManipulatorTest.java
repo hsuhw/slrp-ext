@@ -33,7 +33,6 @@ public class BasicFSAManipulatorTest
         final State s1 = States.generate();
         final State s2 = States.generate();
         final State s3 = States.generate();
-        final State s4 = States.generate();
 
         describe("#getDecoratee", () -> {
 
@@ -69,15 +68,15 @@ public class BasicFSAManipulatorTest
 
         });
 
-        describe("#trimStates", () -> {
+        describe("#trimDanglingStates", () -> {
 
             it("meets a minimum expectation", () -> {
                 final FSA.Builder<Object> builder = provider.builder(3, 3, e);
-                builder.addTransition(s1, s2, a1).addTransition(s2, s3, a1).addTransition(s3, s4, a1);
-                builder.addStartState(s2).addAcceptState(s3);
-                final ImmutableSet<State> states = manipulator.trimDeadEndStates(builder.build()).states();
-                expect(states.containsAllArguments(s2, s3)).toBeTrue();
-                expect(states.containsAllArguments(s1, s4)).toBeFalse();
+                builder.addTransition(s1, s2, a1).addTransition(s2, s2, a1).addTransition(s2, s3, a1);
+                builder.addStartState(s2).addAcceptState(s2);
+                final ImmutableSet<State> states = manipulator.trimDanglingStates(builder.build()).states();
+                expect(states.size()).toEqual(1);
+                expect(states.contains(s2)).toBeTrue();
             });
 
         });
@@ -119,18 +118,18 @@ public class BasicFSAManipulatorTest
             });
 
             it("meets a minimum expectation", () -> {
-                final FSA<Object> fsa = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
-                expect(fsa.accepts(word1)).toBeTrue();
-                expect(fsa.accepts(word2)).toBeTrue();
-                expect(fsa.accepts(word3)).toBeFalse();
-                expect(fsa.accepts(word4)).toBeFalse();
-                expect(fsa.isDeterministic()).toBeFalse();
-                final FSA<Object> dfsa = manipulator.determinize(fsa);
-                expect(dfsa.accepts(word1)).toBeTrue();
-                expect(dfsa.accepts(word2)).toBeTrue();
-                expect(dfsa.accepts(word3)).toBeFalse();
-                expect(dfsa.accepts(word4)).toBeFalse();
-                expect(dfsa.isDeterministic()).toBeTrue();
+                final FSA<Object> nfa = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
+                expect(nfa.accepts(word1)).toBeTrue();
+                expect(nfa.accepts(word2)).toBeTrue();
+                expect(nfa.accepts(word3)).toBeFalse();
+                expect(nfa.accepts(word4)).toBeFalse();
+                expect(nfa.isDeterministic()).toBeFalse();
+                final FSA<Object> dfa = manipulator.determinize(nfa);
+                expect(dfa.accepts(word1)).toBeTrue();
+                expect(dfa.accepts(word2)).toBeTrue();
+                expect(dfa.accepts(word3)).toBeFalse();
+                expect(dfa.accepts(word4)).toBeFalse();
+                expect(dfa.isDeterministic()).toBeTrue();
             });
 
         });

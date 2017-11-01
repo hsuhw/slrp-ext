@@ -5,22 +5,18 @@ import api.automata.fsa.FSA;
 import api.automata.fsa.FSAManipulator;
 import api.automata.fsa.FSAs;
 import org.eclipse.collections.api.bimap.MutableBiMap;
-import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.bimap.mutable.HashBiMap;
-import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 import static api.automata.fsa.FSA.Builder;
 import static api.automata.fsa.FSAs.builder;
-import static api.automata.fsa.FSAs.builderOn;
 import static api.util.Values.NOT_IMPLEMENTED_YET;
 
 public class BasicFSAManipulator implements FSAManipulator.Decorator
@@ -36,76 +32,6 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
     public FSAManipulator getDecoratee()
     {
         return decoratee;
-    }
-
-    private <S> boolean isFSA(Automaton<S> target)
-    {
-        return target instanceof FSA<?>;
-    }
-
-    private void computeStateReachability(Function<State, SetIterable<State>> stepFunction,
-                                          MutableSet<State> reachableStates, Queue<State> pendingChecks)
-    {
-        State currState;
-        while ((currState = pendingChecks.poll()) != null) {
-            stepFunction.apply(currState).forEach(state -> {
-                if (!reachableStates.contains(state)) {
-                    reachableStates.add(state);
-                    pendingChecks.add(state);
-                }
-            });
-        }
-    }
-
-    private static <S> FSA<S> removeStates(FSA<S> targetFSA, ImmutableSet<State> toBeTrimmed)
-    {
-        final Builder<S> builder = builderOn(targetFSA);
-        toBeTrimmed.forEach(builder::removeState);
-
-        return builder.build();
-    }
-
-    @Override
-    public <S> FSA<S> trimUnreachableStatesDelegated(Automaton<S> target)
-    {
-        if (!isFSA(target)) {
-            return null;
-        }
-
-        // mark all the reachable states by a forward BFS
-        final FSA<S> fsa = (FSA<S>) target;
-        final int stateNumber = target.states().size();
-        final MutableSet<State> reachable = UnifiedSet.newSet(stateNumber); // upper bound
-        final Queue<State> pendingChecks = new LinkedList<>();
-        final ImmutableSet<State> startStates = fsa.startStates();
-        reachable.addAllIterable(startStates);
-        pendingChecks.addAll(startStates.castToSet());
-        computeStateReachability(fsa.transitionGraph()::successorsOf, reachable, pendingChecks);
-
-        return reachable.size() == stateNumber ? fsa : removeStates(fsa, target.states().newWithoutAll(reachable));
-    }
-
-    @Override
-    public <S> FSA<S> trimDeadEndStatesDelegated(Automaton<S> target)
-    {
-        if (!isFSA(target)) {
-            return null;
-        }
-        final ImmutableSet<State> acceptStates = target.acceptStates();
-        if (acceptStates.isEmpty()) {
-            return FSAs.thatAcceptsNone(target.alphabet());
-        }
-
-        // mark all the reachable states by a backward BFS
-        final FSA<S> fsa = (FSA<S>) target;
-        final int stateNumber = target.states().size();
-        final MutableSet<State> reachable = UnifiedSet.newSet(stateNumber); // upper bound
-        final Queue<State> pendingChecks = new LinkedList<>();
-        reachable.addAllIterable(acceptStates);
-        pendingChecks.addAll(acceptStates.castToSet());
-        computeStateReachability(fsa.transitionGraph()::predecessorsOf, reachable, pendingChecks);
-
-        return reachable.size() == stateNumber ? fsa : removeStates(fsa, target.states().newWithoutAll(reachable));
     }
 
     @Override

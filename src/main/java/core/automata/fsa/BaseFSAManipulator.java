@@ -25,7 +25,7 @@ public final class BaseFSAManipulator implements FSAManipulator
     }
 
     @Override
-    public <S> FSA<S> trimStates(Automaton<S> target)
+    public <S> FSA<S> trimDanglingStates(Automaton<S> target)
     {
         throw new UnsupportedOperationException(NO_MATCHED_IMPLEMENTATION_FOUND);
     }

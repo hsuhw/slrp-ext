@@ -251,17 +251,21 @@ public interface FSA<S> extends Automaton<S>
             final Builder<S> builder = builder(stateCapacity, alphabet.size(), alphabet.epsilon());
 
             final State startState = States.generate();
+            final State acceptState = States.generate();
+            builder.addAcceptState(acceptState);
             State currState = startState, nextState;
+            int lastSymbolPos;
+            S symbol;
             builder.addStartState(startState);
             for (ImmutableList<S> word : words) {
-                for (S symbol : word) {
-                    if (!symbol.equals(alphabet.epsilon())) {
+                for (int i = 0; i < (lastSymbolPos = word.size() - 1); i++) {
+                    if (!(symbol = word.get(i)).equals(alphabet.epsilon())) {
                         nextState = States.generate();
                         builder.addTransition(currState, nextState, symbol);
                         currState = nextState;
                     }
                 }
-                builder.addAcceptState(currState);
+                builder.addTransition(currState, acceptState, word.get(lastSymbolPos));
                 currState = startState;
             }
 

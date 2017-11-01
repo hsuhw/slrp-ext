@@ -3,6 +3,7 @@ package api.automata.fsa;
 import api.automata.*;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.set.SetIterable;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -14,6 +15,19 @@ import static api.util.Connectives.OR;
 
 public interface FSAManipulator extends AutomatonManipulator
 {
+    default <S> boolean isFSA(Automaton<S> target)
+    {
+        return target instanceof FSA<?>;
+    }
+
+    default <S> FSA<S> removeStates(FSA<S> target, SetIterable<State> toBeTrimmed)
+    {
+        final Builder<S> builder = builderOn(target);
+        toBeTrimmed.forEach(builder::removeState);
+
+        return builder.build();
+    }
+
     @Override
     <S> FSA<S> trimUnreachableStates(Automaton<S> target);
 
@@ -21,10 +35,7 @@ public interface FSAManipulator extends AutomatonManipulator
     <S> FSA<S> trimDeadEndStates(Automaton<S> target);
 
     @Override
-    default <S> FSA<S> trimStates(Automaton<S> target)
-    {
-        return manipulator().trimUnreachableStates(manipulator().trimDeadEndStates(target));
-    }
+    <S> FSA<S> trimDanglingStates(Automaton<S> target);
 
     @Override
     <S, R> FSA<R> project(Automaton<S> target, Alphabet<R> alphabet, Function<S, R> projector);
@@ -154,7 +165,13 @@ public interface FSAManipulator extends AutomatonManipulator
 
         default <S> FSA<S> trimUnreachableStatesDelegated(Automaton<S> target)
         {
-            return null;
+            if (!isFSA(target)) {
+                return null;
+            }
+
+            final SetIterable<State> targetStates = target.unreachableStates();
+
+            return targetStates.isEmpty() ? (FSA<S>) target : removeStates((FSA<S>) target, targetStates);
         }
 
         @Override
@@ -169,7 +186,16 @@ public interface FSAManipulator extends AutomatonManipulator
 
         default <S> FSA<S> trimDeadEndStatesDelegated(Automaton<S> target)
         {
-            return null;
+            if (!isFSA(target)) {
+                return null;
+            }
+            if (target.acceptStates().isEmpty()) {
+                return FSAs.thatAcceptsNone(target.alphabet());
+            }
+
+            final SetIterable<State> targetStates = target.deadEndStates();
+
+            return targetStates.isEmpty() ? (FSA<S>) target : removeStates((FSA<S>) target, targetStates);
         }
 
         @Override
@@ -182,24 +208,33 @@ public interface FSAManipulator extends AutomatonManipulator
             return delegated;
         }
 
-        default <S> FSA<S> trimStatesDelegated(Automaton<S> target)
+        default <S> FSA<S> trimDanglingStatesDelegated(Automaton<S> target)
         {
-            return FSAManipulator.super.trimStates(target);
+            if (!isFSA(target)) {
+                return null;
+            }
+            if (target.acceptStates().isEmpty()) {
+                return FSAs.thatAcceptsNone(target.alphabet());
+            }
+
+            final SetIterable<State> targetStates = target.danglingStates();
+
+            return targetStates.isEmpty() ? (FSA<S>) target : removeStates((FSA<S>) target, targetStates);
         }
 
         @Override
-        default <S> FSA<S> trimStates(Automaton<S> target)
+        default <S> FSA<S> trimDanglingStates(Automaton<S> target)
         {
-            final FSA<S> delegated = trimStatesDelegated(target);
+            final FSA<S> delegated = trimDanglingStatesDelegated(target);
             if (delegated == null) {
-                return getDecoratee().trimStates(target);
+                return getDecoratee().trimDanglingStates(target);
             }
             return delegated;
         }
 
         default <S, R> FSA<R> projectDelegated(Automaton<S> target, Alphabet<R> alphabet, Function<S, R> projector)
         {
-            if (!(target instanceof FSA<?>)) {
+            if (!isFSA(target)) {
                 return null;
             }
 
@@ -218,7 +253,7 @@ public interface FSAManipulator extends AutomatonManipulator
                 }
             }
 
-            return manipulator().trimStates(builder.build(alphabet));
+            return manipulator().trimDanglingStates(builder.build(alphabet));
         }
 
         @Override
