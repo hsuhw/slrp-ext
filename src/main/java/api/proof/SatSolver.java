@@ -426,7 +426,7 @@ public interface SatSolver
     /**
      * Determines whether the given constraints can be satisfied.
      */
-    boolean findItSatisfiable() throws SatSolverTimeoutException;
+    boolean findItSatisfiable();
 
     /**
      * Returns the model of the given constraints after the satisfiability has

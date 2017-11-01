@@ -1,7 +1,8 @@
 package core.proof;
 
+import api.proof.ContradictionException;
 import api.proof.SatSolver;
-import api.proof.SatSolverTimeoutException;
+import api.proof.TimeoutException;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
@@ -14,17 +15,17 @@ public abstract class AbstractSatSolverTest
 {
     protected SatSolver solver;
 
-    protected boolean modelExists() throws SatSolverTimeoutException
+    protected boolean modelExists()
     {
         return solver.findItSatisfiable();
     }
 
-    protected void expectModelExists() throws SatSolverTimeoutException
+    protected void expectModelExists()
     {
         expect(solver.findItSatisfiable()).toBeTrue();
     }
 
-    protected void expectNoModelExists() throws SatSolverTimeoutException
+    protected void expectNoModelExists()
     {
         expect(solver.findItSatisfiable()).toBeFalse();
     }
@@ -53,8 +54,13 @@ public abstract class AbstractSatSolverTest
                 expect(singletonInterval.contains(1)).toBeTrue();
             });
 
+            it("provides empty when called with 0", () -> {
+                final ImmutableIntList empty = solver.newFreeVariables(0);
+                expect(empty).toBeNotNull();
+                expect(empty.isEmpty()).toBeTrue();
+            });
+
             it("only accepts positive integer", () -> {
-                expect(() -> solver.newFreeVariables(0)).toThrow(IllegalArgumentException.class);
                 expect(() -> solver.newFreeVariables(-1)).toThrow(IllegalArgumentException.class);
             });
 
@@ -106,7 +112,7 @@ public abstract class AbstractSatSolverTest
                         solver.addClause(yes);
                         solver.addClause(-2);
                         solver.addClauseIf(yes, solver.newFreeVariables(1));
-                    }).toThrow(IllegalArgumentException.class);
+                    }).toThrow(ContradictionException.class);
                 });
 
             });
@@ -165,7 +171,7 @@ public abstract class AbstractSatSolverTest
 
             it("complains when it causes trivial contradictions", () -> {
                 solver.addClause(1);
-                expect(() -> solver.setLiteralTruthy(-1)).toThrow(IllegalArgumentException.class);
+                expect(() -> solver.setLiteralTruthy(-1)).toThrow(ContradictionException.class);
             });
 
         });
@@ -184,7 +190,7 @@ public abstract class AbstractSatSolverTest
 
             it("complains when it causes trivial contradictions", () -> {
                 solver.setLiteralsTruthy(1, 2);
-                expect(() -> solver.setLiteralsTruthy(-1, -2)).toThrow(IllegalArgumentException.class);
+                expect(() -> solver.setLiteralsTruthy(-1, -2)).toThrow(ContradictionException.class);
             });
 
         });
@@ -203,7 +209,7 @@ public abstract class AbstractSatSolverTest
 
             it("complains when it causes trivial contradictions", () -> {
                 solver.addClause(1);
-                expect(() -> solver.setLiteralFalsy(1)).toThrow(IllegalArgumentException.class);
+                expect(() -> solver.setLiteralFalsy(1)).toThrow(ContradictionException.class);
             });
 
         });
@@ -222,7 +228,7 @@ public abstract class AbstractSatSolverTest
 
             it("complains when it causes trivial contradictions", () -> {
                 solver.setLiteralsFalsy(1, 2);
-                expect(() -> solver.setLiteralsFalsy(-1, -2)).toThrow(IllegalArgumentException.class);
+                expect(() -> solver.setLiteralsFalsy(-1, -2)).toThrow(ContradictionException.class);
             });
 
         });
@@ -246,7 +252,7 @@ public abstract class AbstractSatSolverTest
             it("complains when it causes trivial contradictions", () -> {
                 solver.addClause(1);
                 solver.addClause(-2);
-                expect(() -> solver.markAsEquivalent(1, 2)).toThrow(IllegalArgumentException.class);
+                expect(() -> solver.markAsEquivalent(1, 2)).toThrow(ContradictionException.class);
             });
 
         });
@@ -272,7 +278,7 @@ public abstract class AbstractSatSolverTest
                 solver.addClause(1);
                 solver.addClause(-2);
                 solver.addClause(3);
-                expect(() -> solver.markEachAsEquivalent(1, 2, 3)).toThrow(IllegalArgumentException.class);
+                expect(() -> solver.markEachAsEquivalent(1, 2, 3)).toThrow(ContradictionException.class);
             });
 
         });

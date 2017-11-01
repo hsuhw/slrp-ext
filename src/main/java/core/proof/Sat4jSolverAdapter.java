@@ -1,20 +1,20 @@
 package core.proof;
 
+import api.proof.ContradictionException;
 import api.proof.SatSolver;
-import api.proof.SatSolverTimeoutException;
+import api.proof.TimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.api.set.primitive.IntSet;
+import org.eclipse.collections.impl.factory.primitive.IntLists;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
 import org.sat4j.core.VecInt;
 import org.sat4j.minisat.SolverFactory;
-import org.sat4j.specs.ContradictionException;
 import org.sat4j.specs.ISolver;
-import org.sat4j.specs.TimeoutException;
 
 import java.util.Arrays;
 
@@ -83,8 +83,11 @@ public class Sat4jSolverAdapter implements SatSolver
     @Override
     public ImmutableIntList newFreeVariables(int howMany)
     {
-        if (howMany < 1) {
-            throw new IllegalArgumentException("number given cannot be less than 1");
+        if (howMany < 0) {
+            throw new IllegalArgumentException("number given cannot be less than 0");
+        }
+        if (howMany == 0) {
+            return IntLists.immutable.empty();
         }
         if (nextFreeVariableId + howMany > SAT_SOLVER_MAX_VARIABLE_NUMBER) {
             throw new IllegalArgumentException("ran out of available free variables");
@@ -103,9 +106,8 @@ public class Sat4jSolverAdapter implements SatSolver
         model = null;
         try {
             solver.addClause(new VecInt(clause));
-        } catch (ContradictionException e) {
-            final String msg = "contradiction found when adding clause ";
-            throw new IllegalArgumentException(msg + Arrays.toString(clause));
+        } catch (org.sat4j.specs.ContradictionException e) {
+            throw new ContradictionException("clause " + Arrays.toString(clause));
         }
     }
 
@@ -115,9 +117,8 @@ public class Sat4jSolverAdapter implements SatSolver
         model = null;
         try {
             solver.addAtLeast(new VecInt(clause), degree);
-        } catch (ContradictionException e) {
-            final String msg = "contradiction found when adding at-least-" + degree + " clause ";
-            throw new IllegalArgumentException(msg + Arrays.toString(clause));
+        } catch (org.sat4j.specs.ContradictionException e) {
+            throw new ContradictionException("at-least-" + degree + " clause " + Arrays.toString(clause));
         }
     }
 
@@ -127,9 +128,8 @@ public class Sat4jSolverAdapter implements SatSolver
         model = null;
         try {
             solver.addAtMost(new VecInt(clause), degree);
-        } catch (ContradictionException e) {
-            final String msg = "contradiction found when adding at-most-" + degree + " clause ";
-            throw new IllegalArgumentException(msg + Arrays.toString(clause));
+        } catch (org.sat4j.specs.ContradictionException e) {
+            throw new ContradictionException("at-most-" + degree + " clause " + Arrays.toString(clause));
         }
     }
 
@@ -139,14 +139,13 @@ public class Sat4jSolverAdapter implements SatSolver
         model = null;
         try {
             solver.addExactly(new VecInt(clause), degree);
-        } catch (ContradictionException e) {
-            final String msg = "contradiction found when adding exact clause ";
-            throw new IllegalArgumentException(msg + Arrays.toString(clause));
+        } catch (org.sat4j.specs.ContradictionException e) {
+            throw new ContradictionException("exact clause " + Arrays.toString(clause));
         }
     }
 
     @Override
-    public boolean findItSatisfiable() throws SatSolverTimeoutException
+    public boolean findItSatisfiable()
     {
         if (model != null) {
             return model != NONSOLUTION;
@@ -163,10 +162,10 @@ public class Sat4jSolverAdapter implements SatSolver
 
                 return true;
             }
-        } catch (TimeoutException e) {
+        } catch (org.sat4j.specs.TimeoutException e) {
             endTime = System.currentTimeMillis();
             LOGGER.info("SAT4J failed to solve the problem within {}ms.", endTime - startTime);
-            throw new SatSolverTimeoutException();
+            throw new TimeoutException();
         }
         endTime = System.currentTimeMillis();
         LOGGER.info("SAT4J found it unsatisfiable in {}ms.", endTime - startTime);
