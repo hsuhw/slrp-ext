@@ -180,7 +180,7 @@ public abstract class AbstractTransitionGraphTest
 
                 it("returns the number of its arcs", () -> {
                     expect(instance.size()).toEqual(5);
-                    expect(instance.size()).toEqual(5); // should be cached, hard to tell though
+                    expect(instance.size()).toEqual(5); // should be cached
                 });
 
             });
@@ -197,7 +197,7 @@ public abstract class AbstractTransitionGraphTest
             describe("#referredNodes", () -> {
 
                 it("returns the nodes", () -> {
-                    expect(instance.referredNodes().size()).toEqual(4);  // should be cached
+                    expect(instance.referredNodes().size()).toEqual(4);  // nodes should be cached
                     expect(instance.referredNodes().containsAllArguments(n0, n1, n2, n3)).toBeTrue();
                 });
 
@@ -206,7 +206,7 @@ public abstract class AbstractTransitionGraphTest
             describe("#referredArcLabels", () -> {
 
                 it("returns the labels", () -> {
-                    expect(instance.referredArcLabels().size()).toEqual(2); // should be cached
+                    expect(instance.referredArcLabels().size()).toEqual(2); // labels should be cached
                     expect(instance.referredArcLabels().containsAllArguments(epsilon, label)).toBeTrue();
                 });
 
@@ -224,7 +224,7 @@ public abstract class AbstractTransitionGraphTest
 
                 it("returns false 1", () -> {
                     expect(instance.arcDeterministic()).toBeFalse();
-                    expect(instance.arcDeterministic()).toBeFalse(); // should be cached, hard to tell though
+                    expect(instance.arcDeterministic()).toBeFalse(); // should be cached
                 });
 
                 it("returns false 2", () -> {
@@ -481,7 +481,7 @@ public abstract class AbstractTransitionGraphTest
 
                 it("returns true", () -> {
                     expect(instance.arcDeterministic()).toBeTrue();
-                    expect(instance.arcDeterministic()).toBeTrue(); // should be cached, hard to tell though
+                    expect(instance.arcDeterministic()).toBeTrue(); // should be cached
                 });
 
             });
