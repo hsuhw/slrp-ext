@@ -1,9 +1,9 @@
 package cli;
 
 import api.parser.Parser;
-import core.Problem;
-import core.Prover;
 import core.parser.StringProblemParser;
+import core.proof.Problem;
+import core.proof.Prover;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -15,8 +15,6 @@ import java.io.InputStream;
 
 public class Main
 {
-    private static final Logger LOGGER = LogManager.getLogger();
-
     private static void setLogLevel(Level level)
     {
         final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
@@ -28,30 +26,32 @@ public class Main
 
     public static void main(String[] args) throws Exception
     {
-        String filename;
-
         if (args.length < 1) {
             System.out.println("No input given, doing nothing.");
             return;
         }
-
-        InputStream is = System.in;
-        filename = args[0];
-
-        if (filename != null) {
-            is = new FileInputStream(filename);
+        if (args.length > 1) {
+            setLogLevel(Level.INFO);
         }
 
+        String filename = args[0];
+        InputStream is = filename == null ? System.in : new FileInputStream(filename);
         Parser<Problem> parser = new StringProblemParser();
         Problem problem = parser.parse(is).getOnly();
 
-//        System.out.println(problem.getInitialConfigurations());
-//        System.out.println(problem.getFinalConfigurations());
-//        System.out.println(problem.getSchedulerBehavior());
-//        System.out.println(problem.getProcessBehavior());
-//        System.out.println(problem.getInvariantConfigSearchSpace());
-//        System.out.println(problem.getOrderRelationSearchSpace());
+//        System.out.println(problem.initialConfigurations());
+//        System.out.println(problem.finalConfigurations());
+//        System.out.println(problem.schedulerBehavior());
+//        System.out.println(problem.processBehavior());
+//        System.out.println(problem.invariantSizeBound());
+//        System.out.println(problem.orderRelationSizeBound());
 
-        new Prover(problem).prove();
+        Prover prover = new Prover(problem);
+
+        if (problem.invariant() != null && problem.orderRelation() != null) {
+            prover.verify();
+        } else {
+            prover.prove();
+        }
     }
 }
