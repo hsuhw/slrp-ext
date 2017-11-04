@@ -12,7 +12,7 @@ import static com.mscharhag.oleaster.runner.StaticRunnerSupport.it;
 public class MapMapSetGraphTest extends AbstractTransitionGraphTest
 {
     @Override
-    protected Builder<Object, Object> builderForCommonTest()
+    protected Builder<Object, Object> newBuilder()
     {
         final int c = 4;
 
