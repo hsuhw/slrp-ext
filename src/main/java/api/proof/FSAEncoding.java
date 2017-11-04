@@ -10,9 +10,15 @@ public interface FSAEncoding<S>
 
     void ensureNoDeadEndState();
 
+    default void ensureNoDanglingState()
+    {
+        ensureNoUnreachableState();
+        ensureNoDeadEndState();
+    }
+
     void ensureAcceptingWord(ImmutableList<S> word);
 
-    void ensureNotAcceptingWord(ImmutableList<S> word);
+    void ensureNoAcceptingWord(ImmutableList<S> word);
 
     void whetherAcceptWord(int indicator, ImmutableList<S> word);
 
@@ -20,5 +26,5 @@ public interface FSAEncoding<S>
 
     void blockCurrentInstance();
 
-    FSA<S> resolve() throws SatSolverTimeoutException;
+    FSA<S> resolve();
 }

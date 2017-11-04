@@ -1,5 +1,6 @@
 package core.proof;
 
+import api.automata.AlphabetIntEncoder;
 import api.proof.FSAEncoding;
 import com.mscharhag.oleaster.runner.OleasterRunner;
 import org.junit.runner.RunWith;
@@ -8,8 +9,10 @@ import org.junit.runner.RunWith;
 public class BasicFSAEncodingTest extends AbstractFSAEncodingTest
 {
     @Override
-    protected FSAEncoding<Object> encodingForCommonTest()
+    protected FSAEncoding<Object> newEncoding(int size, AlphabetIntEncoder<Object> alphabetEncoding)
     {
-        return new BasicFSAEncoding<>(solver, 2, alphabetEncoding);
+        solver.reset();
+
+        return new BasicFSAEncoding<>(solver, size, alphabetEncoding);
     }
 }

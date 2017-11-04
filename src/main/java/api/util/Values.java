@@ -28,4 +28,9 @@ public final class Values
     {
         return includesUpperCase ? alphanumericRSG.generate(length) : lowerCasedAlphanumericRSG.generate(length);
     }
+
+    public enum Direction
+    {
+        FORWARD, BACKWARD
+    }
 }

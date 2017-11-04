@@ -15,86 +15,139 @@ import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
 public abstract class AbstractFSAEncodingTest
 {
     protected final SatSolver solver = new Sat4jSolverAdapter();
-    protected final AlphabetIntEncoder<Object> alphabetEncoding;
     protected FSAEncoding<Object> encoding;
 
-    protected abstract FSAEncoding<Object> encodingForCommonTest();
+    protected abstract FSAEncoding<Object> newEncoding(int size, AlphabetIntEncoder<Object> alphabetEncoding);
 
     {
         final Object e = new Object();
         final Object a1 = new Object();
         final Object a2 = new Object();
-        alphabetEncoding = AlphabetIntEncoders.create(Lists.mutable.of(e, a1, a2), e);
-        final ImmutableList<Object> worde = Lists.immutable.of(e);
-        final ImmutableList<Object> word0 = Lists.immutable.of(a1, a1, a1);
-        final ImmutableList<Object> word1 = Lists.immutable.of(a1, a2);
-        final ImmutableList<Object> word2 = Lists.immutable.of(a2, a2, e);
-        final ImmutableList<Object> word3 = Lists.immutable.of(a2, e, a1);
-        final ImmutableList<Object> word4 = Lists.immutable.of(a2, a2, e, a2, a2);
+        final AlphabetIntEncoder<Object> alphabet1 = AlphabetIntEncoders.create(Lists.mutable.of(e, a1), e);
+        final AlphabetIntEncoder<Object> alphabet2 = AlphabetIntEncoders.create(Lists.mutable.of(e, a1, a2), e);
 
-        describe("No-dangling ensured", () -> {
+        describe("To ignore shapeless targets", () -> {
 
             beforeEach(() -> {
-                solver.reset();
-                encoding = encodingForCommonTest();
+                encoding = newEncoding(2, alphabet1);
+            });
+
+            it("can ensure no unreachable state", () -> {
+                FSA<Object> fsa;
+                int count = 0;
                 encoding.ensureNoUnreachableState();
-                encoding.ensureNoUnreachableState(); // should be cached, hard to tell though
+                while (solver.findItSatisfiable()) {
+                    fsa = encoding.resolve();
+                    expect(fsa.unreachableStates().isEmpty()).toBeTrue();
+                    count++;
+                    encoding.blockCurrentInstance();
+                }
+                expect(count).toEqual(9);
+            });
+
+            it("can ensure no dead-end state", () -> {
+                FSA<Object> fsa;
+                int count = 0;
                 encoding.ensureNoDeadEndState();
-                encoding.ensureNoDeadEndState(); // should be cached, hard to tell though
-            });
-
-            it("finds FSAs with accepting or not constraints", () -> {
-                encoding.ensureAcceptingWord(worde);
-                encoding.ensureAcceptingWord(word1);
-                encoding.ensureAcceptingWord(word2);
-                encoding.ensureNotAcceptingWord(word3);
-
                 while (solver.findItSatisfiable()) {
-                    final FSA<Object> instance = encoding.resolve();
-                    expect(instance.accepts(worde)).toBeTrue();
-                    expect(instance.accepts(word1)).toBeTrue();
-                    expect(instance.accepts(word2)).toBeTrue();
-                    expect(instance.accepts(word3)).toBeFalse();
+                    fsa = encoding.resolve();
+                    expect(fsa.deadEndStates().isEmpty()).toBeTrue();
+                    count++;
                     encoding.blockCurrentInstance();
                 }
+                expect(count).toEqual(14);
             });
 
-            it("finds FSAs with whether-accept constraints", () -> {
-                final int yes = solver.newFreeVariables(1).getFirst();
-                solver.setLiteralTruthy(yes);
-                final int no = solver.newFreeVariables(1).getFirst();
-                solver.setLiteralFalsy(no);
-                encoding.whetherAcceptWord(yes, word1);
-                encoding.whetherAcceptWord(no, word2);
-
+            it("can ensure no dangling state", () -> {
+                FSA<Object> fsa;
+                int count = 0;
+                encoding.ensureNoDanglingState();
                 while (solver.findItSatisfiable()) {
-                    final FSA<Object> instance = encoding.resolve();
-                    expect(instance.accepts(word1)).toBeTrue();
-                    expect(instance.accepts(word2)).toBeFalse();
+                    fsa = encoding.resolve();
+                    expect(fsa.danglingStates().isEmpty()).toBeTrue();
+                    count++;
                     encoding.blockCurrentInstance();
                 }
+                expect(count).toEqual(7);
             });
 
-            it("finds FSAs with no-words-purely-made-of constraints", () -> {
-                encoding.ensureNoWordPurelyMadeOf(Sets.immutable.of(a2));
-                encoding.ensureAcceptingWord(word3);
+        });
 
-                boolean someAcceptsWord0 = false;
-                while (solver.findItSatisfiable()) {
-                    final FSA<Object> instance = encoding.resolve();
-                    someAcceptsWord0 = instance.accepts(word0) || someAcceptsWord0;
-                    expect(instance.accepts(word3)).toBeTrue();
-                    expect(instance.accepts(word4)).toBeFalse();
-                    encoding.blockCurrentInstance();
-                }
-                expect(someAcceptsWord0).toBeTrue();
-            });
+        fdescribe("No-dangling", () -> {
 
-            it("finds no FSAs when constraints UNSAT", () -> {
-                encoding.ensureAcceptingWord(word1);
-                encoding.ensureNotAcceptingWord(word1);
-                expect(solver.findItSatisfiable()).toBeFalse();
-                expect(encoding.resolve()).toBeNull();
+            describe("set up ahead", () -> {
+
+                final ImmutableList<Object> word1 = Lists.immutable.of(a1, a1, a1, a1, a1);
+                final ImmutableList<Object> word2 = Lists.immutable.of(a1, a1);
+                final ImmutableList<Object> word3 = Lists.immutable.of(a1, a2, a1);
+                final ImmutableList<Object> word4 = Lists.immutable.of(a2, a1, a2);
+
+                beforeEach(() -> {
+                    encoding = newEncoding(3, alphabet1);
+                    encoding.ensureNoDanglingState();
+                });
+
+                it("can show all on accepting a word", () -> {
+                    encoding.ensureAcceptingWord(word1);
+                    FSA<Object> fsa;
+                    int count = 0;
+                    while (solver.findItSatisfiable()) {
+                        fsa = encoding.resolve();
+                        expect(fsa.accepts(word1)).toBeTrue();
+                        count++;
+                        encoding.blockCurrentInstance();
+                    }
+                    expect(count).toEqual(16);
+                });
+
+                it("can show all on not accepting a word", () -> {
+                    encoding.ensureNoAcceptingWord(word1);
+                    FSA<Object> fsa;
+                    int count = 0;
+                    while (solver.findItSatisfiable()) {
+                        fsa = encoding.resolve();
+                        expect(fsa.accepts(word1)).toBeFalse();
+                        count++;
+                        encoding.blockCurrentInstance();
+                    }
+                    expect(count).toEqual(12);
+                });
+
+                it("can show all on whether-accepting", () -> {
+                    final int yes = solver.newFreeVariables(1).getFirst();
+                    solver.setLiteralTruthy(yes);
+                    encoding.whetherAcceptWord(-yes, word1);
+                    encoding.whetherAcceptWord(yes, word2);
+                    FSA<Object> fsa;
+                    int count = 0;
+                    while (solver.findItSatisfiable()) {
+                        fsa = encoding.resolve();
+                        expect(fsa.accepts(word1)).toBeFalse();
+                        expect(fsa.accepts(word2)).toBeTrue();
+                        count++;
+                        encoding.blockCurrentInstance();
+                    }
+                    expect(count).toEqual(8);
+                });
+
+                it("can show all on no-purely-made-of", () -> {
+                    encoding = newEncoding(2, alphabet2);
+                    encoding.ensureNoDanglingState();
+                    encoding.ensureAcceptingWord(word3);
+                    encoding.ensureAcceptingWord(word4);
+                    encoding.ensureNoWordPurelyMadeOf(Sets.immutable.of(a1));
+                    FSA<Object> fsa;
+                    int count = 0;
+                    while (solver.findItSatisfiable()) {
+                        fsa = encoding.resolve();
+                        expect(fsa.accepts(word3)).toBeTrue();
+                        expect(fsa.accepts(word4)).toBeTrue();
+                        count++;
+                        encoding.blockCurrentInstance();
+                    }
+                    expect(count).toEqual(1);
+                });
+
             });
 
         });
