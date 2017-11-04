@@ -103,16 +103,16 @@ public class StringProblemListener extends ProblemBaseListener
     @Override
     public void enterInvariantSearchSpace(InvariantSearchSpaceContext ctx)
     {
-        final int from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 1);
-        final int to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 1);
+        final int from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 2);
+        final int to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 2);
         invariantBound = sortedIntIntPair(from, to);
     }
 
     @Override
     public void enterRelationSearchSpace(RelationSearchSpaceContext ctx)
     {
-        final int from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 1);
-        final int to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 1);
+        final int from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 2);
+        final int to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 2);
         relationBound = sortedIntIntPair(from, to);
     }
 
