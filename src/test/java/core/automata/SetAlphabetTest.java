@@ -7,6 +7,6 @@ import org.junit.runner.RunWith;
 public class SetAlphabetTest extends AbstractAlphabetTest
 {
     {
-        provider = new BasicAlphabets();
+        Alphabets = new BasicAlphabetProvider();
     }
 }

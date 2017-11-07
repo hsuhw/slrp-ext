@@ -5,7 +5,7 @@ import api.automata.AlphabetIntEncoder;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.list.mutable.FastList;
 
-public final class BasicAlphabetIntEncoders implements AlphabetIntEncoder.Provider
+public final class BasicAlphabetIntEncoderProvider implements AlphabetIntEncoder.Provider
 {
     public <S> AlphabetIntEncoder<S> create(MutableList<S> definition, S epsilon)
     {

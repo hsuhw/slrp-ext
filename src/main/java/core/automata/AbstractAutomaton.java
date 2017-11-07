@@ -152,7 +152,7 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
             final MutableMap<State, String> names = UnifiedMap.newMap(states.size()); // upper bound
             int i = 0;
             for (State generated : states.selectInstancesOf(NamelessState.class)) {
-                names.put(generated, BasicStates.GENERATED_PREFIX + i);
+                names.put(generated, BasicStateProvider.GENERATED_PREFIX + i);
                 i++;
             }
             maskedStateNames = names.toImmutable();

@@ -5,7 +5,7 @@ import org.eclipse.collections.api.bimap.MutableBiMap;
 
 import static api.automata.AlphabetEncoder.Builder;
 
-public final class BasicAlphabetEncoders implements AlphabetEncoder.Provider
+public final class BasicAlphabetEncoderProvider implements AlphabetEncoder.Provider
 {
     public <S, T> Builder<S, T> builder(int sizeEstimate, S originEpsilon, T targetEpsilon)
     {

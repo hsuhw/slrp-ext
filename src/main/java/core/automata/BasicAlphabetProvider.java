@@ -5,7 +5,7 @@ import org.eclipse.collections.api.set.MutableSet;
 
 import static api.automata.Alphabet.Builder;
 
-public final class BasicAlphabets implements Alphabet.Provider
+public final class BasicAlphabetProvider implements Alphabet.Provider
 {
     public <S> Builder<S> builder(int sizeEstimate, S epsilon)
     {

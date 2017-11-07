@@ -18,7 +18,7 @@ import static com.mscharhag.oleaster.runner.StaticRunnerSupport.it;
 public abstract class AbstractFSATest
 {
     protected final Alphabet<Object> alphabet;
-    protected FSA.Provider provider;
+    protected FSA.Provider FSAs;
 
     {
         final Object e = new Object();
@@ -33,13 +33,13 @@ public abstract class AbstractFSATest
         describe("#nonStart/AcceptStates", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA<Object> dfa = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
+                final FSA<Object> dfa = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
                 expect(dfa.nonStartStates().size()).toEqual(3); // should be cached
                 expect(dfa.nonAcceptStates().size()).toEqual(3); // should be cached
                 Set intersect = Sets.intersect(dfa.nonStartStates().castToSet(), dfa.nonAcceptStates().castToSet());
                 expect(intersect.size()).toEqual(2);
 
-                final FSA<Object> nfa = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word3));
+                final FSA<Object> nfa = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word3));
                 expect(nfa.nonStartStates().size()).toEqual(3); // should be cached
                 expect(nfa.nonAcceptStates().size()).toEqual(3); // should be cached
                 intersect = Sets.intersect(nfa.nonStartStates().castToSet(), nfa.nonAcceptStates().castToSet());
@@ -59,7 +59,7 @@ public abstract class AbstractFSATest
         describe("#unreachableStates", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA.Builder<Object> builder = provider.builder(7, 2, e);
+                final FSA.Builder<Object> builder = FSAs.builder(7, 2, e);
                 builder.addTransition(s1, s2, a1).addStartState(s2).addTransition(s2, s3, a1);
                 final FSA<Object> fsa = builder.build();
                 expect(fsa.unreachableStates().size()).toEqual(1);
@@ -76,7 +76,7 @@ public abstract class AbstractFSATest
         describe("#deadEndStates", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA.Builder<Object> builder = provider.builder(7, 2, e);
+                final FSA.Builder<Object> builder = FSAs.builder(7, 2, e);
                 builder.addStartState(s1).addTransition(s1, s2, a1).addAcceptState(s2).addTransition(s2, s3, a1);
                 final FSA<Object> singleGraph = builder.build();
                 expect(singleGraph.deadEndStates().size()).toEqual(1);
@@ -93,7 +93,7 @@ public abstract class AbstractFSATest
         describe("#danglingStates", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA.Builder<Object> builder = provider.builder(5, 2, e);
+                final FSA.Builder<Object> builder = FSAs.builder(5, 2, e);
                 builder.addTransition(s1, s2, a1).addStartState(s2).addTransition(s2, s2, a1);
                 builder.addAcceptState(s2).addTransition(s2, s3, a1);
                 final FSA<Object> fsa = builder.build();
@@ -111,16 +111,16 @@ public abstract class AbstractFSATest
         describe("#incompleteStates", () -> {
 
             it("complains on nondeterministic instances", () -> {
-                final FSA<Object> fsa = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word3));
+                final FSA<Object> fsa = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word3));
                 expect(fsa::incompleteStates).toThrow(UnsupportedOperationException.class);
             });
 
             it("meets a minimum expectation", () -> {
-                final FSA<Object> dfa = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
+                final FSA<Object> dfa = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
                 expect(dfa.incompleteStates().containsAllIterable(dfa.nonStartStates())).toBeTrue();
                 expect(dfa.incompleteStates().size()).toEqual(3); // should be cached
 
-                final FSA<Object> nfa = provider.thatAcceptsOnly(alphabet, word4);
+                final FSA<Object> nfa = FSAs.thatAcceptsOnly(alphabet, word4);
                 expect(nfa.incompleteStates().containsAllIterable(nfa.states())).toBeTrue();
                 expect(nfa.incompleteStates().size()).toEqual(5); // should be cached
             });
@@ -130,20 +130,20 @@ public abstract class AbstractFSATest
         describe("#accepts", () -> {
 
             it("returns false on invalid words", () -> {
-                final FSA<Object> instance = provider.thatAcceptsOnly(alphabet, word1);
+                final FSA<Object> instance = FSAs.thatAcceptsOnly(alphabet, word1);
                 expect(instance.accepts(Lists.immutable.of(new Object()))).toBeFalse();
                 expect(instance.accepts(Lists.immutable.of(new Object(), null))).toBeFalse();
             });
 
             it("meets a minimum expectation", () -> {
-                final FSA<Object> dfa = provider.thatAcceptsOnly(alphabet, word1);
+                final FSA<Object> dfa = FSAs.thatAcceptsOnly(alphabet, word1);
                 expect(dfa.isDeterministic()).toBeTrue();
                 expect(dfa.accepts(word1)).toBeTrue();
                 expect(dfa.accepts(word2)).toBeFalse();
                 expect(dfa.accepts(word3)).toBeFalse();
                 expect(dfa.accepts(word4)).toBeFalse();
 
-                final FSA<Object> nfa = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word3));
+                final FSA<Object> nfa = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word3));
                 expect(nfa.isDeterministic()).toBeFalse();
                 expect(nfa.accepts(word1)).toBeFalse();
                 expect(nfa.accepts(word2)).toBeTrue();
@@ -156,9 +156,9 @@ public abstract class AbstractFSATest
         describe("#acceptsNone", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA<Object> fsa1 = provider.thatAcceptsOnly(alphabet, word1);
-                final FSA<Object> fsa2 = provider.thatAcceptsOnly(alphabet, word2);
-                final FSA<Object> none = provider.thatAcceptsNone(alphabet);
+                final FSA<Object> fsa1 = FSAs.thatAcceptsOnly(alphabet, word1);
+                final FSA<Object> fsa2 = FSAs.thatAcceptsOnly(alphabet, word2);
+                final FSA<Object> none = FSAs.thatAcceptsNone(alphabet);
                 expect(fsa1.acceptsNone()).toBeFalse();
                 expect(fsa2.acceptsNone()).toBeFalse();
                 expect(none.acceptsNone()).toBeTrue();
@@ -169,27 +169,27 @@ public abstract class AbstractFSATest
         describe("#enumerateOneShortest", () -> {
 
             it("returns null on empty", () -> {
-                expect(provider.thatAcceptsNone(alphabet).enumerateOneShortest()).toBeNull();
+                expect(FSAs.thatAcceptsNone(alphabet).enumerateOneShortest()).toBeNull();
             });
 
             it("returns empty on accepting-all", () -> {
-                expect(provider.thatAcceptsAll(alphabet).enumerateOneShortest().isEmpty()).toBeTrue();
+                expect(FSAs.thatAcceptsAll(alphabet).enumerateOneShortest().isEmpty()).toBeTrue();
             });
 
             it("meets a minimum expectation", () -> {
-                final FSA<Object> fsa1 = provider.thatAcceptsOnly(alphabet, word1);
+                final FSA<Object> fsa1 = FSAs.thatAcceptsOnly(alphabet, word1);
                 expect(fsa1.enumerateOneShortest()).toEqual(word1);
-                final FSA<Object> fsa2 = provider.thatAcceptsOnly(alphabet, word2);
+                final FSA<Object> fsa2 = FSAs.thatAcceptsOnly(alphabet, word2);
                 expect(fsa2.enumerateOneShortest()).toEqual(word2);
-                final FSA<Object> fsa3 = provider.thatAcceptsOnly(alphabet, word3);
+                final FSA<Object> fsa3 = FSAs.thatAcceptsOnly(alphabet, word3);
                 expect(fsa3.enumerateOneShortest()).toEqual(word3);
-                final FSA<Object> fsa4 = provider.thatAcceptsOnly(alphabet, word4);
+                final FSA<Object> fsa4 = FSAs.thatAcceptsOnly(alphabet, word4);
                 expect(fsa4.enumerateOneShortest()).toEqual(word4);
-                final FSA<Object> fsa5 = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word4));
+                final FSA<Object> fsa5 = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word4));
                 expect(fsa5.enumerateOneShortest()).toEqual(word1);
-                final FSA<Object> fsa6 = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word4));
+                final FSA<Object> fsa6 = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word4));
                 expect(fsa6.enumerateOneShortest()).toEqual(word2);
-                final FSA<Object> fsa7 = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word3, word4));
+                final FSA<Object> fsa7 = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word3, word4));
                 expect(fsa7.enumerateOneShortest()).toEqual(word3);
             });
 

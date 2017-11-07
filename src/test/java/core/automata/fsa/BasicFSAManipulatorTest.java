@@ -22,7 +22,7 @@ import static com.mscharhag.oleaster.runner.StaticRunnerSupport.it;
 @RunWith(OleasterRunner.class)
 public class BasicFSAManipulatorTest
 {
-    private final FSA.Provider provider = new BasicFSAs();
+    private final FSA.Provider FSAs = new BasicFSAProvider();
     private final FSAManipulator manipulator = new BasicFSAManipulator(null);
     private final Alphabet<Object> alphabet;
 
@@ -47,7 +47,7 @@ public class BasicFSAManipulatorTest
         describe("#trimUnreachableStates", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA.Builder<Object> builder = provider.builder(3, 3, e);
+                final FSA.Builder<Object> builder = FSAs.builder(3, 3, e);
                 builder.addTransition(s1, s2, a1).addStartState(s2).addTransition(s2, s3, a1);
                 final ImmutableSet<State> states = manipulator.trimUnreachableStates(builder.build()).states();
                 expect(states.contains(s1)).toBeFalse();
@@ -59,7 +59,7 @@ public class BasicFSAManipulatorTest
         describe("#trimDeadEndStates", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA.Builder<Object> builder = provider.builder(3, 3, e);
+                final FSA.Builder<Object> builder = FSAs.builder(3, 3, e);
                 builder.addTransition(s1, s2, a1).addStartState(s1).addAcceptState(s2).addTransition(s2, s3, a1);
                 final ImmutableSet<State> states = manipulator.trimDeadEndStates(builder.build()).states();
                 expect(states.containsAllArguments(s1, s2)).toBeTrue();
@@ -71,7 +71,7 @@ public class BasicFSAManipulatorTest
         describe("#trimDanglingStates", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA.Builder<Object> builder = provider.builder(3, 3, e);
+                final FSA.Builder<Object> builder = FSAs.builder(3, 3, e);
                 builder.addTransition(s1, s2, a1).addTransition(s2, s2, a1).addTransition(s2, s3, a1);
                 builder.addStartState(s2).addAcceptState(s2);
                 final ImmutableSet<State> states = manipulator.trimDanglingStates(builder.build()).states();
@@ -100,8 +100,8 @@ public class BasicFSAManipulatorTest
             it("meets a minimum expectation", () -> {
                 final ImmutableList<Twin<Object>> pword1 = Lists.immutable.of(p1, p2);
                 final ImmutableList<Twin<Object>> pword2 = Lists.immutable.of(p3, p2, p1);
-                final FSA<Twin<Object>> tfsa = provider.thatAcceptsOnly(alph, Sets.immutable.of(pword1, pword2));
-                final FSA<Object> fsa = provider.manipulator().project(tfsa, alphabet, Twin::getTwo);
+                final FSA<Twin<Object>> tfsa = FSAs.thatAcceptsOnly(alph, Sets.immutable.of(pword1, pword2));
+                final FSA<Object> fsa = FSAs.manipulator().project(tfsa, alphabet, Twin::getTwo);
                 expect(fsa.accepts(word1)).toBeTrue();
                 expect(fsa.accepts(word2)).toBeFalse();
                 expect(fsa.accepts(word3)).toBeTrue();
@@ -113,12 +113,12 @@ public class BasicFSAManipulatorTest
         describe("#determinize", () -> {
 
             it("does nothing on deterministic instances", () -> {
-                final FSA<Object> fsa = provider.thatAcceptsOnly(alphabet, word1);
+                final FSA<Object> fsa = FSAs.thatAcceptsOnly(alphabet, word1);
                 expect(manipulator.determinize(fsa) == fsa).toBeTrue();
             });
 
             it("meets a minimum expectation", () -> {
-                final FSA<Object> nfa = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
+                final FSA<Object> nfa = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
                 expect(nfa.accepts(word1)).toBeTrue();
                 expect(nfa.accepts(word2)).toBeTrue();
                 expect(nfa.accepts(word3)).toBeFalse();
@@ -137,12 +137,12 @@ public class BasicFSAManipulatorTest
         describe("#complete", () -> {
 
             it("complains on nondeterministic instances", () -> {
-                final FSA<Object> fsa = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
+                final FSA<Object> fsa = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
                 expect(() -> manipulator.complete(fsa)).toThrow(IllegalArgumentException.class);
             });
 
             it("meets a minimum expectation", () -> {
-                final FSA<Object> fsa = provider.thatAcceptsOnly(alphabet, word1);
+                final FSA<Object> fsa = FSAs.thatAcceptsOnly(alphabet, word1);
                 expect(fsa.accepts(word1)).toBeTrue();
                 expect(fsa.accepts(word2)).toBeFalse();
                 expect(fsa.isComplete()).toBeFalse();
@@ -157,7 +157,7 @@ public class BasicFSAManipulatorTest
         describe("#complement", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA<Object> fsa = provider.thatAcceptsOnly(alphabet, word1);
+                final FSA<Object> fsa = FSAs.thatAcceptsOnly(alphabet, word1);
                 expect(fsa.accepts(word1)).toBeTrue();
                 expect(fsa.accepts(word2)).toBeFalse();
                 final FSA<Object> complement = manipulator.complement(fsa);
@@ -170,8 +170,8 @@ public class BasicFSAManipulatorTest
         describe("#intersect", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA<Object> fsa1 = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
-                final FSA<Object> fsa2 = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word3));
+                final FSA<Object> fsa1 = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
+                final FSA<Object> fsa2 = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word3));
                 final FSA<Object> intersection = manipulator.intersect(fsa1, fsa2);
                 expect(intersection.accepts(word1)).toBeFalse();
                 expect(intersection.accepts(word2)).toBeTrue();
@@ -184,8 +184,8 @@ public class BasicFSAManipulatorTest
         describe("#union", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA<Object> fsa1 = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
-                final FSA<Object> fsa2 = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word3));
+                final FSA<Object> fsa1 = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
+                final FSA<Object> fsa2 = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word3));
                 final FSA<Object> union = manipulator.union(fsa1, fsa2);
                 expect(union.accepts(word1)).toBeTrue();
                 expect(union.accepts(word2)).toBeTrue();
@@ -198,11 +198,11 @@ public class BasicFSAManipulatorTest
         describe("#checkSubset", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA<Object> fsa1 = provider.thatAcceptsOnly(alphabet, word1);
-                final FSA<Object> fsa2 = provider.thatAcceptsOnly(alphabet, word2);
-                final FSA<Object> fsa3 = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word3));
-                final FSA<Object> none = provider.thatAcceptsNone(alphabet);
-                final FSA<Object> all = provider.thatAcceptsAll(alphabet);
+                final FSA<Object> fsa1 = FSAs.thatAcceptsOnly(alphabet, word1);
+                final FSA<Object> fsa2 = FSAs.thatAcceptsOnly(alphabet, word2);
+                final FSA<Object> fsa3 = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word3));
+                final FSA<Object> none = FSAs.thatAcceptsNone(alphabet);
+                final FSA<Object> all = FSAs.thatAcceptsAll(alphabet);
                 expect(manipulator.checkSubset(none, fsa1).passed()).toBeTrue();
                 expect(manipulator.checkSubset(fsa1, fsa1).passed()).toBeTrue();
                 expect(manipulator.checkSubset(fsa2, fsa1).passed()).toBeFalse();

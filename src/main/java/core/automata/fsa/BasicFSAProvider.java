@@ -6,7 +6,7 @@ import api.automata.fsa.FSAManipulator;
 import java.util.LinkedList;
 import java.util.List;
 
-public class BasicFSAs implements FSA.Provider
+public class BasicFSAProvider implements FSA.Provider
 {
     @Override
     public <S> FSA.Builder<S> builder(int stateCapacity, int symbolCapacity, S epsilonSymbol)

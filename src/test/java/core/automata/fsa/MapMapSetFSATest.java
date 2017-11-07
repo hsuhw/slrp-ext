@@ -7,6 +7,6 @@ import org.junit.runner.RunWith;
 public class MapMapSetFSATest extends AbstractFSATest
 {
     {
-        provider = new BasicFSAs();
+        FSAs = new BasicFSAProvider();
     }
 }

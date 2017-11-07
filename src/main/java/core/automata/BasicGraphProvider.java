@@ -4,7 +4,7 @@ import api.automata.TransitionGraph;
 
 import static api.automata.TransitionGraph.Builder;
 
-public final class BasicGraphs implements TransitionGraph.Provider
+public final class BasicGraphProvider implements TransitionGraph.Provider
 {
     @Override
     public <N, A> Builder<N, A> builder(int nodeCapacity, int arcCapacity, A epsilonLabel)

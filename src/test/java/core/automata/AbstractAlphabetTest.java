@@ -12,7 +12,7 @@ import static com.mscharhag.oleaster.runner.StaticRunnerSupport.it;
 
 public abstract class AbstractAlphabetTest
 {
-    protected Alphabet.Provider provider;
+    protected Alphabet.Provider Alphabets;
 
     {
         final Object e = new Object();
@@ -31,8 +31,8 @@ public abstract class AbstractAlphabetTest
         describe("Making product", () -> {
 
             it("meets a minimum expectation", () -> {
-                final Alphabet<Object> alphabet = provider.builder(3, e).add(a1).add(a2).build();
-                final Alphabet<Twin<Object>> product = provider.product(alphabet);
+                final Alphabet<Object> alphabet = Alphabets.builder(3, e).add(a1).add(a2).build();
+                final Alphabet<Twin<Object>> product = Alphabets.product(alphabet);
                 expect(product.size()).toEqual(5);
                 expect(product.set().containsAllArguments(p1, p2, p3, p4)).toBeTrue();
             });
@@ -42,19 +42,19 @@ public abstract class AbstractAlphabetTest
         describe("Making twin word", () -> {
 
             it("complains on size-unmatched word pair", () -> {
-                expect(() -> provider.twinWord(worde, word1)).toThrow(IllegalArgumentException.class);
-                expect(() -> provider.twinWord(word2, word3)).toThrow(IllegalArgumentException.class);
+                expect(() -> Alphabets.twinWord(worde, word1)).toThrow(IllegalArgumentException.class);
+                expect(() -> Alphabets.twinWord(word2, word3)).toThrow(IllegalArgumentException.class);
             });
 
             it("meets a minimum expectation", () -> {
-                final ImmutableList<Twin<Object>> pworde = provider.twinWord(worde, worde);
-                final ImmutableList<Twin<Object>> pword1 = provider.twinWord(word1, word2);
-                final ImmutableList<Twin<Object>> pword2 = provider.twinWord(word2, word1);
-                final ImmutableList<Twin<Object>> pword3 = provider.twinWord(word3, word3);
-               expect(pworde).toEqual(Lists.immutable.of(pe));
-               expect(pword1).toEqual(Lists.immutable.of(p2, p4));
-               expect(pword2).toEqual(Lists.immutable.of(p3, p4));
-               expect(pword3).toEqual(Lists.immutable.of(p1, p1, p1));
+                final ImmutableList<Twin<Object>> pworde = Alphabets.twinWord(worde, worde);
+                final ImmutableList<Twin<Object>> pword1 = Alphabets.twinWord(word1, word2);
+                final ImmutableList<Twin<Object>> pword2 = Alphabets.twinWord(word2, word1);
+                final ImmutableList<Twin<Object>> pword3 = Alphabets.twinWord(word3, word3);
+                expect(pworde).toEqual(Lists.immutable.of(pe));
+                expect(pword1).toEqual(Lists.immutable.of(p2, p4));
+                expect(pword2).toEqual(Lists.immutable.of(p3, p4));
+                expect(pword3).toEqual(Lists.immutable.of(p1, p1, p1));
             });
 
         });

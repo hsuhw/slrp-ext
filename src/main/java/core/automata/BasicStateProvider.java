@@ -2,7 +2,7 @@ package core.automata;
 
 import api.automata.State;
 
-public final class BasicStates implements State.Provider
+public final class BasicStateProvider implements State.Provider
 {
     @Override
     public State create(String name)
