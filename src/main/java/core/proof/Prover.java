@@ -2,8 +2,8 @@ package core.proof;
 
 import api.automata.*;
 import api.automata.fsa.FSA;
-import api.automata.fsa.FSAManipulator;
 import api.automata.fsa.FSAs;
+import api.automata.fsa.LanguageSubsetChecker;
 import api.proof.FSAEncoding;
 import api.proof.SatSolver;
 import org.apache.logging.log4j.LogManager;
@@ -28,7 +28,6 @@ import static api.util.Connectives.AND;
 public class Prover
 {
     private static final Logger LOGGER = LogManager.getLogger();
-    private static final FSAManipulator M = FSAs.manipulator();
 
     private final FSA<String> initialConfigs;
     private final FSA<String> nonfinalConfigs;
@@ -45,7 +44,7 @@ public class Prover
     static FSA<Twin<String>> composeTransducer(FSA<Twin<String>> one, FSA<Twin<String>> two,
                                                Alphabet<Twin<String>> productAlphabet)
     {
-        return M.makeProduct(one, two, productAlphabet, (s1, s2) -> {
+        return FSAs.product(one, two, productAlphabet, (s1, s2) -> {
             return s1.getTwo().equals(s2.getOne()) ? Tuples.twin(s1.getOne(), s2.getTwo()) : null;
         }, (stateMapping, builder) -> {
             final ImmutableSet<State> startStates = AutomatonManipulator
@@ -59,15 +58,15 @@ public class Prover
 
     public Prover(Problem problem)
     {
-        initialConfigs = M.determinize(problem.initialConfigurations());
-        nonfinalConfigs = M.makeComplement(problem.finalConfigurations());
+        initialConfigs = FSAs.determinize(problem.initialConfigurations());
+        nonfinalConfigs = FSAs.complement(problem.finalConfigurations());
         invariantCand = problem.invariant();
         relationCand = problem.orderRelation();
 
         relationAlphabet = Alphabets.product(initialConfigs.alphabet());
         final FSA<Twin<String>> scheduler = problem.schedulerBehavior();
         final FSA<Twin<String>> process = problem.processBehavior();
-        transBehavior = M.determinize(composeTransducer(scheduler, process, relationAlphabet));
+        transBehavior = FSAs.determinize(composeTransducer(scheduler, process, relationAlphabet));
 
         final IntIntPair invSearchBound = problem.invariantSizeBound();
         final IntIntPair relSearchBound = problem.orderRelationSizeBound();
@@ -80,7 +79,9 @@ public class Prover
 
     static ImmutableList<String> verifyL1(FSA<String> initConfigs, FSA<String> invCand)
     {
-        return M.witnessLanguageNotSubset(invCand, initConfigs);
+        final LanguageSubsetChecker.Result<String> invCandEnclosesInit = FSAs.checkSubset(initConfigs, invCand);
+
+        return invCandEnclosesInit.rejected() ? invCandEnclosesInit.counterexample().get() : null;
     }
 
     static void applyCE1(FSAEncoding<String> invGuessing, ImmutableList<String> counterexample)
@@ -148,7 +149,7 @@ public class Prover
     static Pair<ImmutableSet<ImmutableList<String>>, ImmutableList<String>> verifyL2(FSA<Twin<String>> transBehavior,
                                                                                      FSA<String> invCand)
     {
-        final FSA<String> postImage = M.makeProduct(invCand, transBehavior, invCand.alphabet(), (s1, s2) -> {
+        final FSA<String> postImage = FSAs.product(invCand, transBehavior, invCand.alphabet(), (s1, s2) -> {
             return s1.equals(s2.getOne()) ? s2.getTwo() : null;
         }, (stateMapping, builder) -> {
             final ImmutableSet<State> startStates = AutomatonManipulator
@@ -159,11 +160,13 @@ public class Prover
             builder.addAcceptStates(acceptStates);
         });
 
-        final ImmutableList<String> witness = M.witnessLanguageNotSubset(invCand, postImage);
+        final LanguageSubsetChecker.Result<String> invCandEnclosesTrans = FSAs.checkSubset(postImage, invCand);
 
-        if (witness == null) {
+        if (invCandEnclosesTrans.passed()) {
             return null;
         }
+        final ImmutableList<String> witness = invCandEnclosesTrans.counterexample().get();
+
         return Tuples.pair(computePreImage(transBehavior, witness), witness);
     }
 
@@ -182,7 +185,7 @@ public class Prover
 
     static Pair<ImmutableList<Twin<String>>, SetIterable<ImmutableList<String>>> verifyL3(FSA<Twin<String>> relCand)
     {
-        final FSA<Twin<String>> twoStepRelation = M.makeProduct(relCand, relCand, relCand.alphabet(), (s1, s2) -> {
+        final FSA<Twin<String>> transitive = FSAs.product(relCand, relCand, relCand.alphabet(), (s1, s2) -> {
             return s1.getTwo().equals(s2.getOne()) ? Tuples.twin(s1.getOne(), s2.getTwo()) : null;
         }, (stateMapping, builder) -> {
             final ImmutableSet<State> startStates = AutomatonManipulator
@@ -193,10 +196,11 @@ public class Prover
             builder.addAcceptStates(acceptStates);
         });
 
-        final ImmutableList<Twin<String>> witness = M.witnessLanguageNotSubset(relCand, twoStepRelation);
-        if (witness == null) {
+        final LanguageSubsetChecker.Result<Twin<String>> relCandBeTransitive = FSAs.checkSubset(transitive, relCand);
+        if (relCandBeTransitive.passed()) {
             return null;
         }
+        final ImmutableList<Twin<String>> witness = relCandBeTransitive.counterexample().get();
         final ImmutableList<String> x = witness.collect(Twin::getOne);
         final ImmutableList<String> z = witness.collect(Twin::getTwo);
         final ImmutableSet<ImmutableList<String>> xPostImage = computePostImage(relCand, x);
@@ -226,14 +230,15 @@ public class Prover
                                                                                      FSA<String> invCand,
                                                                                      FSA<Twin<String>> relCand)
     {
-        final FSA<Twin<String>> havingSmallerStep = M.makeIntersection(transBehavior, relCand);
-        final FSA<String> deptsWithSmallerStep = M.project(havingSmallerStep, invCand.alphabet(), Twin::getOne);
-        System.out.println(deptsWithSmallerStep);
-        final FSA<String> nonfinalInv = M.makeIntersection(invCand, nonfinalConfigs);
-        final ImmutableList<String> witness = M.witnessLanguageNotSubset(deptsWithSmallerStep, nonfinalInv);
-        if (witness == null) {
+        final FSA<Twin<String>> havingSmallerStep = FSAs.intersect(transBehavior, relCand);
+        final FSA<String> smallerAvail = FSAs.project(havingSmallerStep, invCand.alphabet(), Twin::getOne);
+        System.out.println(smallerAvail);
+        final FSA<String> nonfinalInv = FSAs.intersect(invCand, nonfinalConfigs);
+        final LanguageSubsetChecker.Result<String> nonfinalSmallerAvail = FSAs.checkSubset(nonfinalInv, smallerAvail);
+        if (nonfinalSmallerAvail.passed()) {
             return null;
         }
+        final ImmutableList<String> witness = nonfinalSmallerAvail.counterexample().get();
         return Tuples.pair(witness, computePostImage(transBehavior, witness));
     }
 
@@ -326,8 +331,8 @@ public class Prover
 
     public void verify()
     {
-        final FSA<String> invCand = M.determinize(invariantCand);
-        FSA<Twin<String>> relCand = M.determinize(relationCand);
+        final FSA<String> invCand = FSAs.determinize(invariantCand);
+        FSA<Twin<String>> relCand = FSAs.determinize(relationCand);
 
         final ImmutableList<String> c1 = verifyL1(initialConfigs, invCand);
         final Pair<ImmutableSet<ImmutableList<String>>, ImmutableList<String>> c2 = verifyL2(transBehavior, invCand);

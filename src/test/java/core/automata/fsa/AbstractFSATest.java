@@ -153,31 +153,44 @@ public abstract class AbstractFSATest
 
         });
 
-        describe("#enumerateOneShortestWord", () -> {
+        describe("#acceptsNone", () -> {
+
+            it("meets a minimum expectation", () -> {
+                final FSA<Object> fsa1 = provider.thatAcceptsOnly(alphabet, word1);
+                final FSA<Object> fsa2 = provider.thatAcceptsOnly(alphabet, word2);
+                final FSA<Object> none = provider.thatAcceptsNone(alphabet);
+                expect(fsa1.acceptsNone()).toBeFalse();
+                expect(fsa2.acceptsNone()).toBeFalse();
+                expect(none.acceptsNone()).toBeTrue();
+            });
+
+        });
+
+        describe("#enumerateOneShortest", () -> {
 
             it("returns null on empty", () -> {
-                expect(provider.thatAcceptsNone(alphabet).enumerateOneShortestWord()).toBeNull();
+                expect(provider.thatAcceptsNone(alphabet).enumerateOneShortest()).toBeNull();
             });
 
             it("returns empty on accepting-all", () -> {
-                expect(provider.thatAcceptsAll(alphabet).enumerateOneShortestWord().isEmpty()).toBeTrue();
+                expect(provider.thatAcceptsAll(alphabet).enumerateOneShortest().isEmpty()).toBeTrue();
             });
 
             it("meets a minimum expectation", () -> {
                 final FSA<Object> fsa1 = provider.thatAcceptsOnly(alphabet, word1);
-                expect(fsa1.enumerateOneShortestWord()).toEqual(word1);
+                expect(fsa1.enumerateOneShortest()).toEqual(word1);
                 final FSA<Object> fsa2 = provider.thatAcceptsOnly(alphabet, word2);
-                expect(fsa2.enumerateOneShortestWord()).toEqual(word2);
+                expect(fsa2.enumerateOneShortest()).toEqual(word2);
                 final FSA<Object> fsa3 = provider.thatAcceptsOnly(alphabet, word3);
-                expect(fsa3.enumerateOneShortestWord()).toEqual(word3);
+                expect(fsa3.enumerateOneShortest()).toEqual(word3);
                 final FSA<Object> fsa4 = provider.thatAcceptsOnly(alphabet, word4);
-                expect(fsa4.enumerateOneShortestWord()).toEqual(word4);
+                expect(fsa4.enumerateOneShortest()).toEqual(word4);
                 final FSA<Object> fsa5 = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word4));
-                expect(fsa5.enumerateOneShortestWord()).toEqual(word1);
+                expect(fsa5.enumerateOneShortest()).toEqual(word1);
                 final FSA<Object> fsa6 = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word4));
-                expect(fsa6.enumerateOneShortestWord()).toEqual(word2);
+                expect(fsa6.enumerateOneShortest()).toEqual(word2);
                 final FSA<Object> fsa7 = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word3, word4));
-                expect(fsa7.enumerateOneShortestWord()).toEqual(word3);
+                expect(fsa7.enumerateOneShortest()).toEqual(word3);
             });
 
         });

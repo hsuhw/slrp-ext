@@ -4,6 +4,7 @@ import api.automata.*;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAManipulator;
 import api.automata.fsa.FSAs;
+import api.automata.fsa.LanguageSubsetChecker;
 import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
@@ -29,14 +30,14 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
     }
 
     @Override
-    public FSAManipulator getDecoratee()
+    public FSAManipulator decoratee()
     {
         return decoratee;
     }
 
     @Override
-    public <S, T, R> FSA<R> makeProductDelegated(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
-                                                 BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer)
+    public <S, T, R> FSA<R> productImpl(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
+                                        BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer)
     {
         if (!isFSA(one) || !isFSA(two)) {
             return null;
@@ -53,7 +54,7 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
     }
 
     @Override
-    public <S> FSA<S> determinizeDelegated(FSA<S> target)
+    public <S> FSA<S> determinizeImpl(FSA<S> target)
     {
         if (target.isDeterministic()) {
             return target;
@@ -93,9 +94,15 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
     }
 
     @Override
-    public <S> FSA<S> minimizeDelegated(FSA<S> target)
+    public <S> FSA<S> minimizeImpl(FSA<S> target)
     {
         throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
+    }
+
+    @Override
+    public <S> LanguageSubsetChecker.Result<S> checkSubsetImpl(FSA<S> subsumer, FSA<S> includer)
+    {
+        return LanguageSubsetCheckerSingleton.INSTANCE.test(subsumer, includer);
     }
 
     private class ProductDeltaBuilder<S, T, R>
@@ -178,5 +185,10 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
 
             return stateMapping;
         }
+    }
+
+    private static final class LanguageSubsetCheckerSingleton
+    {
+        private static final LanguageSubsetChecker INSTANCE = new BasicLanguageSubsetChecker();
     }
 }

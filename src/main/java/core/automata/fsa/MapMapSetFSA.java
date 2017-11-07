@@ -9,6 +9,7 @@ import org.eclipse.collections.api.set.ImmutableSet;
 public class MapMapSetFSA<S> extends AbstractAutomaton<S> implements FSA<S>
 {
     private ImmutableSet<State> incompleteStates;
+    private Boolean acceptsNone;
 
     public MapMapSetFSA(MapMapSetFSABuilder<S> record)
     {
@@ -30,5 +31,15 @@ public class MapMapSetFSA<S> extends AbstractAutomaton<S> implements FSA<S>
         }
 
         return incompleteStates;
+    }
+
+    @Override
+    public boolean acceptsNone()
+    {
+        if (acceptsNone == null) {
+            acceptsNone = FSA.super.acceptsNone();
+        }
+
+        return acceptsNone;
     }
 }

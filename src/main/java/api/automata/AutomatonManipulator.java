@@ -36,8 +36,8 @@ public interface AutomatonManipulator
 
     <S, R> Automaton<R> project(Automaton<S> target, Alphabet<R> alphabet, Function<S, R> projector);
 
-    <S, T, R> Automaton<R> makeProduct(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
-                                       BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer);
+    <S, T, R> Automaton<R> product(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
+                                   BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer);
 
     @FunctionalInterface
     interface Finalizer<S>

@@ -4,6 +4,7 @@ import api.automata.Alphabet;
 import api.automata.Automaton;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAManipulator;
+import api.automata.fsa.LanguageSubsetChecker;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -37,8 +38,8 @@ public final class BaseFSAManipulator implements FSAManipulator
     }
 
     @Override
-    public <S, T, R> FSA<R> makeProduct(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
-                                        BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer)
+    public <S, T, R> FSA<R> product(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
+                                    BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer)
     {
         throw new UnsupportedOperationException(NO_MATCHED_IMPLEMENTATION_FOUND);
     }
@@ -50,7 +51,7 @@ public final class BaseFSAManipulator implements FSAManipulator
     }
 
     @Override
-    public <S> FSA<S> makeComplete(FSA<S> target)
+    public <S> FSA<S> complete(FSA<S> target)
     {
         throw new UnsupportedOperationException(NO_MATCHED_IMPLEMENTATION_FOUND);
     }
@@ -62,7 +63,13 @@ public final class BaseFSAManipulator implements FSAManipulator
     }
 
     @Override
-    public <S> FSA<S> makeComplement(FSA<S> target)
+    public <S> FSA<S> complement(FSA<S> target)
+    {
+        throw new UnsupportedOperationException(NO_MATCHED_IMPLEMENTATION_FOUND);
+    }
+
+    @Override
+    public <S> LanguageSubsetChecker.Result<S> checkSubset(FSA<S> subsumer, FSA<S> includer)
     {
         throw new UnsupportedOperationException(NO_MATCHED_IMPLEMENTATION_FOUND);
     }

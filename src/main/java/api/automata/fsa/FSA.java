@@ -40,7 +40,7 @@ public interface FSA<S> extends Automaton<S>
         return incompleteStates().size() == 0;
     }
 
-    private boolean deterministicallyAccepts(ImmutableList<S> word)
+    private boolean acceptsDeterminedly(ImmutableList<S> word)
     {
         final TransitionGraph<State, S> delta = transitionGraph();
         final S epsilon = delta.epsilonLabel();
@@ -62,7 +62,7 @@ public interface FSA<S> extends Automaton<S>
         return isAcceptState(currState);
     }
 
-    private boolean nondeterministicallyAccepts(ImmutableList<S> word)
+    private boolean acceptsNondeterminedly(ImmutableList<S> word)
     {
         final TransitionGraph<State, S> delta = transitionGraph();
         final S epsilon = delta.epsilonLabel();
@@ -86,10 +86,15 @@ public interface FSA<S> extends Automaton<S>
     default boolean accepts(ImmutableList<S> word)
     {
         return alphabet().set().containsAllIterable(word) && // valid word given
-            (isDeterministic() ? deterministicallyAccepts(word) : nondeterministicallyAccepts(word));
+            (isDeterministic() ? acceptsDeterminedly(word) : acceptsNondeterminedly(word));
     }
 
-    private ImmutableList<S> deterministicallyEnumerateOneShortestWord()
+    default boolean acceptsNone()
+    {
+        return FSAs.trimUnreachableStates(this).acceptStates().size() == 0;
+    }
+
+    private ImmutableList<S> getOneShortestWordDeterminedly()
     {
         final TransitionGraph<State, S> delta = transitionGraph();
         final int stateNumber = states().size();
@@ -121,7 +126,7 @@ public interface FSA<S> extends Automaton<S>
         return null;
     }
 
-    private ImmutableList<S> nondeterministicallyEnumerateOneShortestWord()
+    private ImmutableList<S> getOneShortestWordNondeterminedly()
     {
         final ImmutableSet<S> noEpsilonAlphabet = alphabet().noEpsilonSet();
         final TransitionGraph<State, S> delta = transitionGraph();
@@ -154,11 +159,9 @@ public interface FSA<S> extends Automaton<S>
         return null;
     }
 
-    default ImmutableList<S> enumerateOneShortestWord()
+    default ImmutableList<S> enumerateOneShortest()
     {
-        return isDeterministic()
-               ? deterministicallyEnumerateOneShortestWord()
-               : nondeterministicallyEnumerateOneShortestWord();
+        return isDeterministic() ? getOneShortestWordDeterminedly() : getOneShortestWordNondeterminedly();
     }
 
     @Override

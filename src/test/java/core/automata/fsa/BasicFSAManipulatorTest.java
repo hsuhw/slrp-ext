@@ -34,12 +34,12 @@ public class BasicFSAManipulatorTest
         final State s2 = States.generate();
         final State s3 = States.generate();
 
-        describe("#getDecoratee", () -> {
+        describe("#decoratee", () -> {
 
             it("returns the decoratee", () -> {
                 final FSAManipulator decoratee = manipulator;
                 final FSAManipulator.Decorator instance = new BasicFSAManipulator(decoratee);
-                expect(instance.getDecoratee() == decoratee).toBeTrue();
+                expect(instance.decoratee() == decoratee).toBeTrue();
             });
 
         });
@@ -134,11 +134,11 @@ public class BasicFSAManipulatorTest
 
         });
 
-        describe("#makeComplete", () -> {
+        describe("#complete", () -> {
 
             it("complains on nondeterministic instances", () -> {
                 final FSA<Object> fsa = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
-                expect(() -> manipulator.makeComplete(fsa)).toThrow(IllegalArgumentException.class);
+                expect(() -> manipulator.complete(fsa)).toThrow(IllegalArgumentException.class);
             });
 
             it("meets a minimum expectation", () -> {
@@ -146,7 +146,7 @@ public class BasicFSAManipulatorTest
                 expect(fsa.accepts(word1)).toBeTrue();
                 expect(fsa.accepts(word2)).toBeFalse();
                 expect(fsa.isComplete()).toBeFalse();
-                final FSA<Object> complete = manipulator.makeComplete(fsa);
+                final FSA<Object> complete = manipulator.complete(fsa);
                 expect(complete.accepts(word1)).toBeTrue();
                 expect(complete.accepts(word2)).toBeFalse();
                 expect(complete.isComplete()).toBeTrue();
@@ -154,25 +154,25 @@ public class BasicFSAManipulatorTest
 
         });
 
-        describe("#makeComplement", () -> {
+        describe("#complement", () -> {
 
             it("meets a minimum expectation", () -> {
                 final FSA<Object> fsa = provider.thatAcceptsOnly(alphabet, word1);
                 expect(fsa.accepts(word1)).toBeTrue();
                 expect(fsa.accepts(word2)).toBeFalse();
-                final FSA<Object> complement = manipulator.makeComplement(fsa);
+                final FSA<Object> complement = manipulator.complement(fsa);
                 expect(complement.accepts(word1)).toBeFalse();
                 expect(complement.accepts(word2)).toBeTrue();
             });
 
         });
 
-        describe("#makeIntersection", () -> {
+        describe("#intersect", () -> {
 
             it("meets a minimum expectation", () -> {
                 final FSA<Object> fsa1 = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
                 final FSA<Object> fsa2 = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word3));
-                final FSA<Object> intersection = manipulator.makeIntersection(fsa1, fsa2);
+                final FSA<Object> intersection = manipulator.intersect(fsa1, fsa2);
                 expect(intersection.accepts(word1)).toBeFalse();
                 expect(intersection.accepts(word2)).toBeTrue();
                 expect(intersection.accepts(word3)).toBeFalse();
@@ -181,12 +181,12 @@ public class BasicFSAManipulatorTest
 
         });
 
-        describe("#makeUnion", () -> {
+        describe("#union", () -> {
 
             it("meets a minimum expectation", () -> {
                 final FSA<Object> fsa1 = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
                 final FSA<Object> fsa2 = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word3));
-                final FSA<Object> union = manipulator.makeUnion(fsa1, fsa2);
+                final FSA<Object> union = manipulator.union(fsa1, fsa2);
                 expect(union.accepts(word1)).toBeTrue();
                 expect(union.accepts(word2)).toBeTrue();
                 expect(union.accepts(word3)).toBeTrue();
@@ -195,33 +195,7 @@ public class BasicFSAManipulatorTest
 
         });
 
-        describe("#checkAcceptingNone", () -> {
-
-            it("meets a minimum expectation", () -> {
-                final FSA<Object> fsa1 = provider.thatAcceptsOnly(alphabet, word1);
-                final FSA<Object> fsa2 = provider.thatAcceptsOnly(alphabet, word2);
-                final FSA<Object> none = provider.thatAcceptsNone(alphabet);
-                expect(manipulator.checkAcceptingNone(fsa1)).toBeFalse();
-                expect(manipulator.checkAcceptingNone(fsa2)).toBeFalse();
-                expect(manipulator.checkAcceptingNone(none)).toBeTrue();
-            });
-
-        });
-
-        describe("#checkAcceptingAll", () -> {
-
-            it("meets a minimum expectation", () -> {
-                final FSA<Object> fsa1 = provider.thatAcceptsOnly(alphabet, word1);
-                final FSA<Object> fsa2 = provider.thatAcceptsOnly(alphabet, word2);
-                final FSA<Object> all = provider.thatAcceptsAll(alphabet);
-                expect(manipulator.checkAcceptingAll(fsa1)).toBeFalse();
-                expect(manipulator.checkAcceptingAll(fsa2)).toBeFalse();
-                expect(manipulator.checkAcceptingAll(all)).toBeTrue();
-            });
-
-        });
-
-        describe("#checkLanguageSubset", () -> {
+        describe("#checkSubset", () -> {
 
             it("meets a minimum expectation", () -> {
                 final FSA<Object> fsa1 = provider.thatAcceptsOnly(alphabet, word1);
@@ -229,31 +203,31 @@ public class BasicFSAManipulatorTest
                 final FSA<Object> fsa3 = provider.thatAcceptsOnly(alphabet, Sets.immutable.of(word2, word3));
                 final FSA<Object> none = provider.thatAcceptsNone(alphabet);
                 final FSA<Object> all = provider.thatAcceptsAll(alphabet);
-                expect(manipulator.checkLanguageSubset(fsa1, none)).toBeTrue();
-                expect(manipulator.checkLanguageSubset(fsa1, fsa1)).toBeTrue();
-                expect(manipulator.checkLanguageSubset(fsa1, fsa2)).toBeFalse();
-                expect(manipulator.checkLanguageSubset(fsa1, fsa3)).toBeFalse();
-                expect(manipulator.checkLanguageSubset(fsa1, all)).toBeFalse();
-                expect(manipulator.checkLanguageSubset(fsa2, none)).toBeTrue();
-                expect(manipulator.checkLanguageSubset(fsa2, fsa1)).toBeFalse();
-                expect(manipulator.checkLanguageSubset(fsa2, fsa2)).toBeTrue();
-                expect(manipulator.checkLanguageSubset(fsa2, fsa3)).toBeFalse();
-                expect(manipulator.checkLanguageSubset(fsa2, all)).toBeFalse();
-                expect(manipulator.checkLanguageSubset(fsa3, none)).toBeTrue();
-                expect(manipulator.checkLanguageSubset(fsa3, fsa1)).toBeFalse();
-                expect(manipulator.checkLanguageSubset(fsa3, fsa2)).toBeTrue();
-                expect(manipulator.checkLanguageSubset(fsa3, fsa3)).toBeTrue();
-                expect(manipulator.checkLanguageSubset(fsa3, all)).toBeFalse();
-                expect(manipulator.checkLanguageSubset(none, none)).toBeTrue();
-                expect(manipulator.checkLanguageSubset(none, fsa1)).toBeFalse();
-                expect(manipulator.checkLanguageSubset(none, fsa2)).toBeFalse();
-                expect(manipulator.checkLanguageSubset(none, fsa3)).toBeFalse();
-                expect(manipulator.checkLanguageSubset(none, all)).toBeFalse();
-                expect(manipulator.checkLanguageSubset(all, none)).toBeTrue();
-                expect(manipulator.checkLanguageSubset(all, fsa1)).toBeTrue();
-                expect(manipulator.checkLanguageSubset(all, fsa2)).toBeTrue();
-                expect(manipulator.checkLanguageSubset(all, fsa3)).toBeTrue();
-                expect(manipulator.checkLanguageSubset(all, all)).toBeTrue();
+                expect(manipulator.checkSubset(none, fsa1).passed()).toBeTrue();
+                expect(manipulator.checkSubset(fsa1, fsa1).passed()).toBeTrue();
+                expect(manipulator.checkSubset(fsa2, fsa1).passed()).toBeFalse();
+                expect(manipulator.checkSubset(fsa3, fsa1).passed()).toBeFalse();
+                expect(manipulator.checkSubset(all, fsa1).passed()).toBeFalse();
+                expect(manipulator.checkSubset(none, fsa2).passed()).toBeTrue();
+                expect(manipulator.checkSubset(fsa1, fsa2).passed()).toBeFalse();
+                expect(manipulator.checkSubset(fsa2, fsa2).passed()).toBeTrue();
+                expect(manipulator.checkSubset(fsa3, fsa2).passed()).toBeFalse();
+                expect(manipulator.checkSubset(all, fsa2).passed()).toBeFalse();
+                expect(manipulator.checkSubset(none, fsa3).passed()).toBeTrue();
+                expect(manipulator.checkSubset(fsa1, fsa3).passed()).toBeFalse();
+                expect(manipulator.checkSubset(fsa2, fsa3).passed()).toBeTrue();
+                expect(manipulator.checkSubset(fsa3, fsa3).passed()).toBeTrue();
+                expect(manipulator.checkSubset(all, fsa3).passed()).toBeFalse();
+                expect(manipulator.checkSubset(none, none).passed()).toBeTrue();
+                expect(manipulator.checkSubset(fsa1, none).passed()).toBeFalse();
+                expect(manipulator.checkSubset(fsa2, none).passed()).toBeFalse();
+                expect(manipulator.checkSubset(fsa3, none).passed()).toBeFalse();
+                expect(manipulator.checkSubset(all, none).passed()).toBeFalse();
+                expect(manipulator.checkSubset(none, all).passed()).toBeTrue();
+                expect(manipulator.checkSubset(fsa1, all).passed()).toBeTrue();
+                expect(manipulator.checkSubset(fsa2, all).passed()).toBeTrue();
+                expect(manipulator.checkSubset(fsa3, all).passed()).toBeTrue();
+                expect(manipulator.checkSubset(all, all).passed()).toBeTrue();
             });
 
         });
