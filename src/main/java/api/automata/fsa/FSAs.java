@@ -3,8 +3,12 @@ package api.automata.fsa;
 import api.automata.Alphabet;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
 
+import java.lang.ref.SoftReference;
 import java.util.ServiceLoader;
+import java.util.WeakHashMap;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -14,6 +18,9 @@ import static api.automata.fsa.FSA.Provider;
 
 public final class FSAs
 {
+    private static final WeakHashMap<Alphabet, Pair<SoftReference<Alphabet>, FSA>> NONE_FSA = new WeakHashMap<>();
+    private static final WeakHashMap<Alphabet, Pair<SoftReference<Alphabet>, FSA>> ALL_FSA = new WeakHashMap<>();
+
     private FSAs()
     {
     }
@@ -30,12 +37,32 @@ public final class FSAs
 
     public static <S> FSA<S> thatAcceptsNone(Alphabet<S> alphabet)
     {
-        return Singleton.INSTANCE.thatAcceptsNone(alphabet);
+        Pair<SoftReference<Alphabet>, FSA> record = NONE_FSA.get(alphabet);
+        if (record != null && record.getOne().get() != null) {
+            @SuppressWarnings("unchecked")
+            final FSA<S> acceptingNone = record.getTwo();
+            return acceptingNone;
+        }
+
+        final FSA<S> acceptingNone = Singleton.INSTANCE.thatAcceptsNone(alphabet);
+        NONE_FSA.put(alphabet, Tuples.pair(new SoftReference<>(alphabet), acceptingNone));
+
+        return acceptingNone;
     }
 
     public static <S> FSA<S> thatAcceptsAll(Alphabet<S> alphabet)
     {
-        return Singleton.INSTANCE.thatAcceptsAll(alphabet);
+        Pair<SoftReference<Alphabet>, FSA> record = ALL_FSA.get(alphabet);
+        if (record != null && record.getOne().get() != null) {
+            @SuppressWarnings("unchecked")
+            final FSA<S> acceptingAll = record.getTwo();
+            return acceptingAll;
+        }
+
+        final FSA<S> acceptingAll = Singleton.INSTANCE.thatAcceptsAll(alphabet);
+        ALL_FSA.put(alphabet, Tuples.pair(new SoftReference<>(alphabet), acceptingAll));
+
+        return acceptingAll;
     }
 
     public static <S> FSA<S> thatAcceptsOnly(Alphabet<S> alphabet, ImmutableList<S> word)

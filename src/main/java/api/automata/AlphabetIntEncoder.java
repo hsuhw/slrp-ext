@@ -55,6 +55,12 @@ public interface AlphabetIntEncoder<S>
         return decode(IntLists.immutable.of(word));
     }
 
+    @Override
+    int hashCode();
+
+    @Override
+    boolean equals(Object obj);
+
     interface Provider
     {
         <S> AlphabetIntEncoder<S> create(MutableList<S> definition, S epsilon);

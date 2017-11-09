@@ -42,6 +42,12 @@ public interface AlphabetEncoder<S, T>
         return word.collect(this::decode);
     }
 
+    @Override
+    int hashCode();
+
+    @Override
+    boolean equals(Object obj);
+
     interface Builder<S, T>
     {
         T encodedEpsilon();

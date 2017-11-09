@@ -12,6 +12,9 @@ public class BiMapAlphabetEncoder<S, T> implements AlphabetEncoder<S, T>
     private final ImmutableBiMap<S, T> encoder;
     private final ImmutableBiMap<T, S> decoder;
     private final S originEpsilon;
+    private Alphabet<T> encodedAlphabet;
+    private Alphabet<S> originAlphabet;
+    private int hashCode = -1;
 
     public BiMapAlphabetEncoder(MutableBiMap<S, T> definition, S originEpsilon)
     {
@@ -44,7 +47,11 @@ public class BiMapAlphabetEncoder<S, T> implements AlphabetEncoder<S, T>
     @Override
     public Alphabet<T> encodedAlphabet()
     {
-        return Alphabets.create(encoder.valuesView().toSet(), encodedEpsilon());
+        if (encodedAlphabet == null) {
+            encodedAlphabet = Alphabets.create(encoder.valuesView().toSet(), encodedEpsilon());
+        }
+
+        return encodedAlphabet;
     }
 
     @Override
@@ -56,7 +63,11 @@ public class BiMapAlphabetEncoder<S, T> implements AlphabetEncoder<S, T>
     @Override
     public Alphabet<S> originAlphabet()
     {
-        return Alphabets.create(encoder.keysView().toSet(), originEpsilon());
+        if (originAlphabet == null) {
+            originAlphabet = Alphabets.create(encoder.keysView().toSet(), originEpsilon());
+        }
+
+        return originAlphabet;
     }
 
     @Override
@@ -69,6 +80,37 @@ public class BiMapAlphabetEncoder<S, T> implements AlphabetEncoder<S, T>
     public S decode(T symbol)
     {
         return decoder.get(symbol);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        if (hashCode == -1) {
+            final int prime = 41;
+            int result = 1;
+
+            result = prime * result + encoder.hashCode();
+            result = prime * result + originEpsilon.hashCode();
+
+            hashCode = result;
+        }
+
+        return hashCode;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof BiMapAlphabetEncoder<?, ?>) {
+            try {
+                @SuppressWarnings("unchecked")
+                final BiMapAlphabetEncoder<S, T> other = (BiMapAlphabetEncoder<S, T>) obj;
+                return other.encoder.equals(this.encoder) && other.originEpsilon.equals(this.originEpsilon);
+            } catch (ClassCastException e) {
+                return false;
+            }
+        }
+        return false;
     }
 
     final ImmutableBiMap<S, T> biMap()

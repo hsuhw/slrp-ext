@@ -25,7 +25,7 @@ public interface FSAManipulator extends AutomatonManipulator
         final Builder<S> builder = builderOn(target);
         toBeTrimmed.forEach(builder::removeState);
 
-        return builder.build();
+        return builder.build(target.alphabet());
     }
 
     @Override
@@ -71,7 +71,7 @@ public interface FSAManipulator extends AutomatonManipulator
             });
         });
 
-        return builder.build();
+        return builder.build(target.alphabet());
     }
 
     <S> FSA<S> minimize(FSA<S> target);
@@ -80,7 +80,7 @@ public interface FSAManipulator extends AutomatonManipulator
     {
         final FSA<S> fsa = FSAs.complete(FSAs.determinize(target));
 
-        return builderOn(fsa).resetAcceptStates().addAcceptStates(fsa.nonAcceptStates()).build();
+        return builderOn(fsa).resetAcceptStates().addAcceptStates(fsa.nonAcceptStates()).build(target.alphabet());
     }
 
     private <S> S matchedSymbol(S one, S two)

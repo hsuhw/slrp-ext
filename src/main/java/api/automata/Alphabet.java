@@ -20,6 +20,12 @@ public interface Alphabet<S>
 
     ImmutableSet<S> noEpsilonSet();
 
+    @Override
+    int hashCode();
+
+    @Override
+    boolean equals(Object obj);
+
     interface Builder<S>
     {
         S epsilon();

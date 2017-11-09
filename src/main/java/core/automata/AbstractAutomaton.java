@@ -7,7 +7,7 @@ import api.automata.TransitionGraph;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.ImmutableSet;
-import org.eclipse.collections.api.set.SetIterable;
+import org.eclipse.collections.api.set.ImmutableSetIterable;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 
 import static api.util.Values.DISPLAY_INDENT;
@@ -24,9 +24,9 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
 
     private ImmutableSet<State> nonStartStates;
     private ImmutableSet<State> nonAcceptStates;
-    private SetIterable<State> unreachableStates;
-    private SetIterable<State> deadEndStates;
-    private SetIterable<State> danglingStates;
+    private ImmutableSet<State> unreachableStates;
+    private ImmutableSet<State> deadEndStates;
+    private ImmutableSetIterable<State> danglingStates;
     private ImmutableMap<State, String> maskedStateNames;
     private String rawDisplay;
     private String nameMaskedDisplay;
@@ -105,7 +105,7 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
     }
 
     @Override
-    public SetIterable<State> unreachableStates()
+    public ImmutableSet<State> unreachableStates()
     {
         if (unreachableStates == null) {
             unreachableStates = Automaton.super.unreachableStates();
@@ -115,7 +115,7 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
     }
 
     @Override
-    public SetIterable<State> deadEndStates()
+    public ImmutableSet<State> deadEndStates()
     {
         if (deadEndStates == null) {
             deadEndStates = Automaton.super.deadEndStates();
@@ -125,10 +125,10 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
     }
 
     @Override
-    public SetIterable<State> danglingStates()
+    public ImmutableSetIterable<State> danglingStates()
     {
         if (danglingStates == null) {
-            danglingStates = Automaton.super.danglingStates();
+            danglingStates = Automaton.super.danglingStates().toImmutable();
         }
 
         return danglingStates;

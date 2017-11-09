@@ -70,19 +70,19 @@ public interface Automaton<S>
         return reachable; // one-off
     }
 
-    default SetIterable<State> unreachableStates()
+    default ImmutableSet<State> unreachableStates()
     {
         return states().newWithoutAll(reachableStatesWith(startStates(), transitionGraph()::successorsOf));
     }
 
-    default SetIterable<State> deadEndStates()
+    default ImmutableSet<State> deadEndStates()
     {
         return states().newWithoutAll(reachableStatesWith(acceptStates(), transitionGraph()::predecessorsOf));
     }
 
     default SetIterable<State> danglingStates()
     {
-        return Sets.union(unreachableStates().toSet(), deadEndStates().toSet());
+        return Sets.union(unreachableStates().castToSet(), deadEndStates().castToSet()); // one-off
     }
 
     TransitionGraph<State, S> transitionGraph();

@@ -14,6 +14,8 @@ public class MapListAlphabetIntEncoder<S> implements AlphabetIntEncoder<S>
 {
     private final ImmutableObjectIntMap<S> encoder;
     private final ImmutableList<S> decoder;
+    private Alphabet<S> originAlphabet;
+    private int hashCode = -1;
 
     public MapListAlphabetIntEncoder(MutableList<S> definition, S epsilon)
     {
@@ -49,7 +51,11 @@ public class MapListAlphabetIntEncoder<S> implements AlphabetIntEncoder<S>
     @Override
     public Alphabet<S> originAlphabet()
     {
-        return Alphabets.create(encoder.keysView().toSet(), originEpsilon());
+        if (originAlphabet == null) {
+            originAlphabet = Alphabets.create(encoder.keysView().toSet(), originEpsilon());
+        }
+
+        return originAlphabet;
     }
 
     @Override
@@ -62,5 +68,35 @@ public class MapListAlphabetIntEncoder<S> implements AlphabetIntEncoder<S>
     public S decode(int symbol)
     {
         return decoder.get(symbol);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        if (hashCode == -1) {
+            final int prime = 61;
+            int result = 1;
+
+            result = prime * result + decoder.hashCode();
+
+            hashCode = result;
+        }
+
+        return hashCode;
+    }
+
+    @Override
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof MapListAlphabetIntEncoder<?>) {
+            try {
+                @SuppressWarnings("unchecked")
+                final MapListAlphabetIntEncoder<S> other = (MapListAlphabetIntEncoder<S>) obj;
+                return other.decoder.equals(this.decoder);
+            } catch (ClassCastException e) {
+                return false;
+            }
+        }
+        return false;
     }
 }
