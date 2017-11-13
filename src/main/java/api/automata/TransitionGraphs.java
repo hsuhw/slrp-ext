@@ -5,7 +5,7 @@ import java.util.ServiceLoader;
 import static api.automata.TransitionGraph.Builder;
 import static api.automata.TransitionGraph.Provider;
 
-public class TransitionGraphs
+public final class TransitionGraphs
 {
     private TransitionGraphs()
     {
