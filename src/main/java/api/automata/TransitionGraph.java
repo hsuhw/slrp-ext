@@ -73,11 +73,12 @@ public interface TransitionGraph<N, A>
             throw new UnsupportedOperationException("only available on nondeterministic instances");
         }
 
-        MutableSet<N> base = UnifiedSet.newSet(estimateExtendedSize(nodes.size())); // heuristic
+        MutableSet<N> base = UnifiedSet.newSet(referredNodes().size()); // upper bound
         base.addAllIterable(nodes);
-        MutableSet<N> curr;
-        while (!base.containsAll((curr = successorsOf(base, epsilonLabel()).toSet()))) {
-            base.addAllIterable(curr);
+        while (true) {
+            if (!base.addAllIterable(successorsOf(base, epsilonLabel()))) {
+                break; // `base` has converged
+            }
         }
 
         return arcLabel.equals(epsilonLabel()) ? base : epsilonClosureOf(successorsOf(base, arcLabel));

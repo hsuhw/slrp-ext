@@ -60,8 +60,7 @@ public interface Automaton<S>
         State currState;
         while ((currState = pendingChecks.poll()) != null) {
             stepFunction.apply(currState).forEach(state -> {
-                if (!reachable.contains(state)) {
-                    reachable.add(state);
+                if (reachable.add(state)) {
                     pendingChecks.add(state);
                 }
             });
