@@ -13,8 +13,8 @@ public final class BasicGraphProvider implements TransitionGraph.Provider
     }
 
     @Override
-    public <N, A> Builder<N, A> builderOn(TransitionGraph<N, A> graph)
+    public <N, A> Builder<N, A> builder(TransitionGraph<N, A> base)
     {
-        return new MapMapSetGraphBuilder<>((MapMapSetGraph<N, A>) graph);
+        return new MapMapSetGraphBuilder<>((MapMapSetGraph<N, A>) base);
     }
 }

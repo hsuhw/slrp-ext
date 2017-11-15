@@ -12,9 +12,9 @@ public final class BasicAlphabetProvider implements Alphabet.Provider
         return new SetAlphabetBuilder<>(sizeEstimate, epsilon);
     }
 
-    public <S> Builder<S> builderOn(Alphabet<S> alphabet)
+    public <S> Builder<S> builder(Alphabet<S> base)
     {
-        return new SetAlphabetBuilder<>((SetAlphabet<S>) alphabet);
+        return new SetAlphabetBuilder<>((SetAlphabet<S>) base);
     }
 
     public <S> Alphabet<S> create(MutableSet<S> definition, S epsilon)

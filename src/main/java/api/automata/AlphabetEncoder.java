@@ -26,7 +26,7 @@ public interface AlphabetEncoder<S, T>
 
     T encode(S symbol);
 
-    default ListIterable<T> encode(ImmutableList<S> word)
+    default ImmutableList<T> encode(ImmutableList<S> word)
     {
         word.forEach(Assertions::argumentNotNull);
 
@@ -35,7 +35,7 @@ public interface AlphabetEncoder<S, T>
 
     S decode(T symbol);
 
-    default ListIterable<S> decode(ImmutableList<T> word)
+    default ImmutableList<S> decode(ImmutableList<T> word)
     {
         word.forEach(Assertions::argumentNotNull);
 

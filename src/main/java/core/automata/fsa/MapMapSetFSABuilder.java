@@ -37,7 +37,7 @@ public class MapMapSetFSABuilder<S> implements FSA.Builder<S>
 
     public MapMapSetFSABuilder(MapMapSetFSA<S> fsa)
     {
-        alphabetBuilder = Alphabets.builderOn(fsa.alphabet());
+        alphabetBuilder = Alphabets.builder(fsa.alphabet());
         deltaBuilder = new MapMapSetGraphBuilder<>(fsa.transitionGraph());
 
         final int stateNumberEstimate = estimateExtendedSize(fsa.states().size());
@@ -204,13 +204,13 @@ public class MapMapSetFSABuilder<S> implements FSA.Builder<S>
     }
 
     @Override
-    public FSA<S> build(Alphabet<S> alphabet)
+    public FSA<S> buildWith(Alphabet<S> override)
     {
-        if (!alphabet.set().containsAllIterable(alphabetBuilder.addedSymbols())) {
+        if (!override.set().containsAllIterable(alphabetBuilder.addedSymbols())) {
             throw new IllegalArgumentException("given alphabet does not contain all the symbols");
         }
 
-        return settle(alphabet);
+        return settle(override);
     }
 
     final Alphabet<S> exportAlphabet()

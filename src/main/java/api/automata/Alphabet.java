@@ -41,7 +41,7 @@ public interface Alphabet<S>
     {
         <S> Builder<S> builder(int sizeEstimate, S epsilon);
 
-        <S> Builder<S> builderOn(Alphabet<S> alphabet);
+        <S> Builder<S> builder(Alphabet<S> base);
 
         <S> Alphabet<S> create(MutableSet<S> definition, S epsilon);
 

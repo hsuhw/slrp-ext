@@ -20,9 +20,9 @@ public final class Alphabets
         return Singleton.INSTANCE.builder(sizeEstimate, epsilon);
     }
 
-    public static <S> Builder<S> builderOn(Alphabet<S> alphabet)
+    public static <S> Builder<S> builder(Alphabet<S> base)
     {
-        return Singleton.INSTANCE.builderOn(alphabet);
+        return Singleton.INSTANCE.builder(base);
     }
 
     public static <S> Alphabet<S> create(MutableSet<S> definition, S epsilon)

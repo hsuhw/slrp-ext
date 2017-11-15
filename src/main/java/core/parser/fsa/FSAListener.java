@@ -40,7 +40,7 @@ public class FSAListener<S>
         this.epsilonSymbol = alphabet.epsilon();
         predefinedAlphabet = alphabet;
         if (symbolPolicy == AGGREGATE) {
-            alphabetBuilder = Alphabets.builderOn(alphabet);
+            alphabetBuilder = Alphabets.builder(alphabet);
         }
         queuedBuilds = FastList.newList(PARSER_COMMON_CAPACITY);
         builtAutomata = FastList.newList(PARSER_COMMON_CAPACITY);
@@ -83,7 +83,7 @@ public class FSAListener<S>
     {
         if (symbolPolicy == AGGREGATE) {
             final Alphabet<S> alphabet = alphabetBuilder.build();
-            queuedBuilds.forEach(builder -> builtAutomata.add(builder.build(alphabet)));
+            queuedBuilds.forEach(builder -> builtAutomata.add(builder.buildWith(alphabet)));
         }
 
         return builtAutomata;
@@ -93,7 +93,7 @@ public class FSAListener<S>
     {
         final int capacity = endLineNo - startLineNo + 1; // heuristic
         if (symbolPolicy == SEPARATE) {
-            alphabetBuilder = Alphabets.builderOn(predefinedAlphabet);
+            alphabetBuilder = Alphabets.builder(predefinedAlphabet);
         }
         stateNameTable = UnifiedMap.newMap(capacity);
         fsaBuilder = FSAs.builder(capacity, capacity, epsilonSymbol);
@@ -103,12 +103,12 @@ public class FSAListener<S>
     {
         switch (symbolPolicy) {
             case PREDEFINED:
-                builtAutomata.add(fsaBuilder.build(predefinedAlphabet));
+                builtAutomata.add(fsaBuilder.buildWith(predefinedAlphabet));
             case AGGREGATE:
                 queuedBuilds.add(fsaBuilder);
                 break;
             case SEPARATE:
-                builtAutomata.add(fsaBuilder.build(alphabetBuilder.build()));
+                builtAutomata.add(fsaBuilder.buildWith(alphabetBuilder.build()));
                 alphabetBuilder = null;
                 break;
             default:

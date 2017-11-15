@@ -146,14 +146,14 @@ public class MapMapSetGraph<N, A> implements TransitionGraph<N, A>
     public String toString()
     {
         if (defaultDisplay == null) {
-            defaultDisplay = toString(Maps.immutable.empty());
+            defaultDisplay = toStringWith(Maps.immutable.empty());
         }
 
         return defaultDisplay;
     }
 
     @Override
-    public String toString(ImmutableMap<N, String> nodeNames)
+    public String toStringWith(ImmutableMap<N, String> nodeNames)
     {
         final StringBuilder layout = new StringBuilder();
         forwardGraph.forEachKeyValue((dept, arcRecord) -> {

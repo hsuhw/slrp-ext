@@ -88,7 +88,7 @@ public abstract class AbstractFSAEncodingTest
                 });
 
                 it("can show all on accepting a word", () -> {
-                    encoding.ensureAcceptingWord(word1);
+                    encoding.ensureAccepting(word1);
                     FSA<Object> fsa;
                     int count = 0;
                     while (solver.findItSatisfiable()) {
@@ -101,7 +101,7 @@ public abstract class AbstractFSAEncodingTest
                 });
 
                 it("can show all on not accepting a word", () -> {
-                    encoding.ensureNoAcceptingWord(word1);
+                    encoding.ensureNoAccepting(word1);
                     FSA<Object> fsa;
                     int count = 0;
                     while (solver.findItSatisfiable()) {
@@ -113,11 +113,11 @@ public abstract class AbstractFSAEncodingTest
                     expect(count).toEqual(12);
                 });
 
-                it("can show all on whether-accepting", () -> {
+                it("can show all on iff-accepting a word", () -> {
                     final int yes = solver.newFreeVariables(1).getFirst();
                     solver.setLiteralTruthy(yes);
-                    encoding.whetherAcceptWord(-yes, word1);
-                    encoding.whetherAcceptWord(yes, word2);
+                    encoding.acceptsIfOnlyIf(-yes, word1);
+                    encoding.acceptsIfOnlyIf(yes, word2);
                     FSA<Object> fsa;
                     int count = 0;
                     while (solver.findItSatisfiable()) {
@@ -133,8 +133,8 @@ public abstract class AbstractFSAEncodingTest
                 it("can show all on no-purely-made-of", () -> {
                     encoding = newEncoding(2, alphabet2);
                     encoding.ensureNoDanglingState();
-                    encoding.ensureAcceptingWord(word3);
-                    encoding.ensureAcceptingWord(word4);
+                    encoding.ensureAccepting(word3);
+                    encoding.ensureAccepting(word4);
                     encoding.ensureNoWordPurelyMadeOf(Sets.immutable.of(a1));
                     FSA<Object> fsa;
                     int count = 0;

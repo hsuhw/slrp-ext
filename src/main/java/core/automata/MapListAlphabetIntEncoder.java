@@ -45,7 +45,7 @@ public class MapListAlphabetIntEncoder<S> implements AlphabetIntEncoder<S>
     @Override
     public IntSet encodedAlphabet()
     {
-        return encoder.values().toSet();
+        return encoder.values().toSet(); // one-off
     }
 
     @Override

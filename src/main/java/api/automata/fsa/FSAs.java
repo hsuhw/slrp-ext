@@ -30,9 +30,9 @@ public final class FSAs
         return Singleton.INSTANCE.builder(stateCapacity, symbolCapacity, epsilonSymbol);
     }
 
-    public static <S> Builder<S> builderOn(FSA<S> fsa)
+    public static <S> Builder<S> builder(FSA<S> base)
     {
-        return Singleton.INSTANCE.builderOn(fsa);
+        return Singleton.INSTANCE.builder(base);
     }
 
     public static <S> FSA<S> thatAcceptsNone(Alphabet<S> alphabet)

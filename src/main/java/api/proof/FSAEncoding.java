@@ -16,11 +16,11 @@ public interface FSAEncoding<S>
         ensureNoDeadEndState();
     }
 
-    void ensureAcceptingWord(ImmutableList<S> word);
+    void ensureAccepting(ImmutableList<S> word);
 
-    void ensureNoAcceptingWord(ImmutableList<S> word);
+    void ensureNoAccepting(ImmutableList<S> word);
 
-    void whetherAcceptWord(int indicator, ImmutableList<S> word);
+    void acceptsIfOnlyIf(int indicator, ImmutableList<S> word);
 
     void ensureNoWordPurelyMadeOf(ImmutableSet<S> symbols);
 

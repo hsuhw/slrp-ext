@@ -212,14 +212,14 @@ public interface FSA<S> extends Automaton<S>
         @Override
         FSA<S> build();
 
-        FSA<S> build(Alphabet<S> alphabet);
+        FSA<S> buildWith(Alphabet<S> override);
     }
 
     interface Provider
     {
         <S> Builder<S> builder(int stateCapacity, int symbolCapacity, S epsilonSymbol);
 
-        <S> Builder<S> builderOn(FSA<S> fsa);
+        <S> Builder<S> builder(FSA<S> base);
 
         default <S> FSA<S> thatAcceptsNone(Alphabet<S> alphabet)
         {
@@ -229,7 +229,7 @@ public interface FSA<S> extends Automaton<S>
             builder.addStartState(state);
             alphabet.noEpsilonSet().forEach(symbol -> builder.addTransition(state, state, symbol));
 
-            return builder.build(alphabet);
+            return builder.buildWith(alphabet);
         }
 
         default <S> FSA<S> thatAcceptsAll(Alphabet<S> alphabet)
@@ -240,7 +240,7 @@ public interface FSA<S> extends Automaton<S>
             builder.addStartState(state).addAcceptState(state);
             alphabet.noEpsilonSet().forEach(symbol -> builder.addTransition(state, state, symbol));
 
-            return builder.build(alphabet);
+            return builder.buildWith(alphabet);
         }
 
         default <S> FSA<S> thatAcceptsOnly(Alphabet<S> alphabet, ImmutableList<S> word)
@@ -272,7 +272,7 @@ public interface FSA<S> extends Automaton<S>
                 currState = startState;
             }
 
-            return builder.build(alphabet);
+            return builder.buildWith(alphabet);
         }
 
         FSAManipulator manipulator();

@@ -9,7 +9,6 @@ import java.util.function.Function;
 
 import static api.automata.fsa.FSA.Builder;
 import static api.automata.fsa.FSAs.builder;
-import static api.automata.fsa.FSAs.builderOn;
 import static api.util.Connectives.AND;
 import static api.util.Connectives.OR;
 
@@ -22,10 +21,10 @@ public interface FSAManipulator extends AutomatonManipulator
 
     default <S> FSA<S> trimStates(FSA<S> target, SetIterable<State> toBeTrimmed)
     {
-        final Builder<S> builder = builderOn(target);
+        final Builder<S> builder = FSAs.builder(target);
         toBeTrimmed.forEach(builder::removeState);
 
-        return builder.build(target.alphabet());
+        return builder.buildWith(target.alphabet());
     }
 
     @Override
@@ -58,7 +57,7 @@ public interface FSAManipulator extends AutomatonManipulator
         }
 
         // complete the ignored transitions of those states
-        final Builder<S> builder = builderOn(target);
+        final Builder<S> builder = FSAs.builder(target);
         final State deadEndState = States.generate();
         final ImmutableSet<S> completeAlphabet = target.alphabet().noEpsilonSet();
         completeAlphabet.forEach(symbol -> {
@@ -71,7 +70,7 @@ public interface FSAManipulator extends AutomatonManipulator
             });
         });
 
-        return builder.build(target.alphabet());
+        return builder.buildWith(target.alphabet());
     }
 
     <S> FSA<S> minimize(FSA<S> target);
@@ -80,7 +79,8 @@ public interface FSAManipulator extends AutomatonManipulator
     {
         final FSA<S> fsa = FSAs.complete(FSAs.determinize(target));
 
-        return builderOn(fsa).resetAcceptStates().addAcceptStates(fsa.nonAcceptStates()).build(target.alphabet());
+        return FSAs.builder(fsa).resetAcceptStates().addAcceptStates(fsa.nonAcceptStates())
+                   .buildWith(target.alphabet());
     }
 
     private <S> S matchedSymbol(S one, S two)
@@ -92,9 +92,9 @@ public interface FSAManipulator extends AutomatonManipulator
     {
         return FSAs.product(one, two, one.alphabet(), this::matchedSymbol, (stateMapping, builder) -> {
             final ImmutableSet<State> startStates = AutomatonManipulator
-                .selectFromProduct(stateMapping, one::isStartState, two::isStartState, AND);
+                .selectFrom(stateMapping, one::isStartState, two::isStartState, AND);
             final ImmutableSet<State> acceptStates = AutomatonManipulator
-                .selectFromProduct(stateMapping, one::isAcceptState, two::isAcceptState, AND);
+                .selectFrom(stateMapping, one::isAcceptState, two::isAcceptState, AND);
             builder.addStartStates(startStates);
             builder.addAcceptStates(acceptStates);
         });
@@ -107,9 +107,9 @@ public interface FSAManipulator extends AutomatonManipulator
         return FSAs.product(oneFixed, twoFixed, oneFixed.alphabet(), this::matchedSymbol, (stateMapping, builder) -> {
             stateMapping.forEachKeyValue((state, statePair) -> {
                 final ImmutableSet<State> startStates = AutomatonManipulator
-                    .selectFromProduct(stateMapping, oneFixed::isStartState, twoFixed::isStartState, AND);
+                    .selectFrom(stateMapping, oneFixed::isStartState, twoFixed::isStartState, AND);
                 final ImmutableSet<State> acceptStates = AutomatonManipulator
-                    .selectFromProduct(stateMapping, oneFixed::isAcceptState, twoFixed::isAcceptState, OR);
+                    .selectFrom(stateMapping, oneFixed::isAcceptState, twoFixed::isAcceptState, OR);
                 builder.addStartStates(startStates);
                 builder.addAcceptStates(acceptStates);
             });
@@ -206,7 +206,7 @@ public interface FSAManipulator extends AutomatonManipulator
                 }
             }
 
-            return FSAs.trimDanglingStates(builder.build(alphabet));
+            return FSAs.trimDanglingStates(builder.buildWith(alphabet));
         }
 
         @Override
@@ -317,6 +317,7 @@ public interface FSAManipulator extends AutomatonManipulator
             return null;
         }
 
+        @Override
         default <S> LanguageSubsetChecker.Result<S> checkSubset(FSA<S> subsumer, FSA<S> includer)
         {
             final LanguageSubsetChecker.Result<S> delegated = checkSubsetImpl(subsumer, includer);

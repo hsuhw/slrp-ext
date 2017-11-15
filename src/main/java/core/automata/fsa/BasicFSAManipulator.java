@@ -50,7 +50,7 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
         final Builder<R> builder = builder(size, alphabet.size(), alphabet.epsilon());
         finalizer.apply(deltaBuilder.run(builder, transitionDecider), builder);
 
-        return builder.currentAcceptStateNumber() == 0 ? FSAs.thatAcceptsNone(alphabet) : builder.build(alphabet);
+        return builder.currentAcceptStateNumber() == 0 ? FSAs.thatAcceptsNone(alphabet) : builder.buildWith(alphabet);
     }
 
     @Override
@@ -90,7 +90,7 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
             }
         }
 
-        return builder.build(alphabet);
+        return builder.buildWith(alphabet);
     }
 
     @Override

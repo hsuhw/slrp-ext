@@ -48,9 +48,9 @@ public class Prover
             return s1.getTwo().equals(s2.getOne()) ? Tuples.twin(s1.getOne(), s2.getTwo()) : null;
         }, (stateMapping, builder) -> {
             final ImmutableSet<State> startStates = AutomatonManipulator
-                .selectFromProduct(stateMapping, one::isStartState, two::isStartState, AND);
+                .selectFrom(stateMapping, one::isStartState, two::isStartState, AND);
             final ImmutableSet<State> acceptStates = AutomatonManipulator
-                .selectFromProduct(stateMapping, one::isAcceptState, two::isAcceptState, AND);
+                .selectFrom(stateMapping, one::isAcceptState, two::isAcceptState, AND);
             builder.addStartStates(startStates);
             builder.addAcceptStates(acceptStates);
         });
@@ -86,7 +86,7 @@ public class Prover
 
     static void applyCE1(FSAEncoding<String> invGuessing, ImmutableList<String> counterexample)
     {
-        invGuessing.ensureAcceptingWord(counterexample);
+        invGuessing.ensureAccepting(counterexample);
     }
 
     static MutableSet<MutableList<String>> computeReversedPostImage(FSA<Twin<String>> target, State state,
@@ -153,9 +153,9 @@ public class Prover
             return s1.equals(s2.getOne()) ? s2.getTwo() : null;
         }, (stateMapping, builder) -> {
             final ImmutableSet<State> startStates = AutomatonManipulator
-                .selectFromProduct(stateMapping, invCand::isStartState, transBehavior::isStartState, AND);
+                .selectFrom(stateMapping, invCand::isStartState, transBehavior::isStartState, AND);
             final ImmutableSet<State> acceptStates = AutomatonManipulator
-                .selectFromProduct(stateMapping, invCand::isAcceptState, transBehavior::isAcceptState, AND);
+                .selectFrom(stateMapping, invCand::isAcceptState, transBehavior::isAcceptState, AND);
             builder.addStartStates(startStates);
             builder.addAcceptStates(acceptStates);
         });
@@ -175,10 +175,10 @@ public class Prover
     {
         final ImmutableList<String> y = counterexample.getTwo();
         final int takenY = solver.newFreeVariables(1).getFirst();
-        invGuessing.whetherAcceptWord(takenY, y);
+        invGuessing.acceptsIfOnlyIf(takenY, y);
         for (ImmutableList<String> x : counterexample.getOne()) {
             final int takenX = solver.newFreeVariables(1).getFirst();
-            invGuessing.whetherAcceptWord(takenX, x);
+            invGuessing.acceptsIfOnlyIf(takenX, x);
             solver.addImplication(takenX, takenY);
         }
     }
@@ -189,9 +189,9 @@ public class Prover
             return s1.getTwo().equals(s2.getOne()) ? Tuples.twin(s1.getOne(), s2.getTwo()) : null;
         }, (stateMapping, builder) -> {
             final ImmutableSet<State> startStates = AutomatonManipulator
-                .selectFromProduct(stateMapping, relCand::isStartState, relCand::isStartState, AND);
+                .selectFrom(stateMapping, relCand::isStartState, relCand::isStartState, AND);
             final ImmutableSet<State> acceptStates = AutomatonManipulator
-                .selectFromProduct(stateMapping, relCand::isAcceptState, relCand::isAcceptState, AND);
+                .selectFrom(stateMapping, relCand::isAcceptState, relCand::isAcceptState, AND);
             builder.addStartStates(startStates);
             builder.addAcceptStates(acceptStates);
         });
@@ -214,13 +214,13 @@ public class Prover
         final ImmutableList<String> x = counterexample.getOne().collect(Twin::getOne);
         final ImmutableList<String> z = counterexample.getOne().collect(Twin::getTwo);
         final int takenXZ = solver.newFreeVariables(1).getFirst();
-        relGuessing.whetherAcceptWord(takenXZ, counterexample.getOne());
+        relGuessing.acceptsIfOnlyIf(takenXZ, counterexample.getOne());
         for (ImmutableList<String> y : counterexample.getTwo()) {
             final int takenXY = solver.newFreeVariables(1).getFirst();
             final int takenYZ = solver.newFreeVariables(1).getFirst();
 
-            relGuessing.whetherAcceptWord(takenXY, Alphabets.twinWord(x, y));
-            relGuessing.whetherAcceptWord(takenYZ, Alphabets.twinWord(y, z));
+            relGuessing.acceptsIfOnlyIf(takenXY, Alphabets.twinWord(x, y));
+            relGuessing.acceptsIfOnlyIf(takenYZ, Alphabets.twinWord(y, z));
             solver.addClause(-takenXY, -takenYZ, takenXZ);
         }
     }
@@ -232,7 +232,6 @@ public class Prover
     {
         final FSA<Twin<String>> havingSmallerStep = FSAs.intersect(transBehavior, relCand);
         final FSA<String> smallerAvail = FSAs.project(havingSmallerStep, invCand.alphabet(), Twin::getOne);
-        System.out.println(smallerAvail);
         final FSA<String> nonfinalInv = FSAs.intersect(invCand, nonfinalConfigs);
         final LanguageSubsetChecker.Result<String> nonfinalSmallerAvail = FSAs.checkSubset(nonfinalInv, smallerAvail);
         if (nonfinalSmallerAvail.passed()) {
@@ -247,11 +246,11 @@ public class Prover
     {
         final ImmutableList<String> x = counterexample.getOne();
         final int takenX = solver.newFreeVariables(1).getFirst();
-        invGuessing.whetherAcceptWord(takenX, x);
+        invGuessing.acceptsIfOnlyIf(takenX, x);
         final ImmutableSet<ImmutableList<String>> possibleY = counterexample.getTwo();
         final ImmutableIntList takenAtLeastOneXY = possibleY.toList().collectInt(y -> {
             final int takenXY = solver.newFreeVariables(1).getFirst();
-            relGuessing.whetherAcceptWord(takenXY, Alphabets.twinWord(x, y));
+            relGuessing.acceptsIfOnlyIf(takenXY, Alphabets.twinWord(x, y));
             return takenXY;
         }).toImmutable();
         solver.addClauseIf(takenX, takenAtLeastOneXY);
@@ -283,10 +282,10 @@ public class Prover
 
                     LOGGER.info("Searching in state spaces {} & {} ..", invSearching, relSearching);
                     invGuessing = new BasicFSAEncoding<>(solver, invSearching, invSymbolEncoding);
-                    invGuessing.ensureNoAcceptingWord(Lists.immutable.empty());
+                    invGuessing.ensureNoAccepting(Lists.immutable.empty());
                     invGuessing.ensureNoDanglingState();
                     relGuessing = new BasicFSAEncoding<>(solver, relSearching, relSymbolEncoding);
-                    relGuessing.ensureNoAcceptingWord(Lists.immutable.empty());
+                    relGuessing.ensureNoAccepting(Lists.immutable.empty());
                     relGuessing.ensureNoDanglingState();
                     relGuessing.ensureNoWordPurelyMadeOf(reflexiveRelSymbols);
 
@@ -309,10 +308,6 @@ public class Prover
 
                         LOGGER.warn("Counterexample: {} {} {} {}", //
                                     c1 == null, c2 == null, c3 == null, c4 == null);
-//                        if (c1 == null && c2 == null) {
-//                            System.out.println(invCand);
-//                            return;
-//                        }
                         if (c1 == null && c2 == null && c3 == null && c4 == null) {
                             System.out.println("Proof found under the given search bound.");
                             System.out.println("A " + invCand);

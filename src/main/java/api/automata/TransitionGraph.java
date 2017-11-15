@@ -6,8 +6,6 @@ import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
-import static core.util.Parameters.estimateExtendedSize;
-
 public interface TransitionGraph<N, A>
 {
     int size();
@@ -87,7 +85,7 @@ public interface TransitionGraph<N, A>
     @Override
     String toString();
 
-    String toString(ImmutableMap<N, String> nodeNameOverride);
+    String toStringWith(ImmutableMap<N, String> nodeNameOverride);
 
     interface Builder<N, A>
     {
@@ -108,6 +106,6 @@ public interface TransitionGraph<N, A>
     {
         <N, A> Builder<N, A> builder(int nodeCapacity, int arcCapacity, A epsilonLabel);
 
-        <N, A> Builder<N, A> builderOn(TransitionGraph<N, A> graph);
+        <N, A> Builder<N, A> builder(TransitionGraph<N, A> base);
     }
 }

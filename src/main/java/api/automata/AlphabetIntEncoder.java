@@ -45,12 +45,12 @@ public interface AlphabetIntEncoder<S>
 
     S decode(int symbol);
 
-    default ListIterable<S> decode(ImmutableIntList word)
+    default ImmutableList<S> decode(ImmutableIntList word)
     {
         return word.collect(this::decode);
     }
 
-    default ListIterable<S> decode(int... word)
+    default ImmutableList<S> decode(int... word)
     {
         return decode(IntLists.immutable.of(word));
     }

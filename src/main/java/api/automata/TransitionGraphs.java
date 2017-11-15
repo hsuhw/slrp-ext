@@ -18,7 +18,7 @@ public final class TransitionGraphs
 
     public static <N, A> Builder<N, A> builderOn(TransitionGraph<N, A> graph)
     {
-        return Singleton.INSTANCE.builderOn(graph);
+        return Singleton.INSTANCE.builder(graph);
     }
 
     private static final class Singleton

@@ -176,7 +176,7 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
         return rawDisplay;
     }
 
-    private String determineStateName(State state)
+    private String stateName(State state)
     {
         return state instanceof NamedState ? state.toString() : maskedStateNames.get(state);
     }
@@ -184,13 +184,13 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
     private String nameMaskedDisplay()
     {
         maskedStateNames();
-        final String startStateNames = startStates.collect(this::determineStateName).makeString();
-        final String acceptStateNames = acceptStates.collect(this::determineStateName).makeString();
+        final String startStateNames = startStates.collect(this::stateName).makeString();
+        final String acceptStateNames = acceptStates.collect(this::stateName).makeString();
         if (nameMaskedDisplay == null) {
             nameMaskedDisplay = "{" + DISPLAY_NEWLINE //
                 + DISPLAY_INDENT + "start: " + startStateNames + ";" + DISPLAY_NEWLINE //
                 + DISPLAY_NEWLINE //
-                + transitionGraph.toString(maskedStateNames) //
+                + transitionGraph.toStringWith(maskedStateNames) //
                 + DISPLAY_NEWLINE //
                 + DISPLAY_INDENT + "accept: " + acceptStateNames + ";" + DISPLAY_NEWLINE //
                 + "}" + DISPLAY_NEWLINE;

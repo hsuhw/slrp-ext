@@ -176,7 +176,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
         noDeadEndStateEnsured = true;
     }
 
-    private void ensureAcceptWordIf(int activated, ImmutableIntList wordGiven)
+    private void ensureAcceptingIf(int activated, ImmutableIntList wordGiven)
     {
         final ImmutableIntList word = wordGiven.select(symbol -> symbol != EPSILON_SYMBOL_INDEX);
 
@@ -213,11 +213,11 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     }
 
     @Override
-    public void ensureAcceptingWord(ImmutableList<S> word)
+    public void ensureAccepting(ImmutableList<S> word)
     {
         final ImmutableIntList encodedWord = intAlphabet.encode(word);
         final int activated = solver.newFreeVariables(1).getFirst();
-        ensureAcceptWordIf(activated, encodedWord);
+        ensureAcceptingIf(activated, encodedWord);
         solver.setLiteralTruthy(activated);
     }
 
@@ -236,7 +236,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
         solver.setLiteralTruthy(initialStepNeverFailedAlready);
     }
 
-    private void ensureNotAcceptWordIf(int activated, ImmutableIntList wordGiven)
+    private void ensureNoAcceptingIf(int activated, ImmutableIntList wordGiven)
     {
         final ImmutableIntList word = wordGiven.select(symbol -> symbol != EPSILON_SYMBOL_INDEX);
 
@@ -282,20 +282,20 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     }
 
     @Override
-    public void ensureNoAcceptingWord(ImmutableList<S> word)
+    public void ensureNoAccepting(ImmutableList<S> word)
     {
         final ImmutableIntList encodedWord = intAlphabet.encode(word);
         final int activated = solver.newFreeVariables(1).getFirst();
-        ensureNotAcceptWordIf(activated, encodedWord);
+        ensureNoAcceptingIf(activated, encodedWord);
         solver.setLiteralTruthy(activated);
     }
 
     @Override
-    public void whetherAcceptWord(int indicator, ImmutableList<S> word)
+    public void acceptsIfOnlyIf(int indicator, ImmutableList<S> word)
     {
         final ImmutableIntList encodedWord = intAlphabet.encode(word);
-        ensureAcceptWordIf(indicator, encodedWord);
-        ensureNotAcceptWordIf(-indicator, encodedWord);
+        ensureAcceptingIf(indicator, encodedWord);
+        ensureNoAcceptingIf(-indicator, encodedWord);
     }
 
     @Override
@@ -383,6 +383,6 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
             }
         }
 
-        return builder.build(intAlphabet.originAlphabet());
+        return builder.buildWith(intAlphabet.originAlphabet());
     }
 }
