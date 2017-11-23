@@ -25,7 +25,12 @@ public interface TransitionGraph<N, A>
 
     SetIterable<A> enabledArcsOn(N node);
 
-    ImmutableSet<A> nonEpsilonArcsOn(N node);
+    SetIterable<A> enabledArcsOn(N dept, N dest);
+
+    default ImmutableSet<A> nonEpsilonArcsOn(N node)
+    {
+        return enabledArcsOn(node).toSet().toImmutable().newWithout(epsilonLabel());
+    }
 
     boolean hasArc(N node, A arcLabel);
 

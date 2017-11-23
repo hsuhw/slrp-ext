@@ -94,9 +94,13 @@ public class MapMapSetGraph<N, A> implements TransitionGraph<N, A>
     }
 
     @Override
-    public ImmutableSet<A> nonEpsilonArcsOn(N node)
+    public SetIterable<A> enabledArcsOn(N dept, N dest)
     {
-        return enabledArcsOn(node).toSet().toImmutable().newWithout(epsilonLabel);
+        if (!forwardGraph.containsKey(dept)) {
+            return Sets.immutable.empty();
+        }
+
+        return forwardGraph.get(dept).select((arc, nodes) -> nodes.contains(dest)).keysView().toSet(); // one-off
     }
 
     @Override
@@ -105,7 +109,7 @@ public class MapMapSetGraph<N, A> implements TransitionGraph<N, A>
         return forwardGraph.containsKey(node) && forwardGraph.get(node).get(arc) != null;
     }
 
-    private SetIterable<N> successorsOfFrom(ImmutableMap<N, ImmutableMap<A, ImmutableSet<N>>> graph, N node)
+    private SetIterable<N> successorsOf(ImmutableMap<N, ImmutableMap<A, ImmutableSet<N>>> graph, N node)
     {
         return graph.containsKey(node) ? graph.get(node).flatCollect(x -> x).toSet() // one-off
                                        : Sets.immutable.empty();
@@ -114,10 +118,10 @@ public class MapMapSetGraph<N, A> implements TransitionGraph<N, A>
     @Override
     public SetIterable<N> successorsOf(N node)
     {
-        return successorsOfFrom(forwardGraph, node);
+        return successorsOf(forwardGraph, node);
     }
 
-    private ImmutableSet<N> successorsOfFrom(ImmutableMap<N, ImmutableMap<A, ImmutableSet<N>>> graph, N node, A arc)
+    private ImmutableSet<N> successorsOf(ImmutableMap<N, ImmutableMap<A, ImmutableSet<N>>> graph, N node, A arc)
     {
         return graph.containsKey(node) && graph.get(node).containsKey(arc)
                ? graph.get(node).get(arc)
@@ -127,19 +131,19 @@ public class MapMapSetGraph<N, A> implements TransitionGraph<N, A>
     @Override
     public ImmutableSet<N> successorsOf(N node, A arc)
     {
-        return successorsOfFrom(forwardGraph, node, arc);
+        return successorsOf(forwardGraph, node, arc);
     }
 
     @Override
     public SetIterable<N> predecessorsOf(N node)
     {
-        return successorsOfFrom(backwardGraph, node);
+        return successorsOf(backwardGraph, node);
     }
 
     @Override
     public ImmutableSet<N> predecessorsOf(N node, A arc)
     {
-        return successorsOfFrom(backwardGraph, node, arc);
+        return successorsOf(backwardGraph, node, arc);
     }
 
     @Override
