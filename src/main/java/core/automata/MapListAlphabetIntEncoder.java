@@ -61,7 +61,7 @@ public class MapListAlphabetIntEncoder<S> implements AlphabetIntEncoder<S>
     @Override
     public int encode(S symbol)
     {
-        return encoder.get(symbol);
+        return encoder.getOrThrow(symbol);
     }
 
     @Override
