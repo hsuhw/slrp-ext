@@ -1,10 +1,13 @@
-package api.automata.fsa;
+package api.proof;
 
+import api.automata.fsa.FSA;
 import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.tuple.Twin;
 
-public interface LanguageSubsetChecker
+public interface AnySchedulerProgressabilityChecker
 {
-    <S> Result<S> test(FSA<S> subsumer, FSA<S> includer);
+    <S> Result<S> test(FSA<Twin<S>> scheduler, FSA<Twin<S>> process, FSA<S> nonfinalConfigs, FSA<S> invariant,
+                       FSA<Twin<S>> order);
 
     interface Result<S>
     {
@@ -23,9 +26,9 @@ public interface LanguageSubsetChecker
 
     interface Counterexample<S>
     {
-        FSA<S> sourceImage();
+        FSA<Twin<S>> sourceImage();
 
-        default ImmutableList<S> get()
+        default ImmutableList<Twin<S>> get()
         {
             return sourceImage().enumerateOneShortest();
         }

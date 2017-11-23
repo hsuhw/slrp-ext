@@ -1,7 +1,7 @@
 package core.parser;
 
 import api.parser.Parser;
-import core.proof.Problem;
+import api.proof.Problem;
 import generated.ProblemLexer;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -12,12 +12,12 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.list.ListIterable;
 
-public class StringProblemParser extends AbstractAntlrParser<Problem> implements Parser<Problem>
+public class StringProblemParser extends AbstractAntlrParser<Problem<String>> implements Parser<Problem<String>>
 {
     private static final Logger LOGGER = LogManager.getLogger();
 
     @Override
-    protected ListIterable<Problem> parse(CharStream charStream)
+    protected ListIterable<Problem<String>> parse(CharStream charStream)
     {
         LOGGER.info("Invoke the Problem instance parsing on a given source.");
         final long startTime = System.currentTimeMillis();

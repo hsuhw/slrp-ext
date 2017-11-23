@@ -51,6 +51,12 @@ public class BasicLanguageSubsetChecker implements LanguageSubsetChecker
         {
             return counterexample;
         }
+
+        @Override
+        public String toString()
+        {
+            return passed() ? "pass" : counterexample().toString();
+        }
     }
 
     private class Counterexample<S> implements LanguageSubsetChecker.Counterexample<S>
@@ -83,7 +89,7 @@ public class BasicLanguageSubsetChecker implements LanguageSubsetChecker
         @Override
         public String toString()
         {
-            return "does not include every part, e.g., " + get();
+            return "witness of nonincluded parts: " + get();
         }
     }
 }

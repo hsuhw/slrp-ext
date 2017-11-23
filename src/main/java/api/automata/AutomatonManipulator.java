@@ -16,7 +16,7 @@ import static api.automata.Automaton.Builder;
 public interface AutomatonManipulator
 {
     static ImmutableSet<State> selectFrom(BiMap<Twin<State>, State> stateMapping, Predicate<State> filter1,
-                                          Predicate<State> filter2, BooleanBooleanPredicate connective)
+                                          BooleanBooleanPredicate connective, Predicate<State> filter2)
     {
         final MutableSet<State> result = UnifiedSet.newSet(stateMapping.size()); // upper bound
         stateMapping.forEachKeyValue((statePair, state) -> {

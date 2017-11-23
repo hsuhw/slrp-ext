@@ -89,6 +89,13 @@ public class FSAListener<S>
         return builtAutomata;
     }
 
+    public ListIterable<FSA<S>> getAutomataWith(Alphabet<S> override)
+    {
+        queuedBuilds.forEach(builder -> builtAutomata.add(builder.buildWith(override)));
+
+        return builtAutomata;
+    }
+
     public void enterAutomaton(int startLineNo, int endLineNo)
     {
         final int capacity = endLineNo - startLineNo + 1; // heuristic

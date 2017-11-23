@@ -7,10 +7,10 @@ package generated;
 }
 
 problem
-    : initialStatesRepr finalStatesRepr schedulerRepr processRepr invariantRepr? relationRepr? verifierOptions
+    : initialConfigs finalConfigs scheduler process invariant? order? verifierOptions
     ;
 
-initialStatesRepr
+initialConfigs
     : 'I0' automaton closedUnderTransFlag?
     ;
 
@@ -18,23 +18,23 @@ closedUnderTransFlag
     : 'closedUnderTransitions' ';'
     ;
 
-finalStatesRepr
+finalConfigs
     : 'F' automaton
     ;
 
-schedulerRepr
+scheduler
     : 'P1' transducer
     ;
 
-processRepr
+process
     : 'P2' transducer
     ;
 
-invariantRepr
+invariant
     : 'Given A' automaton
     ;
 
-relationRepr
+order
     : 'Given T' transducer
     ;
 
@@ -44,11 +44,11 @@ verifierOptions
 
 verifierOption
     : 'initAutomatonStateGuessing' ':' integerRange # unusedOption
-    | 'automatonStateGuessing' ':' integerRange # invariantSearchSpace
-    | 'transducerStateGuessing' ':' integerRange # relationSearchSpace
+    | 'automatonStateGuessing' ':' integerRange # invariantSizeBound
+    | 'transducerStateGuessing' ':' integerRange # orderSizeBound
     | 'explicitChecksUntilLength' ':' INTEGER # unusedOption
     | 'symmetries' ':' symmetryOption (',' symmetryOption)* # unusedOption
-    | 'closedUnderTransitions' # unusedOption
+    | 'closedUnderTransitions' # closedUnderTrans
     | 'useRankingFunctions' # unusedOption
     | 'monolithicWitness' # unusedOption
     | 'noPrecomputedInvariant' # unusedOption

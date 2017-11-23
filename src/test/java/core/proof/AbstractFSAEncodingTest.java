@@ -114,10 +114,10 @@ public abstract class AbstractFSAEncodingTest
                 });
 
                 it("can show all on iff-accepting a word", () -> {
-                    final int yes = solver.newFreeVariables(1).getFirst();
+                    final int yes = solver.newFreeVariable();
                     solver.setLiteralTruthy(yes);
-                    encoding.acceptsIfOnlyIf(-yes, word1);
-                    encoding.acceptsIfOnlyIf(yes, word2);
+                    encoding.ensureAcceptingIfOnlyIf(-yes, word1);
+                    encoding.ensureAcceptingIfOnlyIf(yes, word2);
                     FSA<Object> fsa;
                     int count = 0;
                     while (solver.findItSatisfiable()) {

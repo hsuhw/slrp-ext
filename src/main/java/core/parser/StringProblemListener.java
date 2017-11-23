@@ -3,8 +3,9 @@ package core.parser;
 import api.automata.Alphabet;
 import api.automata.Alphabets;
 import api.automata.fsa.FSA;
+import api.proof.Problem;
 import core.parser.fsa.FSAListener;
-import core.proof.Problem;
+import core.proof.BasicProblem;
 import generated.ProblemBaseListener;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.tuple.Twin;
@@ -22,26 +23,30 @@ public class StringProblemListener extends ProblemBaseListener
     private static final Twin<String> TRANSDUCER_EPSILON_SYMBOL = Tuples.twin(EPSILON_SYMBOL, EPSILON_SYMBOL);
 
     private int commonCapacity;
+    private Alphabet.Builder<String> alphabetRecorder;
     private FSAPartListener initialConfigsListener;
     private FSAPartListener finalConfigsListener;
-    private FSAPartListener invariantListener;
     private TransducerPartListener schedulerListener;
     private TransducerPartListener processListener;
-    private TransducerPartListener relationListener;
-    private IntIntPair invariantBound;
-    private IntIntPair relationBound;
+    private FSAPartListener invariantListener;
+    private TransducerPartListener orderListener;
+    private IntIntPair invSize;
+    private IntIntPair ordSize;
+    private boolean invEnclosesAll;
 
-    public ListIterable<Problem> getProblem()
+    public ListIterable<Problem<String>> getProblem()
     {
-        final FSA<String> initCfg = initialConfigsListener.getAutomata().getOnly();
-        final FSA<String> finalCfg = finalConfigsListener.getAutomata().getOnly();
-        final ListIterable<FSA<String>> invParsed = invariantListener.getAutomata();
-        final FSA<String> inv = invParsed.notEmpty() ? invParsed.getOnly() : null;
-        final FSA<Twin<String>> sched = schedulerListener.getAutomata().getOnly();
-        final FSA<Twin<String>> proc = processListener.getAutomata().getOnly();
-        final ListIterable<FSA<Twin<String>>> relParsed = relationListener.getAutomata();
-        final FSA<Twin<String>> rel = relParsed.notEmpty() ? relParsed.getOnly() : null;
-        final Problem problem = new Problem(initCfg, finalCfg, inv, sched, proc, rel, invariantBound, relationBound);
+        final FSA<String> init = initialConfigsListener.getAutomata().getOnly();
+        final FSA<String> fin = finalConfigsListener.getAutomata().getOnly();
+        final ListIterable<FSA<String>> invariantParsed = invariantListener.getAutomata();
+        final FSA<String> inv = invariantParsed.notEmpty() ? invariantParsed.getOnly() : null;
+        final Alphabet<Twin<String>> relationAlphabet = Alphabets.product(init.alphabet());
+        final FSA<Twin<String>> sched = schedulerListener.getAutomataWith(relationAlphabet).getOnly();
+        final FSA<Twin<String>> proc = processListener.getAutomataWith(relationAlphabet).getOnly();
+        final ListIterable<FSA<Twin<String>>> orderParsed = orderListener.getAutomataWith(relationAlphabet);
+        final FSA<Twin<String>> ord = orderParsed.notEmpty() ? orderParsed.getOnly() : null;
+        final Problem<String> problem = new BasicProblem<>(init, fin, sched, proc, inv, ord, invSize, ordSize,
+                                                           invEnclosesAll);
 
         return Lists.immutable.of(problem);
     }
@@ -50,49 +55,49 @@ public class StringProblemListener extends ProblemBaseListener
     public void enterProblem(ProblemContext ctx)
     {
         commonCapacity = (ctx.getStop().getLine() - ctx.getStart().getLine()) / 4; // loose upper bound
-        final Alphabet.Builder<String> alphabetRecorder = Alphabets.builder(commonCapacity, EPSILON_SYMBOL);
-        initialConfigsListener = new FSAPartListener(alphabetRecorder);
-        finalConfigsListener = new FSAPartListener(alphabetRecorder);
-        invariantListener = new FSAPartListener(alphabetRecorder);
+        alphabetRecorder = Alphabets.builder(commonCapacity, EPSILON_SYMBOL);
+        initialConfigsListener = new FSAPartListener();
+        finalConfigsListener = new FSAPartListener();
+        invariantListener = new FSAPartListener();
         schedulerListener = new TransducerPartListener();
         processListener = new TransducerPartListener();
-        relationListener = new TransducerPartListener();
+        orderListener = new TransducerPartListener();
     }
 
     @Override
-    public void enterInitialStatesRepr(InitialStatesReprContext ctx)
+    public void enterInitialConfigs(InitialConfigsContext ctx)
     {
         ctx.automaton().enterRule(initialConfigsListener);
     }
 
     @Override
-    public void enterFinalStatesRepr(FinalStatesReprContext ctx)
+    public void enterFinalConfigs(FinalConfigsContext ctx)
     {
         ctx.automaton().enterRule(finalConfigsListener);
     }
 
     @Override
-    public void enterSchedulerRepr(SchedulerReprContext ctx)
+    public void enterScheduler(SchedulerContext ctx)
     {
         ctx.transducer().enterRule(schedulerListener);
     }
 
     @Override
-    public void enterProcessRepr(ProcessReprContext ctx)
+    public void enterProcess(ProcessContext ctx)
     {
         ctx.transducer().enterRule(processListener);
     }
 
     @Override
-    public void enterInvariantRepr(InvariantReprContext ctx)
+    public void enterInvariant(InvariantContext ctx)
     {
         ctx.automaton().enterRule(invariantListener);
     }
 
     @Override
-    public void enterRelationRepr(RelationReprContext ctx)
+    public void enterOrder(OrderContext ctx)
     {
-        ctx.transducer().enterRule(relationListener);
+        ctx.transducer().enterRule(orderListener);
     }
 
     private static IntIntPair sortedIntIntPair(int one, int two)
@@ -101,28 +106,40 @@ public class StringProblemListener extends ProblemBaseListener
     }
 
     @Override
-    public void enterInvariantSearchSpace(InvariantSearchSpaceContext ctx)
+    public void enterInvariantSizeBound(InvariantSizeBoundContext ctx)
     {
-        final int from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 2);
-        final int to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 2);
-        invariantBound = sortedIntIntPair(from, to);
+        final int from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 0);
+        final int to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 0);
+        invSize = sortedIntIntPair(from, to);
     }
 
     @Override
-    public void enterRelationSearchSpace(RelationSearchSpaceContext ctx)
+    public void enterOrderSizeBound(OrderSizeBoundContext ctx)
     {
-        final int from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 2);
-        final int to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 2);
-        relationBound = sortedIntIntPair(from, to);
+        final int from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 0);
+        final int to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 0);
+        ordSize = sortedIntIntPair(from, to);
+    }
+
+    @Override
+    public void enterClosedUnderTransFlag(ClosedUnderTransFlagContext ctx)
+    {
+        invEnclosesAll = true;
+    }
+
+    @Override
+    public void enterClosedUnderTrans(ClosedUnderTransContext ctx)
+    {
+        invEnclosesAll = true;
     }
 
     private class FSAPartListener extends ProblemBaseListener
     {
         private final FSAListener<String> impl;
 
-        private FSAPartListener(Alphabet.Builder<String> alphabetBuilder)
+        private FSAPartListener()
         {
-            impl = new FSAListener<>(alphabetBuilder);
+            impl = new FSAListener<>(alphabetRecorder);
         }
 
         private ListIterable<FSA<String>> getAutomata()
@@ -178,9 +195,9 @@ public class StringProblemListener extends ProblemBaseListener
             impl = new FSAListener<>(Alphabets.builder(commonCapacity, TRANSDUCER_EPSILON_SYMBOL));
         }
 
-        private ListIterable<FSA<Twin<String>>> getAutomata()
+        private ListIterable<FSA<Twin<String>>> getAutomataWith(Alphabet<Twin<String>> override)
         {
-            return impl.getAutomata();
+            return impl.getAutomataWith(override);
         }
 
         @Override
@@ -215,6 +232,7 @@ public class StringProblemListener extends ProblemBaseListener
             } else {
                 final String input = label.monadIOTransitionLabel().ID(0).getText();
                 final String output = label.monadIOTransitionLabel().ID(1).getText();
+                alphabetRecorder.add(input).add(output);
                 symbol = Tuples.twin(input, output);
             }
 

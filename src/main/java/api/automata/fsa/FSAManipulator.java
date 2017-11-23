@@ -7,10 +7,10 @@ import org.eclipse.collections.api.set.SetIterable;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
+import static api.automata.AutomatonManipulator.selectFrom;
 import static api.automata.fsa.FSA.Builder;
 import static api.automata.fsa.FSAs.builder;
-import static api.util.Connectives.AND;
-import static api.util.Connectives.OR;
+import static api.util.Connectives.*;
 
 public interface FSAManipulator extends AutomatonManipulator
 {
@@ -83,20 +83,11 @@ public interface FSAManipulator extends AutomatonManipulator
                    .buildWith(target.alphabet());
     }
 
-    private <S> S matchedSymbol(S one, S two)
-    {
-        return one.equals(two) ? one : null;
-    }
-
     default <S> FSA<S> intersect(FSA<S> one, FSA<S> two)
     {
-        return FSAs.product(one, two, one.alphabet(), this::matchedSymbol, (stateMapping, builder) -> {
-            final ImmutableSet<State> startStates = AutomatonManipulator
-                .selectFrom(stateMapping, one::isStartState, two::isStartState, AND);
-            final ImmutableSet<State> acceptStates = AutomatonManipulator
-                .selectFrom(stateMapping, one::isAcceptState, two::isAcceptState, AND);
-            builder.addStartStates(startStates);
-            builder.addAcceptStates(acceptStates);
+        return FSAs.product(one, two, one.alphabet(), Labels.matched(), (stateMapping, builder) -> {
+            builder.addStartStates(selectFrom(stateMapping, one::isStartState, AND, two::isStartState));
+            builder.addAcceptStates(selectFrom(stateMapping, one::isAcceptState, AND, two::isAcceptState));
         });
     }
 
@@ -104,15 +95,9 @@ public interface FSAManipulator extends AutomatonManipulator
     {
         final FSA<S> oneFixed = FSAs.complete(determinize(one));
         final FSA<S> twoFixed = FSAs.complete(determinize(two));
-        return FSAs.product(oneFixed, twoFixed, oneFixed.alphabet(), this::matchedSymbol, (stateMapping, builder) -> {
-            stateMapping.forEachKeyValue((state, statePair) -> {
-                final ImmutableSet<State> startStates = AutomatonManipulator
-                    .selectFrom(stateMapping, oneFixed::isStartState, twoFixed::isStartState, AND);
-                final ImmutableSet<State> acceptStates = AutomatonManipulator
-                    .selectFrom(stateMapping, oneFixed::isAcceptState, twoFixed::isAcceptState, OR);
-                builder.addStartStates(startStates);
-                builder.addAcceptStates(acceptStates);
-            });
+        return FSAs.product(oneFixed, twoFixed, oneFixed.alphabet(), Labels.matched(), (stateMapping, builder) -> {
+            builder.addStartStates(selectFrom(stateMapping, oneFixed::isStartState, AND, twoFixed::isStartState));
+            builder.addAcceptStates(selectFrom(stateMapping, oneFixed::isAcceptState, OR, twoFixed::isAcceptState));
         });
     }
 

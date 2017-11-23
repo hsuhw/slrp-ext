@@ -1,10 +1,13 @@
-package api.automata.fsa;
+package api.proof;
 
+import api.automata.fsa.FSA;
 import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.tuple.Twin;
 
-public interface LanguageSubsetChecker
+public interface BehaviorEnclosureChecker
 {
-    <S> Result<S> test(FSA<S> subsumer, FSA<S> includer);
+    <S> Result<S> test(FSA<Twin<S>> behavior, FSA<S> encloser);
 
     interface Result<S>
     {
@@ -24,6 +27,8 @@ public interface LanguageSubsetChecker
     interface Counterexample<S>
     {
         FSA<S> sourceImage();
+
+        ImmutableSet<ImmutableList<S>> causes();
 
         default ImmutableList<S> get()
         {
