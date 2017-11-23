@@ -81,6 +81,16 @@ public class Sat4jSolverAdapter implements SatSolver
     }
 
     @Override
+    public int newFreeVariable()
+    {
+        if (nextFreeVariableId == SAT_SOLVER_MAX_VARIABLE_NUMBER + 1) {
+            throw new IllegalArgumentException("ran out of available free variables");
+        }
+
+        return nextFreeVariableId++;
+    }
+
+    @Override
     public ImmutableIntList newFreeVariables(int howMany)
     {
         if (howMany < 0) {
@@ -89,7 +99,7 @@ public class Sat4jSolverAdapter implements SatSolver
         if (howMany == 0) {
             return IntLists.immutable.empty();
         }
-        if (nextFreeVariableId + howMany > SAT_SOLVER_MAX_VARIABLE_NUMBER) {
+        if (nextFreeVariableId + howMany > SAT_SOLVER_MAX_VARIABLE_NUMBER + 1) {
             throw new IllegalArgumentException("ran out of available free variables");
         }
 

@@ -23,6 +23,8 @@ public interface SatSolver
 
     void setTimeoutInMs(long ms);
 
+    int newFreeVariable();
+
     ImmutableIntList newFreeVariables(int howMany);
 
     default void setLiteralTruthy(int literal)
@@ -159,6 +161,15 @@ public interface SatSolver
     }
 
     /**
+     * Behaves the same as {@link #addClause(int...)}, but accepting an
+     * {@link ImmutableIntSet} as the given clause.
+     */
+    default void addClause(ImmutableIntSet clause)
+    {
+        addClause(clause.toArray());
+    }
+
+    /**
      * Behaves the same as {@link #addClause(int...)} if the given
      * {@code indicator} is valuated true.  If not activated, the given clause
      * has no any effects as if it were never mentioned.
@@ -179,6 +190,15 @@ public interface SatSolver
      * {@link ImmutableIntList} as the given clause.
      */
     default void addClauseIf(int indicator, ImmutableIntList clause)
+    {
+        addClauseIf(indicator, clause.toArray());
+    }
+
+    /**
+     * Behaves the same as {@link #addClauseIf(int, int...)}, but accepting an
+     * {@link ImmutableIntSet} as the given clause.
+     */
+    default void addClauseIf(int indicator, ImmutableIntSet clause)
     {
         addClauseIf(indicator, clause.toArray());
     }
