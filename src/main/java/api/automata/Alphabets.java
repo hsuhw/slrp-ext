@@ -1,6 +1,7 @@
 package api.automata;
 
 import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.tuple.Twin;
 
@@ -23,6 +24,11 @@ public final class Alphabets
     public static <S> Builder<S> builder(Alphabet<S> base)
     {
         return Singleton.INSTANCE.builder(base);
+    }
+
+    public static <S> Alphabet<S> create(ImmutableSet<S> definition, S epsilon)
+    {
+        return Singleton.INSTANCE.create(definition, epsilon);
     }
 
     public static <S> Alphabet<S> create(MutableSet<S> definition, S epsilon)

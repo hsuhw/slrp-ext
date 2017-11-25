@@ -43,7 +43,12 @@ public interface Alphabet<S>
 
         <S> Builder<S> builder(Alphabet<S> base);
 
-        <S> Alphabet<S> create(MutableSet<S> definition, S epsilon);
+        <S> Alphabet<S> create(ImmutableSet<S> definition, S epsilon);
+
+        default <S> Alphabet<S> create(MutableSet<S> definition, S epsilon)
+        {
+            return create(definition.toImmutable(), epsilon);
+        }
 
         default <S> Alphabet<Twin<S>> product(Alphabet<S> alphabet)
         {

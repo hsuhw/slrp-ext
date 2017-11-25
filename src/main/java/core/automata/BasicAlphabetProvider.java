@@ -1,6 +1,7 @@
 package core.automata;
 
 import api.automata.Alphabet;
+import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
 
 import static api.automata.Alphabet.Builder;
@@ -17,7 +18,7 @@ public final class BasicAlphabetProvider implements Alphabet.Provider
         return new SetAlphabetBuilder<>((SetAlphabet<S>) base);
     }
 
-    public <S> Alphabet<S> create(MutableSet<S> definition, S epsilon)
+    public <S> Alphabet<S> create(ImmutableSet<S> definition, S epsilon)
     {
         return new SetAlphabet<>(definition, epsilon);
     }

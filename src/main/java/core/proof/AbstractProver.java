@@ -1,11 +1,16 @@
 package core.proof;
 
+import api.automata.Alphabet;
+import api.automata.Alphabets;
+import api.automata.State;
+import api.automata.TransitionGraph;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.proof.Problem;
 import api.proof.Prover;
 import api.proof.SatSolver;
 import org.eclipse.collections.api.block.function.primitive.IntIntToObjectFunction;
+import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
@@ -19,6 +24,9 @@ public abstract class AbstractProver<S> implements Prover
     protected final FSA<Twin<S>> process;
     protected final FSA<S> givenInvariant;
     protected final FSA<Twin<S>> givenOrder;
+    protected final Alphabet<S> allAlphabet;
+    protected final Alphabet<S> steadyAlphabet;
+    protected final Alphabet<Twin<S>> orderAlphabet;
     protected int invariantSizeBegin;
     protected final int invariantSizeEnd;
     protected int orderSizeBegin;
@@ -34,6 +42,12 @@ public abstract class AbstractProver<S> implements Prover
         process = FSAs.determinize(problem.process());
         givenInvariant = problem.invariant();
         givenOrder = problem.order();
+
+        allAlphabet = initialConfigs.alphabet();
+        final TransitionGraph<State, Twin<S>> rawProcDelta = problem.process().transitionGraph();
+        final ImmutableSet<S> steadySymbols = rawProcDelta.referredArcLabels().collect(Twin::getTwo);
+        steadyAlphabet = Alphabets.create(steadySymbols.newWith(allAlphabet.epsilon()), allAlphabet.epsilon());
+        orderAlphabet = Alphabets.product(steadyAlphabet);
 
         final IntIntPair invSizeBound = problem.invariantSizeBound();
         final IntIntPair ordSizeBound = problem.orderSizeBound();
@@ -63,7 +77,7 @@ public abstract class AbstractProver<S> implements Prover
                         System.out.println("A proof found under the search bound in " + timeSpent + "ms.");
                         System.out.println();
                         System.out.println("A " + result.getOne());
-                        System.out.println("T " + result.getTwo());
+                        System.out.println("T (>) " + result.getTwo());
                         return;
                     }
                 }

@@ -1,6 +1,5 @@
 package core.proof;
 
-import api.automata.Alphabet;
 import api.automata.AlphabetIntEncoder;
 import api.automata.AlphabetIntEncoders;
 import api.automata.Alphabets;
@@ -16,7 +15,7 @@ import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.tuple.Tuples;
 
-import static api.util.Values.DISPLAY_INDENT;
+import static api.util.Values.DISPLAY_NEWLINE;
 import static core.proof.CAV16MonoProver.*;
 
 public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
@@ -63,10 +62,9 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
     @Override
     public void prove()
     {
-        final Alphabet<S> alphabet = initialConfigs.alphabet();
-        final AlphabetIntEncoder<S> invSymbolEncoding = AlphabetIntEncoders.create(alphabet);
-        final AlphabetIntEncoder<Twin<S>> ordSymbolEncoding = AlphabetIntEncoders.create(scheduler.alphabet());
-        final ImmutableSet<Twin<S>> reflexiveRelSymbols = alphabet.noEpsilonSet().collect(s -> Tuples.twin(s, s));
+        final AlphabetIntEncoder<S> invSymbolEncoding = AlphabetIntEncoders.create(allAlphabet);
+        final AlphabetIntEncoder<Twin<S>> ordSymbolEncoding = AlphabetIntEncoders.create(orderAlphabet);
+        final ImmutableSet<Twin<S>> ordReflexiveSymbols = steadyAlphabet.set().collect(s -> Tuples.twin(s, s));
 
         // having empty string excluded makes searching from 0 or 1 meaningless
         invariantSizeBegin = invariantSizeBegin < 2 ? 2 : invariantSizeBegin;
@@ -77,7 +75,7 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
 
             final FSAEncoding<S> invGuessing = newFSAEncoding(solver, invSize, invSymbolEncoding);
             final FSAEncoding<Twin<S>> ordGuessing = newFSAEncoding(solver, ordSize, ordSymbolEncoding);
-            ordGuessing.ensureNoWordPurelyMadeOf(reflexiveRelSymbols);
+            ordGuessing.ensureNoWordPurelyMadeOf(ordReflexiveSymbols);
 
             LanguageSubsetChecker.Result<S> l1;
             BehaviorEnclosureChecker.Result<S> l2;
@@ -104,6 +102,13 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
                             l1.passed(), l2.passed(), l3.passed(), l4.passed());
                 if (l1.passed() && l2.passed() && l3.passed() && l4.passed()) {
                     return Tuples.pair(invCand, ordCand);
+                } else {
+                    LOGGER.debug("Invariant candidate: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", invCand);
+                    LOGGER.debug("Order candidate (>): " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", ordCand);
+                    LOGGER.debug("Initial configurations enclosed: {}", l1);
+                    LOGGER.debug("Transition behavior enclosed: {}", l2);
+                    LOGGER.debug("Strict pre-order relation: {}", l3);
+                    LOGGER.debug("Progressability: {}", l4);
                 }
             }
 
@@ -115,17 +120,20 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
     @Override
     public void verify()
     {
-        final String indent = DISPLAY_INDENT + "-- ";
         final FSA<S> invCand = FSAs.determinize(givenInvariant);
         final FSA<Twin<S>> ordCand = FSAs.determinize(givenOrder);
 
-        System.out.println("Initial Configurations Enclosed");
-        System.out.println(indent + checkInitConfigsEnclosure(initialConfigs, invCand));
-        System.out.println("Transition Behavior Enclosed");
-        System.out.println(indent + checkBehaviorEnclosure(allBehavior, invCand));
-        System.out.println("Strict Pre-order Relation");
-        System.out.println(indent + checkTransitivity(ordCand));
-        System.out.println("Fairness Progressability");
-        System.out.println(indent + checkProgressability(allBehavior, nonfinalConfigs, invCand, ordCand));
+        final String l1 = checkInitConfigsEnclosure(initialConfigs, invCand).toString();
+        final String l2 = checkBehaviorEnclosure(allBehavior, invCand).toString();
+        final String l3 = checkTransitivity(ordCand).toString();
+        final String l4 = checkProgressability(allBehavior, nonfinalConfigs, invCand, ordCand).toString();
+
+        LOGGER.debug("Invariant candidate: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", invCand);
+        LOGGER.debug("Order candidate (>): " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", ordCand);
+
+        System.out.println("Initial configurations enclosed: " + l1);
+        System.out.println("All behavior enclosed: " + l2);
+        System.out.println("Strict pre-order relation: " + l3);
+        System.out.println("Progressability: " + l4);
     }
 }

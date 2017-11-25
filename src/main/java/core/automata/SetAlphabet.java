@@ -11,7 +11,7 @@ public class SetAlphabet<S> implements Alphabet<S>
     private final S epsilon;
     private int hashCode = -1;
 
-    public SetAlphabet(MutableSet<S> definition, S epsilon)
+    public SetAlphabet(ImmutableSet<S> definition, S epsilon)
     {
         Assertions.argumentNotNull(epsilon);
         if (!definition.contains(epsilon)) {
@@ -21,8 +21,13 @@ public class SetAlphabet<S> implements Alphabet<S>
             throw new IllegalArgumentException("null found in the definition");
         }
 
-        symbols = definition.toImmutable();
+        symbols = definition;
         this.epsilon = epsilon;
+    }
+
+    public SetAlphabet(MutableSet<S> definition, S epsilon)
+    {
+        this(definition.toImmutable(), epsilon);
     }
 
     @Override

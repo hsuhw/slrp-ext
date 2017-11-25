@@ -476,7 +476,6 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
             final MutableList<State> stateDecoder = dfa.states().toList();
             final MutableObjectIntMap<State> stateEncoder = new ObjectIntHashMap<>(stateNumber);
             stateDecoder.forEachWithIndex(stateEncoder::put);
-            final ImmutableSet<S> alphabet = fsa.alphabet().noEpsilonSet();
             final TransitionGraph<State, S> delta = fsa.transitionGraph();
 
             // define each possible step over the DFA's states with each character of the word
@@ -499,7 +498,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
                         final int takenQjAsNext = stepIndicators[pos + 1].get(qj);
                         final State stateQj = stateDecoder.get(qj);
                         final SetIterable<S> enabledQiToQjArc = delta.enabledArcsOn(stateQi, stateQj);
-                        for (S disableSymbol : alphabet.newWithoutAll(enabledQiToQjArc)) {
+                        for (S disableSymbol : alphabet().set().newWithoutAll(enabledQiToQjArc)) {
                             final int posBeDisableSymbol = possibleSymbol.get(intAlphabet.encode(disableSymbol));
                             solver.addClause(-takenQiAsCurr, -takenQjAsNext, -posBeDisableSymbol);
                         }
