@@ -9,6 +9,9 @@ import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.tuple.Twin;
 
+import static api.util.Values.DISPLAY_INDENT;
+import static api.util.Values.DISPLAY_NEWLINE;
+
 public class BasicFairnessProgressabilityChecker implements FairnessProgressabilityChecker
 {
     @Override
@@ -53,7 +56,7 @@ public class BasicFairnessProgressabilityChecker implements FairnessProgressabil
         @Override
         public String toString()
         {
-            return passed() ? "pass" : counterexample().toString();
+            return passed() ? "pass" : DISPLAY_NEWLINE + DISPLAY_INDENT + "-- " + counterexample();
         }
     }
 

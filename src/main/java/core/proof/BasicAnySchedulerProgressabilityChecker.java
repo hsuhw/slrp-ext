@@ -12,6 +12,8 @@ import org.eclipse.collections.impl.tuple.Tuples;
 import static api.automata.AutomatonManipulator.selectFrom;
 import static api.automata.fsa.FSAs.checkSubset;
 import static api.util.Connectives.AND;
+import static api.util.Values.DISPLAY_INDENT;
+import static api.util.Values.DISPLAY_NEWLINE;
 
 public class BasicAnySchedulerProgressabilityChecker implements AnySchedulerProgressabilityChecker
 {
@@ -62,7 +64,7 @@ public class BasicAnySchedulerProgressabilityChecker implements AnySchedulerProg
         @Override
         public String toString()
         {
-            return passed() ? "pass" : counterexample().toString();
+            return passed() ? "pass" : DISPLAY_NEWLINE + DISPLAY_INDENT + "-- " + counterexample();
         }
     }
 

@@ -6,6 +6,9 @@ import api.automata.fsa.LanguageSubsetChecker;
 import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
 
+import static api.util.Values.DISPLAY_INDENT;
+import static api.util.Values.DISPLAY_NEWLINE;
+
 public class BasicLanguageSubsetChecker implements LanguageSubsetChecker
 {
     @Override
@@ -55,7 +58,7 @@ public class BasicLanguageSubsetChecker implements LanguageSubsetChecker
         @Override
         public String toString()
         {
-            return passed() ? "pass" : counterexample().toString();
+            return passed() ? "pass" : DISPLAY_NEWLINE + DISPLAY_INDENT + "-- " + counterexample();
         }
     }
 

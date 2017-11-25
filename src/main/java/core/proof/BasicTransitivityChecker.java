@@ -14,6 +14,9 @@ import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.Set;
 
+import static api.util.Values.DISPLAY_INDENT;
+import static api.util.Values.DISPLAY_NEWLINE;
+
 public class BasicTransitivityChecker implements TransitivityChecker
 {
     @Override
@@ -56,7 +59,7 @@ public class BasicTransitivityChecker implements TransitivityChecker
         @Override
         public String toString()
         {
-            return passed() ? "pass" : counterexample().toString();
+            return passed() ? "pass" : DISPLAY_NEWLINE + DISPLAY_INDENT + "-- " + counterexample();
         }
     }
 
