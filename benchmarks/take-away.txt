@@ -1,57 +1,76 @@
+// take-away.txt
+//
+// A very basic example of a take-away game discussed in "Game Theory"
+// by Thomas S. Ferguson.
+//
+// Available at:
+// https://www.math.ucla.edu/~tom/Game_Theory/comb.pdf
+//
+// i - a chip
+// o - no chip
+// x - p1 winning move
+//
+
+// the number of `i` is 4k
 I0 {
     init: s0;
 
-    sn -> sn _0_;
-    s0 -> s1 _1_;
-    s1 -> s2 _1_;
-    s2 -> s3 _1_;
-    s3 -> s0 _1_;
-    s0 -> sn _0_;
+    s0 -> s1 i;
+    s1 -> s2 i;
+    s2 -> s3 i;
+    s3 -> s4 i;
+    s4 -> s1 i;
+    s0 -> sf o;
+    sf -> sf o;
 
-    accepting: s0, sn;
+    accepting: s4;
 }
 
+// no `i` any more
 F {
     init: s0;
-    s0 -> s0 _0_;
+
+    s0 -> s0 o;
+
     accepting: s0;
 }
 
 P1 {
     init: s0;
-    s0 -> sk _1_/_1_;
 
-    s0 -> sn _1_/_2_;
-    s0 -> s1 _1_/_2_;
-    s0 -> s2 _1_/_2_;
+    s0 -> sk i/i; // normal rounds
+    sk -> sk i/i;
 
-    sk -> sk _1_/_1_;
-    sn -> sn _0_/_0_;
+    s0 -> sf i/x; // final rounds
+    s0 -> s1 i/x;
+    s0 -> s2 i/x;
 
-    sk -> sn _1_/_0_;
-    sk -> s2 _1_/_0_;
-    sk -> s1 _1_/_0_;
+    sk -> sf i/o; // takes one `i`
+    sk -> s1 i/o;
+    s1 -> sf i/o; // takes two `i`
+    sk -> s2 i/o;
+    s2 -> s1 i/o; // takes three `i`
 
-    s1 -> s2 _1_/_0_;
-    s2 -> sn _1_/_0_;
-    accepting: sn;
+    sf -> sf o/o;
+
+    accepting: sf;
 }
 
 P2 {
-    init: sk;
-    sk -> sk _1_/_1_;
-    sn -> sn _0_/_0_;
+    init: s0;
 
-    sk -> sn _1_/_0_;
-    sk -> s2 _1_/_0_;
-    sk -> s1 _1_/_0_;
+    s0 -> s0 i/i;
 
-    s1 -> s2 _1_/_0_;
-    s2 -> sn _1_/_0_;
-    accepting: sn;
+    s0 -> sf i/o; // takes one `i`
+    s0 -> s1 i/o;
+    s1 -> sf i/o; // takes two `i`
+    s0 -> s2 i/o;
+    s2 -> s1 i/o; // takes three `i`
+
+    sf -> sf o/o;
+
+    accepting: sf;
 }
 
-transducerStateGuessing: 1 .. 7;
-automatonStateGuessing: 1 .. 8;
-
-// useRankingFunctions;         // not used for benchmarking
+transducerStateGuessing: 1 .. 2;
+automatonStateGuessing: 1 .. 5;

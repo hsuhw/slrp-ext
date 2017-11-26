@@ -1,11 +1,13 @@
 // herman-linear.txt
+//
 // This an adaptation of Herman's protocol in a linear array. The last
 // (rightmost) process is never enabled, even with a token.
 //
 // Liveness holds under arbitrary schedulers here (unlike the ring case).
 //
-// N - no token
 // T - token
+// N - no token
+//
 
 // Configurations with at least one token
 I0 {
@@ -56,7 +58,7 @@ P1 {
     s2 -> s2 T/T;
 
     // Player 1 always needs to be able to make a move
-    sN -> sN N/N;
+    //sN -> sN N/N;
 
     accepting: s2, sN;
 }
@@ -85,4 +87,3 @@ P2 {
 
 transducerStateGuessing: 1 .. 10;
 automatonStateGuessing: 0 .. 4;
-

@@ -24,10 +24,10 @@ I0 {
     init: si;
 
     si -> s0 bot;
-    s0 -> s0 _000_;
-    s0 -> s0 _101_;
-    s0 -> s0 _011_;
-    s0 -> s0 _110_;
+    s0 -> s0 OOO;
+    s0 -> s0 IOI;
+    s0 -> s0 OII;
+    s0 -> s0 IIO;
 
     accepting: s0;
 }
@@ -36,14 +36,14 @@ F {
     init: s0;
 
     s0 -> s1 bott;
-    s1 -> s1 _000_;
-    s1 -> s1 _001_;
-    s1 -> s1 _010_;
-    s1 -> s1 _011_;
-    s1 -> s1 _100_;
-    s1 -> s1 _101_;
-    s1 -> s1 _110_;
-    s1 -> s1 _111_;
+    s1 -> s1 OOO;
+    s1 -> s1 OOI;
+    s1 -> s1 OIO;
+    s1 -> s1 OII;
+    s1 -> s1 IOO;
+    s1 -> s1 IOI;
+    s1 -> s1 IIO;
+    s1 -> s1 III;
 
     accepting: s1;
 }
@@ -54,118 +54,118 @@ P1 {
     // Empty
     si -> s0;
     s0 -> s1 bot/bott;
-    s1 -> s1 _000_/_000_;
+    s1 -> s1 OOO/OOO;
 
     // Nonempty: first pile
     si -> p0;
     p0 -> p1 bot/bot;
-    p1 -> p1 _000_/_000_;
-    p1 -> p1 _001_/_001_;
-    p1 -> p1 _010_/_010_;
-    p1 -> p1 _011_/_011_;
-    p1 -> p1 _100_/_100_;
-    p1 -> p1 _101_/_101_;
-    p1 -> p1 _110_/_110_;
-    p1 -> p1 _111_/_111_;
+    p1 -> p1 OOO/OOO;
+    p1 -> p1 OOI/OOI;
+    p1 -> p1 OIO/OIO;
+    p1 -> p1 OII/OII;
+    p1 -> p1 IOO/IOO;
+    p1 -> p1 IOI/IOI;
+    p1 -> p1 IIO/IIO;
+    p1 -> p1 III/III;
 
         // the first digit where the number differs (and has to decrease)
-    p1 -> p2 _100_/_000_;
-    p1 -> p2 _101_/_001_;
-    p1 -> p2 _110_/_010_;
-    p1 -> p2 _111_/_011_;
+    p1 -> p2 IOO/OOO;
+    p1 -> p2 IOI/OOI;
+    p1 -> p2 IIO/OIO;
+    p1 -> p2 III/OII;
 
         // after this, it doesn't matter
-    p2 -> p2 _000_/_000_;
-    p2 -> p2 _001_/_001_;
-    p2 -> p2 _010_/_010_;
-    p2 -> p2 _011_/_011_;
-    p2 -> p2 _100_/_100_;
-    p2 -> p2 _101_/_101_;
-    p2 -> p2 _110_/_110_;
-    p2 -> p2 _111_/_111_;
+    p2 -> p2 OOO/OOO;
+    p2 -> p2 OOI/OOI;
+    p2 -> p2 OIO/OIO;
+    p2 -> p2 OII/OII;
+    p2 -> p2 IOO/IOO;
+    p2 -> p2 IOI/IOI;
+    p2 -> p2 IIO/IIO;
+    p2 -> p2 III/III;
 
-    p2 -> p2 _000_/_100_;
-    p2 -> p2 _001_/_101_;
-    p2 -> p2 _010_/_110_;
-    p2 -> p2 _011_/_111_;
-    p2 -> p2 _100_/_000_;
-    p2 -> p2 _101_/_001_;
-    p2 -> p2 _110_/_010_;
-    p2 -> p2 _111_/_011_;
+    p2 -> p2 OOO/IOO;
+    p2 -> p2 OOI/IOI;
+    p2 -> p2 OIO/IIO;
+    p2 -> p2 OII/III;
+    p2 -> p2 IOO/OOO;
+    p2 -> p2 IOI/OOI;
+    p2 -> p2 IIO/OIO;
+    p2 -> p2 III/OII;
 
     // Nonempty: second pile
     si -> q0;
     q0 -> q1 bot/bot;
-    q1 -> q1 _000_/_000_;
-    q1 -> q1 _001_/_001_;
-    q1 -> q1 _010_/_010_;
-    q1 -> q1 _011_/_011_;
-    q1 -> q1 _100_/_100_;
-    q1 -> q1 _101_/_101_;
-    q1 -> q1 _110_/_110_;
-    q1 -> q1 _111_/_111_;
+    q1 -> q1 OOO/OOO;
+    q1 -> q1 OOI/OOI;
+    q1 -> q1 OIO/OIO;
+    q1 -> q1 OII/OII;
+    q1 -> q1 IOO/IOO;
+    q1 -> q1 IOI/IOI;
+    q1 -> q1 IIO/IIO;
+    q1 -> q1 III/III;
 
         // the first digit where the number differs (and has to decrease)
-    q1 -> q2 _010_/_000_;
-    q1 -> q2 _011_/_001_;
-    q1 -> q2 _110_/_100_;
-    q1 -> q2 _111_/_101_;
+    q1 -> q2 OIO/OOO;
+    q1 -> q2 OII/OOI;
+    q1 -> q2 IIO/IOO;
+    q1 -> q2 III/IOI;
 
         // after this, it doesn't matter
-    q2 -> q2 _000_/_000_;
-    q2 -> q2 _001_/_001_;
-    q2 -> q2 _010_/_010_;
-    q2 -> q2 _011_/_011_;
-    q2 -> q2 _100_/_100_;
-    q2 -> q2 _101_/_101_;
-    q2 -> q2 _110_/_110_;
-    q2 -> q2 _111_/_111_;
+    q2 -> q2 OOO/OOO;
+    q2 -> q2 OOI/OOI;
+    q2 -> q2 OIO/OIO;
+    q2 -> q2 OII/OII;
+    q2 -> q2 IOO/IOO;
+    q2 -> q2 IOI/IOI;
+    q2 -> q2 IIO/IIO;
+    q2 -> q2 III/III;
 
-    q2 -> q2 _000_/_010_;
-    q2 -> q2 _001_/_011_;
-    q2 -> q2 _100_/_110_;
-    q2 -> q2 _101_/_111_;
-    q2 -> q2 _010_/_000_;
-    q2 -> q2 _011_/_001_;
-    q2 -> q2 _110_/_100_;
-    q2 -> q2 _111_/_101_;
+    q2 -> q2 OOO/OIO;
+    q2 -> q2 OOI/OII;
+    q2 -> q2 IOO/IIO;
+    q2 -> q2 IOI/III;
+    q2 -> q2 OIO/OOO;
+    q2 -> q2 OII/OOI;
+    q2 -> q2 IIO/IOO;
+    q2 -> q2 III/IOI;
 
     // Nonempty: third pile
     si -> r0;
     r0 -> r1 bot/bot;
-    r1 -> r1 _000_/_000_;
-    r1 -> r1 _001_/_001_;
-    r1 -> r1 _010_/_010_;
-    r1 -> r1 _011_/_011_;
-    r1 -> r1 _100_/_100_;
-    r1 -> r1 _101_/_101_;
-    r1 -> r1 _110_/_110_;
-    r1 -> r1 _111_/_111_;
+    r1 -> r1 OOO/OOO;
+    r1 -> r1 OOI/OOI;
+    r1 -> r1 OIO/OIO;
+    r1 -> r1 OII/OII;
+    r1 -> r1 IOO/IOO;
+    r1 -> r1 IOI/IOI;
+    r1 -> r1 IIO/IIO;
+    r1 -> r1 III/III;
 
         // the first digit where the number differs (and has to decrease)
-    r1 -> r2 _001_/_000_;
-    r1 -> r2 _011_/_010_;
-    r1 -> r2 _101_/_100_;
-    r1 -> r2 _111_/_110_;
+    r1 -> r2 OOI/OOO;
+    r1 -> r2 OII/OIO;
+    r1 -> r2 IOI/IOO;
+    r1 -> r2 III/IIO;
 
         // after this, it doesn't matter
-    r2 -> r2 _000_/_000_;
-    r2 -> r2 _001_/_001_;
-    r2 -> r2 _010_/_010_;
-    r2 -> r2 _011_/_011_;
-    r2 -> r2 _100_/_100_;
-    r2 -> r2 _101_/_101_;
-    r2 -> r2 _110_/_110_;
-    r2 -> r2 _111_/_111_;
+    r2 -> r2 OOO/OOO;
+    r2 -> r2 OOI/OOI;
+    r2 -> r2 OIO/OIO;
+    r2 -> r2 OII/OII;
+    r2 -> r2 IOO/IOO;
+    r2 -> r2 IOI/IOI;
+    r2 -> r2 IIO/IIO;
+    r2 -> r2 III/III;
 
-    r2 -> r2 _000_/_001_;
-    r2 -> r2 _010_/_011_;
-    r2 -> r2 _100_/_101_;
-    r2 -> r2 _110_/_111_;
-    r2 -> r2 _001_/_000_;
-    r2 -> r2 _011_/_010_;
-    r2 -> r2 _101_/_100_;
-    r2 -> r2 _111_/_110_;
+    r2 -> r2 OOO/OOI;
+    r2 -> r2 OIO/OII;
+    r2 -> r2 IOO/IOI;
+    r2 -> r2 IIO/III;
+    r2 -> r2 OOI/OOO;
+    r2 -> r2 OII/OIO;
+    r2 -> r2 IOI/IOO;
+    r2 -> r2 III/IIO;
 
     accepting: s1, p2, q2, r2;
 }
@@ -176,123 +176,123 @@ P2 {
     //
     si -> sii;
     sii -> siii bott/bott;
-    siii -> siii _000_/_000_;
+    siii -> siii OOO/OOO;
 
     // Empty
     si -> s0;
     s0 -> s1 bot/boto; // declare Player 1 wins if empty
-    s1 -> s1 _000_/_000_;
+    s1 -> s1 OOO/OOO;
 
     // Nonempty: first pile
     si -> p0;
     p0 -> p1 bot/bot;
-    p1 -> p1 _000_/_000_;
-    p1 -> p1 _001_/_001_;
-    p1 -> p1 _010_/_010_;
-    p1 -> p1 _011_/_011_;
-    p1 -> p1 _100_/_100_;
-    p1 -> p1 _101_/_101_;
-    p1 -> p1 _110_/_110_;
-    p1 -> p1 _111_/_111_;
+    p1 -> p1 OOO/OOO;
+    p1 -> p1 OOI/OOI;
+    p1 -> p1 OIO/OIO;
+    p1 -> p1 OII/OII;
+    p1 -> p1 IOO/IOO;
+    p1 -> p1 IOI/IOI;
+    p1 -> p1 IIO/IIO;
+    p1 -> p1 III/III;
 
         // the first digit where the number differs (and has to decrease)
-    p1 -> p2 _100_/_000_;
-    p1 -> p2 _101_/_001_;
-    p1 -> p2 _110_/_010_;
-    p1 -> p2 _111_/_011_;
+    p1 -> p2 IOO/OOO;
+    p1 -> p2 IOI/OOI;
+    p1 -> p2 IIO/OIO;
+    p1 -> p2 III/OII;
 
         // after this, it doesn't matter
-    p2 -> p2 _000_/_000_;
-    p2 -> p2 _001_/_001_;
-    p2 -> p2 _010_/_010_;
-    p2 -> p2 _011_/_011_;
-    p2 -> p2 _100_/_100_;
-    p2 -> p2 _101_/_101_;
-    p2 -> p2 _110_/_110_;
-    p2 -> p2 _111_/_111_;
+    p2 -> p2 OOO/OOO;
+    p2 -> p2 OOI/OOI;
+    p2 -> p2 OIO/OIO;
+    p2 -> p2 OII/OII;
+    p2 -> p2 IOO/IOO;
+    p2 -> p2 IOI/IOI;
+    p2 -> p2 IIO/IIO;
+    p2 -> p2 III/III;
 
-    p2 -> p2 _000_/_100_;
-    p2 -> p2 _001_/_101_;
-    p2 -> p2 _010_/_110_;
-    p2 -> p2 _011_/_111_;
-    p2 -> p2 _100_/_000_;
-    p2 -> p2 _101_/_001_;
-    p2 -> p2 _110_/_010_;
-    p2 -> p2 _111_/_011_;
+    p2 -> p2 OOO/IOO;
+    p2 -> p2 OOI/IOI;
+    p2 -> p2 OIO/IIO;
+    p2 -> p2 OII/III;
+    p2 -> p2 IOO/OOO;
+    p2 -> p2 IOI/OOI;
+    p2 -> p2 IIO/OIO;
+    p2 -> p2 III/OII;
 
     // Nonempty: second pile
     si -> q0;
     q0 -> q1 bot/bot;
-    q1 -> q1 _000_/_000_;
-    q1 -> q1 _001_/_001_;
-    q1 -> q1 _010_/_010_;
-    q1 -> q1 _011_/_011_;
-    q1 -> q1 _100_/_100_;
-    q1 -> q1 _101_/_101_;
-    q1 -> q1 _110_/_110_;
-    q1 -> q1 _111_/_111_;
+    q1 -> q1 OOO/OOO;
+    q1 -> q1 OOI/OOI;
+    q1 -> q1 OIO/OIO;
+    q1 -> q1 OII/OII;
+    q1 -> q1 IOO/IOO;
+    q1 -> q1 IOI/IOI;
+    q1 -> q1 IIO/IIO;
+    q1 -> q1 III/III;
 
         // the first digit where the number differs (and has to decrease)
-    q1 -> q2 _010_/_000_;
-    q1 -> q2 _011_/_001_;
-    q1 -> q2 _110_/_100_;
-    q1 -> q2 _111_/_101_;
+    q1 -> q2 OIO/OOO;
+    q1 -> q2 OII/OOI;
+    q1 -> q2 IIO/IOO;
+    q1 -> q2 III/IOI;
 
         // after this, it doesn't matter
-    q2 -> q2 _000_/_000_;
-    q2 -> q2 _001_/_001_;
-    q2 -> q2 _010_/_010_;
-    q2 -> q2 _011_/_011_;
-    q2 -> q2 _100_/_100_;
-    q2 -> q2 _101_/_101_;
-    q2 -> q2 _110_/_110_;
-    q2 -> q2 _111_/_111_;
+    q2 -> q2 OOO/OOO;
+    q2 -> q2 OOI/OOI;
+    q2 -> q2 OIO/OIO;
+    q2 -> q2 OII/OII;
+    q2 -> q2 IOO/IOO;
+    q2 -> q2 IOI/IOI;
+    q2 -> q2 IIO/IIO;
+    q2 -> q2 III/III;
 
-    q2 -> q2 _000_/_010_;
-    q2 -> q2 _001_/_011_;
-    q2 -> q2 _100_/_110_;
-    q2 -> q2 _101_/_111_;
-    q2 -> q2 _010_/_000_;
-    q2 -> q2 _011_/_001_;
-    q2 -> q2 _110_/_100_;
-    q2 -> q2 _111_/_101_;
+    q2 -> q2 OOO/OIO;
+    q2 -> q2 OOI/OII;
+    q2 -> q2 IOO/IIO;
+    q2 -> q2 IOI/III;
+    q2 -> q2 OIO/OOO;
+    q2 -> q2 OII/OOI;
+    q2 -> q2 IIO/IOO;
+    q2 -> q2 III/IOI;
 
     // Nonempty: third pile
     si -> r0;
     r0 -> r1 bot/bot;
-    r1 -> r1 _000_/_000_;
-    r1 -> r1 _001_/_001_;
-    r1 -> r1 _010_/_010_;
-    r1 -> r1 _011_/_011_;
-    r1 -> r1 _100_/_100_;
-    r1 -> r1 _101_/_101_;
-    r1 -> r1 _110_/_110_;
-    r1 -> r1 _111_/_111_;
+    r1 -> r1 OOO/OOO;
+    r1 -> r1 OOI/OOI;
+    r1 -> r1 OIO/OIO;
+    r1 -> r1 OII/OII;
+    r1 -> r1 IOO/IOO;
+    r1 -> r1 IOI/IOI;
+    r1 -> r1 IIO/IIO;
+    r1 -> r1 III/III;
 
         // the first digit where the number differs (and has to decrease)
-    r1 -> r2 _001_/_000_;
-    r1 -> r2 _011_/_010_;
-    r1 -> r2 _101_/_100_;
-    r1 -> r2 _111_/_110_;
+    r1 -> r2 OOI/OOO;
+    r1 -> r2 OII/OIO;
+    r1 -> r2 IOI/IOO;
+    r1 -> r2 III/IIO;
 
         // after this, it doesn't matter
-    r2 -> r2 _000_/_000_;
-    r2 -> r2 _001_/_001_;
-    r2 -> r2 _010_/_010_;
-    r2 -> r2 _011_/_011_;
-    r2 -> r2 _100_/_100_;
-    r2 -> r2 _101_/_101_;
-    r2 -> r2 _110_/_110_;
-    r2 -> r2 _111_/_111_;
+    r2 -> r2 OOO/OOO;
+    r2 -> r2 OOI/OOI;
+    r2 -> r2 OIO/OIO;
+    r2 -> r2 OII/OII;
+    r2 -> r2 IOO/IOO;
+    r2 -> r2 IOI/IOI;
+    r2 -> r2 IIO/IIO;
+    r2 -> r2 III/III;
 
-    r2 -> r2 _000_/_001_;
-    r2 -> r2 _010_/_011_;
-    r2 -> r2 _100_/_101_;
-    r2 -> r2 _110_/_111_;
-    r2 -> r2 _001_/_000_;
-    r2 -> r2 _011_/_010_;
-    r2 -> r2 _101_/_100_;
-    r2 -> r2 _111_/_110_;
+    r2 -> r2 OOO/OOI;
+    r2 -> r2 OIO/OII;
+    r2 -> r2 IOO/IOI;
+    r2 -> r2 IIO/III;
+    r2 -> r2 OOI/OOO;
+    r2 -> r2 OII/OIO;
+    r2 -> r2 IOI/IOO;
+    r2 -> r2 III/IIO;
 
     accepting: s1, p2, q2, r2, siii;
 }
