@@ -1,9 +1,25 @@
 package api.automata.fsa;
 
 import api.automata.*;
+import org.eclipse.collections.api.bimap.MutableBiMap;
+import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
+import org.eclipse.collections.api.set.sorted.MutableSortedSet;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.api.tuple.Twin;
+import org.eclipse.collections.impl.bimap.mutable.HashBiMap;
+import org.eclipse.collections.impl.factory.Lists;
+import org.eclipse.collections.impl.map.mutable.UnifiedMap;
+import org.eclipse.collections.impl.set.sorted.mutable.TreeSortedSet;
+import org.eclipse.collections.impl.tuple.Tuples;
 
+import java.util.Comparator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
@@ -43,7 +59,44 @@ public interface FSAManipulator extends AutomatonManipulator
     <S, T, R> FSA<R> product(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
                              BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer);
 
-    <S> FSA<S> determinize(FSA<S> target);
+    default <S> FSA<S> determinize(FSA<S> target)
+    {
+        if (target.isDeterministic()) {
+            return target;
+        }
+
+        final Alphabet<S> alphabet = target.alphabet();
+        final TransitionGraph<State, S> delta = target.transitionGraph();
+        final int capacity = target.states().size() * target.states().size(); // heuristic
+        final Builder<S> builder = builder(capacity, alphabet.size(), alphabet.epsilon());
+        final MutableBiMap<MutableSet<State>, State> stateMapping = new HashBiMap<>(capacity);
+        final Queue<MutableSet<State>> pendingStateSets = new LinkedList<>();
+
+        final MutableSet<State> startStates = delta.epsilonClosureOf(target.startStates()).toSet();
+        final State newStart = States.generate();
+        stateMapping.put(startStates, newStart);
+        builder.addStartState(newStart);
+        pendingStateSets.add(startStates);
+        final SetIterable<S> noEpsilonSymbolSet = alphabet.noEpsilonSet();
+        MutableSet<State> currStateSet;
+        while ((currStateSet = pendingStateSets.poll()) != null) {
+            final State newDept = stateMapping.get(currStateSet);
+            for (S symbol : noEpsilonSymbolSet) {
+                final MutableSet<State> destStates = delta.epsilonClosureOf(currStateSet, symbol).toSet();
+                final State newDest = stateMapping.computeIfAbsent(destStates, __ -> {
+                    pendingStateSets.add(destStates);
+                    final State s = States.generate();
+                    if (destStates.anySatisfy(target::isAcceptState)) {
+                        builder.addAcceptState(s);
+                    }
+                    return s;
+                });
+                builder.addTransition(newDept, newDest, symbol);
+            }
+        }
+
+        return builder.buildWith(alphabet);
+    }
 
     default <S> FSA<S> complete(FSA<S> target)
     {
@@ -73,7 +126,98 @@ public interface FSAManipulator extends AutomatonManipulator
         return builder.buildWith(target.alphabet());
     }
 
-    <S> FSA<S> minimize(FSA<S> target);
+    default <S> Twin<ImmutableList<State>> splitPartition(TransitionGraph<State, S> delta, ImmutableList<State> part,
+                                                          Pair<ImmutableList<State>, S> splitter)
+    {
+        final S symbol = splitter.getTwo();
+        final ImmutableList<State> filter = splitter.getOne();
+        final ImmutableList<State> split1 = part.select(state -> filter.contains(delta.successorOf(state, symbol)));
+        final ImmutableList<State> split2 = part.newWithoutAll(split1);
+
+        return split1.size() < split2.size() ? Tuples.twin(split1, split2) : Tuples.twin(split2, split1);
+    }
+
+    default <S> List<ImmutableList<State>> refinePartition(TransitionGraph<State, S> delta, ImmutableSet<S> alphabet,
+                                                           ImmutableList<ImmutableList<State>> initialPartition,
+                                                           ImmutableList<State> initialCheck)
+    {
+        final MutableSortedSet<Pair<ImmutableList<State>, S>> pendingChecks = TreeSortedSet
+            .newSet(Comparator.comparingInt(Object::hashCode));
+        alphabet.forEach(symbol -> pendingChecks.add(Tuples.pair(initialCheck, symbol)));
+
+        ImmutableList<ImmutableList<State>> currentPartition = initialPartition;
+        while (pendingChecks.notEmpty()) {
+            final Pair<ImmutableList<State>, S> currCheck = pendingChecks.getFirst();
+            pendingChecks.remove(currCheck);
+            currentPartition = currentPartition.flatCollect(part -> {
+                final Twin<ImmutableList<State>> parts = splitPartition(delta, part, currCheck);
+                if (parts.getOne().notEmpty()) {
+                    alphabet.forEach(symbol -> {
+                        final Pair<ImmutableList<State>, S> splitCheck = Tuples.pair(part, symbol);
+                        if (pendingChecks.contains(splitCheck)) {
+                            pendingChecks.remove(splitCheck);
+                            pendingChecks.add(Tuples.pair(parts.getOne(), symbol));
+                            pendingChecks.add(Tuples.pair(parts.getTwo(), symbol));
+                        } else {
+                            pendingChecks.add(Tuples.pair(parts.getOne(), symbol));
+                        }
+                    });
+                    return Lists.immutable.of(parts.getOne(), parts.getTwo());
+                }
+                return Lists.immutable.of(part);
+            });
+        }
+
+        return currentPartition.castToList();
+    }
+
+    private <S> FSA<S> minimize(FSA<S> origin, List<ImmutableList<State>> statePartition)
+    {
+        final Alphabet<S> alphabet = origin.alphabet();
+        final ImmutableSet<S> symbols = alphabet.noEpsilonSet();
+        final TransitionGraph<State, S> delta = origin.transitionGraph();
+        final MutableMap<ImmutableList<State>, State> setToNewState = UnifiedMap.newMap(statePartition.size());
+        statePartition.forEach(part -> setToNewState.put(part, States.generate()));
+        final MutableMap<State, State> stateToNewState = UnifiedMap.newMap(origin.states().size());
+        statePartition.forEach(part -> part.forEach(state -> stateToNewState.put(state, setToNewState.get(part))));
+        final FSA.Builder<S> builder = FSAs.builder(statePartition.size(), alphabet.size(), alphabet.epsilon());
+
+        statePartition.forEach(part -> {
+            final State state = setToNewState.get(part);
+            if (part.anySatisfy(origin::isStartState)) {
+                builder.addStartState(state);
+            }
+            if (part.anySatisfy(origin::isAcceptState)) {
+                builder.addAcceptState(state);
+            }
+            symbols.forEach(symbol -> {
+                final State dest = stateToNewState.get(delta.successorOf(part.getFirst(), symbol));
+                builder.addTransition(state, dest, symbol);
+            });
+        });
+
+        return builder.buildWith(alphabet);
+    }
+
+    default <S> FSA<S> minimize(FSA<S> target)
+    {
+        if (!target.isDeterministic()) {
+            throw new IllegalArgumentException("only available on deterministic instances");
+        }
+        final Alphabet<S> alphabet = target.alphabet();
+        if (target.acceptsNone()) {
+            return FSAs.thatAcceptsNone(alphabet);
+        }
+
+        final FSA<S> dfa = FSAs.complete(target);
+        final TransitionGraph<State, S> delta = dfa.transitionGraph();
+        final ImmutableList<State> accepts = dfa.acceptStates().toList().toImmutable();
+        final ImmutableList<State> nonAccepts = dfa.nonAcceptStates().toList().toImmutable();
+        final ImmutableList<ImmutableList<State>> initialPartition = Lists.immutable.of(accepts, nonAccepts);
+        final ImmutableList<State> initialCheck = accepts.size() < nonAccepts.size() ? accepts : nonAccepts;
+
+        return minimize(dfa, refinePartition(delta, alphabet.noEpsilonSet(), initialPartition, initialCheck));
+    }
 
     default <S> FSA<S> complement(FSA<S> target)
     {
@@ -95,6 +239,7 @@ public interface FSAManipulator extends AutomatonManipulator
     {
         final FSA<S> oneFixed = FSAs.complete(determinize(one));
         final FSA<S> twoFixed = FSAs.complete(determinize(two));
+
         return FSAs.product(oneFixed, twoFixed, oneFixed.alphabet(), Labels.matched(), (stateMapping, builder) -> {
             builder.addStartStates(selectFrom(stateMapping, oneFixed::isStartState, AND, twoFixed::isStartState));
             builder.addAcceptStates(selectFrom(stateMapping, oneFixed::isAcceptState, OR, twoFixed::isAcceptState));
@@ -221,7 +366,7 @@ public interface FSAManipulator extends AutomatonManipulator
 
         default <S> FSA<S> determinizeImpl(FSA<S> target)
         {
-            return null;
+            return FSAManipulator.super.determinize(target);
         }
 
         @Override
@@ -247,7 +392,7 @@ public interface FSAManipulator extends AutomatonManipulator
 
         default <S> FSA<S> minimizeImpl(FSA<S> target)
         {
-            return null;
+            return FSAManipulator.super.minimize(target);
         }
 
         @Override

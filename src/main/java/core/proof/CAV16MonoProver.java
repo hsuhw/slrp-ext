@@ -57,7 +57,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         super(problem);
 
         nfScheduler = makeNonfinalScheduler(scheduler, nonfinalConfigs);
-        allBehavior = FSAs.determinize(FSAs.union(scheduler, process));
+        allBehavior = FSAs.minimize(FSAs.determinize(FSAs.union(scheduler, process)));
         invEnclosesAll = problem.invariantEnclosesAllBehavior();
     }
 
@@ -143,7 +143,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         invariantEncoding.ensureAcceptingIfOnlyIf(takenX, x);
         final int shouldBeCertainZ = solver.newFreeVariable();
         final CertainWord<S> z = invariantEncoding.ensureAcceptingCertainWordIf(shouldBeCertainZ, x.size());
-        z.ensureAcceptedBy(FSAs.determinize(possibleZ));
+        z.ensureAcceptedBy(FSAs.minimize(FSAs.determinize(possibleZ)));
         final CertainWord<Twin<S>> xz = orderEncoding.ensureAcceptingCertainWordIf(shouldBeCertainZ, x.size());
         x.forEachWithIndex((chx, pos) -> {
             steadyAlphabet.noEpsilonSet().forEach(chz -> {
@@ -162,7 +162,6 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
     {
         final AlphabetIntEncoder<S> invSymbolEncoding = AlphabetIntEncoders.create(allAlphabet);
         final AlphabetIntEncoder<Twin<S>> ordSymbolEncoding = AlphabetIntEncoders.create(orderAlphabet);
-        System.out.println(orderAlphabet.set());
         final ImmutableSet<Twin<S>> ordReflexiveSymbols = steadyAlphabet.set().collect(s -> Tuples.twin(s, s));
 
         // having empty string excluded makes searching from 0 or 1 meaningless

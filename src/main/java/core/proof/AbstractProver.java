@@ -35,11 +35,11 @@ public abstract class AbstractProver<S> implements Prover
 
     public AbstractProver(Problem<S> problem)
     {
-        initialConfigs = FSAs.determinize(problem.initialConfigs());
-        finalConfigs = FSAs.determinize(problem.finalConfigs());
+        initialConfigs = FSAs.minimize(FSAs.determinize(problem.initialConfigs()));
+        finalConfigs = FSAs.minimize(FSAs.determinize(problem.finalConfigs()));
         nonfinalConfigs = FSAs.complement(finalConfigs);
-        scheduler = FSAs.determinize(problem.scheduler());
-        process = FSAs.determinize(problem.process());
+        scheduler = FSAs.minimize(FSAs.determinize(problem.scheduler()));
+        process = FSAs.minimize(FSAs.determinize(problem.process()));
         givenInvariant = problem.invariant();
         givenOrder = problem.order();
 

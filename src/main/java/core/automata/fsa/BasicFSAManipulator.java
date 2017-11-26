@@ -56,52 +56,6 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
     }
 
     @Override
-    public <S> FSA<S> determinizeImpl(FSA<S> target)
-    {
-        if (target.isDeterministic()) {
-            return target;
-        }
-
-        final Alphabet<S> alphabet = target.alphabet();
-        final TransitionGraph<State, S> delta = target.transitionGraph();
-        final int capacity = target.states().size() * target.states().size(); // heuristic
-        final Builder<S> builder = builder(capacity, alphabet.size(), alphabet.epsilon());
-        final MutableBiMap<MutableSet<State>, State> stateMapping = new HashBiMap<>(capacity);
-        final Queue<MutableSet<State>> pendingStateSets = new LinkedList<>();
-
-        final MutableSet<State> startStates = delta.epsilonClosureOf(target.startStates()).toSet();
-        final State newStart = States.generate();
-        stateMapping.put(startStates, newStart);
-        builder.addStartState(newStart);
-        pendingStateSets.add(startStates);
-        final SetIterable<S> noEpsilonSymbolSet = alphabet.noEpsilonSet();
-        MutableSet<State> currStateSet;
-        while ((currStateSet = pendingStateSets.poll()) != null) {
-            final State newDept = stateMapping.get(currStateSet);
-            for (S symbol : noEpsilonSymbolSet) {
-                final MutableSet<State> destStates = delta.epsilonClosureOf(currStateSet, symbol).toSet();
-                final State newDest = stateMapping.computeIfAbsent(destStates, __ -> {
-                    pendingStateSets.add(destStates);
-                    final State s = States.generate();
-                    if (destStates.anySatisfy(target::isAcceptState)) {
-                        builder.addAcceptState(s);
-                    }
-                    return s;
-                });
-                builder.addTransition(newDept, newDest, symbol);
-            }
-        }
-
-        return builder.buildWith(alphabet);
-    }
-
-    @Override
-    public <S> FSA<S> minimizeImpl(FSA<S> target)
-    {
-        throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
-    }
-
-    @Override
     public <S> LanguageSubsetChecker.Result<S> checkSubsetImpl(FSA<S> subsumer, FSA<S> includer)
     {
         return LanguageSubsetCheckerSingleton.INSTANCE.test(subsumer, includer);

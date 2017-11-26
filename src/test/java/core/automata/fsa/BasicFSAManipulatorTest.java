@@ -17,6 +17,7 @@ import org.junit.runner.RunWith;
 
 import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.describe;
+import static com.mscharhag.oleaster.runner.StaticRunnerSupport.fdescribe;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.it;
 
 @RunWith(OleasterRunner.class)
@@ -86,6 +87,8 @@ public class BasicFSAManipulatorTest
         final ImmutableList<Object> word2 = Lists.immutable.of(a1, a1);
         final ImmutableList<Object> word3 = Lists.immutable.of(a1, a2, a1);
         final ImmutableList<Object> word4 = Lists.immutable.of(a2, a1, a2);
+        final ImmutableList<Object> word5 = Lists.immutable.of(a1, a2, a2, a2);
+        final ImmutableList<Object> word6 = Lists.immutable.of(a1, a1, a1, a2, a2, a2);
 
         describe("#project", () -> {
 
@@ -130,6 +133,34 @@ public class BasicFSAManipulatorTest
                 expect(dfa.accepts(word3)).toBeFalse();
                 expect(dfa.accepts(word4)).toBeFalse();
                 expect(dfa.isDeterministic()).toBeTrue();
+            });
+
+        });
+
+        fdescribe("#minimize", () -> {
+
+            it("complains on nondeterministic instances", () -> {
+                final FSA<Object> fsa = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
+                expect(() -> manipulator.minimize(fsa)).toThrow(IllegalArgumentException.class);
+            });
+
+            it("meets a minimum expectation", () -> {
+                final FSA<Object> nfa = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word5, word6));
+                final FSA<Object> dfa = manipulator.determinize(nfa);
+                expect(dfa.accepts(word1)).toBeFalse();
+                expect(dfa.accepts(word2)).toBeFalse();
+                expect(dfa.accepts(word3)).toBeFalse();
+                expect(dfa.accepts(word4)).toBeFalse();
+                expect(dfa.accepts(word5)).toBeTrue();
+                expect(dfa.accepts(word6)).toBeTrue();
+                final FSA<Object> min = manipulator.minimize(dfa);
+                expect(min.accepts(word1)).toBeFalse();
+                expect(min.accepts(word2)).toBeFalse();
+                expect(min.accepts(word3)).toBeFalse();
+                expect(min.accepts(word4)).toBeFalse();
+                expect(min.accepts(word5)).toBeTrue();
+                expect(min.accepts(word6)).toBeTrue();
+                expect(min.states().size()).toBeSmallerThan(dfa.states().size());
             });
 
         });
