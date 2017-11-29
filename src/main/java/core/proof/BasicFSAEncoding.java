@@ -4,7 +4,7 @@ import api.automata.*;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.proof.FSAEncoding;
-import api.proof.SatSolver;
+import api.common.sat.SatSolver;
 import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;

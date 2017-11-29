@@ -1,7 +1,7 @@
-package core.proof;
+package core.common.sat;
 
-import api.proof.ContradictionException;
-import api.proof.SatSolver;
+import api.common.sat.ContradictionException;
+import api.common.sat.SatSolver;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntSets;

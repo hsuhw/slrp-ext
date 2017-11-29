@@ -6,6 +6,7 @@ import api.automata.Alphabets;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.automata.fsa.LanguageSubsetChecker;
+import api.common.sat.SatSolver;
 import api.proof.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

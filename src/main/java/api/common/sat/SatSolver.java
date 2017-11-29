@@ -1,4 +1,4 @@
-package api.proof;
+package api.common.sat;
 
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.list.primitive.MutableIntList;

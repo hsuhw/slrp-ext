@@ -1,4 +1,4 @@
-package api.proof;
+package api.common.sat;
 
 public class ContradictionException extends RuntimeException
 {

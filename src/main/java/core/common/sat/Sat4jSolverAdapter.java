@@ -1,8 +1,8 @@
-package core.proof;
+package core.common.sat;
 
-import api.proof.ContradictionException;
-import api.proof.SatSolver;
-import api.proof.TimeoutException;
+import api.common.sat.ContradictionException;
+import api.common.sat.SatSolver;
+import api.common.sat.TimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
