@@ -1,20 +1,27 @@
 package core.automata;
 
 import api.automata.TransitionGraph;
+import api.common.Digraph;
+import api.util.Values;
 import core.util.Assertions;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.api.set.SetIterable;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.eclipse.collections.impl.tuple.Tuples;
 
 import static api.automata.TransitionGraph.Builder;
+import static api.util.Values.Direction.BACKWARD;
+import static api.util.Values.Direction.FORWARD;
 import static core.util.Parameters.NONDETERMINISTIC_TRANSITION_CAPACITY;
 import static core.util.Parameters.estimateExtendedSize;
 
-public class MapMapSetGraphBuilder<N, A> implements TransitionGraph.Builder<N, A>
+public class MapMapSetGraphBuilder<N, A> implements TransitionGraph.Builder<N, A>, Digraph<N, A>
 {
     private final int arcCapacity;
     private final MutableMap<N, MutableMap<A, MutableSet<N>>> forwardGraph;
@@ -65,7 +72,7 @@ public class MapMapSetGraphBuilder<N, A> implements TransitionGraph.Builder<N, A
         epsilonLabel = graph.epsilonLabel();
     }
 
-    private <N, A> MutableMap<A, MutableSet<N>> newArcRecord()
+    private MutableMap<A, MutableSet<N>> newArcRecord()
     {
         return UnifiedMap.newMap(arcCapacity);
     }
@@ -143,6 +150,142 @@ public class MapMapSetGraphBuilder<N, A> implements TransitionGraph.Builder<N, A
         }
 
         return this;
+    }
+
+    @Override
+    public Digraph<N, A> asGraph()
+    {
+        return this;
+    }
+
+    @Override
+    public ImmutableSet<N> referredNodes()
+    {
+        return Sets.union(forwardGraph.keysView().toSet(), backwardGraph.keysView().toSet()).toImmutable();
+    }
+
+    @Override
+    public ImmutableSet<A> referredArcLabels()
+    {
+        return forwardGraph.flatCollect(MutableMap::keysView).toSet().toImmutable();
+    }
+
+    @Override
+    public SetIterable<Pair<A, N>> arcsFrom(N node)
+    {
+        if (!forwardGraph.containsKey(node)) {
+            return Sets.immutable.empty();
+        }
+
+        return forwardGraph.get(node).keyValuesView().flatCollect(each -> {
+            final A label = each.getOne();
+            final MutableSet<N> dests = each.getTwo();
+            return dests.collect(dest -> Tuples.pair(label, dest));
+        }).toSet(); // one-off
+    }
+
+    private SetIterable<A> arcLabelsFrom(N node, Values.Direction dir)
+    {
+        final MutableMap<N, MutableMap<A, MutableSet<N>>> graph = dir == FORWARD ? forwardGraph : backwardGraph;
+
+        return graph.containsKey(node) ? graph.get(node).keysView().toSet() // one-off
+                                       : Sets.immutable.empty();
+    }
+
+    @Override
+    public SetIterable<A> arcLabelsFrom(N node)
+    {
+        return arcLabelsFrom(node, FORWARD);
+    }
+
+    private boolean arcLabeledFrom(N node, A arcLabel, Values.Direction dir)
+    {
+        final MutableMap<N, MutableMap<A, MutableSet<N>>> graph = dir == FORWARD ? forwardGraph : backwardGraph;
+
+        return graph.containsKey(node) && graph.get(node).containsKey(arcLabel);
+    }
+
+    @Override
+    public boolean arcLabeledFrom(N node, A arcLabel)
+    {
+        return arcLabeledFrom(node, arcLabel, FORWARD);
+    }
+
+    @Override
+    public SetIterable<Pair<N, A>> arcsTo(N node)
+    {
+        if (!backwardGraph.containsKey(node)) {
+            return Sets.immutable.empty();
+        }
+
+        return backwardGraph.get(node).keyValuesView().flatCollect(each -> {
+            final A label = each.getOne();
+            final MutableSet<N> dests = each.getTwo();
+            return dests.collect(dest -> Tuples.pair(dest, label));
+        }).toSet(); // one-off
+    }
+
+    @Override
+    public SetIterable<A> arcLabelsTo(N node)
+    {
+        return arcLabelsFrom(node, BACKWARD);
+    }
+
+    @Override
+    public boolean arcLabeledTo(N node, A arcLabel)
+    {
+        return arcLabeledFrom(node, arcLabel, BACKWARD);
+    }
+
+    @Override
+    public SetIterable<A> arcLabelsOn(N from, N to)
+    {
+        if (!forwardGraph.containsKey(from)) {
+            return Sets.immutable.empty();
+        }
+
+        return forwardGraph.get(from).select((label, dests) -> dests.contains(to)).keysView().toSet(); // one-off
+    }
+
+    private SetIterable<N> directSuccessorsOf(N node, Values.Direction dir)
+    {
+        final MutableMap<N, MutableMap<A, MutableSet<N>>> graph = dir == FORWARD ? forwardGraph : backwardGraph;
+
+        return graph.containsKey(node) ? graph.get(node).flatCollect(x -> x).toSet() // one-off
+                                       : Sets.immutable.empty();
+    }
+
+    @Override
+    public SetIterable<N> directSuccessorsOf(N node)
+    {
+        return directSuccessorsOf(node, FORWARD);
+    }
+
+    private ImmutableSet<N> directSuccessorsOf(N node, A arcLabel, Values.Direction dir)
+    {
+        final MutableMap<N, MutableMap<A, MutableSet<N>>> graph = dir == FORWARD ? forwardGraph : backwardGraph;
+
+        return graph.containsKey(node) && graph.get(node).containsKey(arcLabel) //
+               ? graph.get(node).get(arcLabel).toImmutable() // defense required
+               : Sets.immutable.empty();
+    }
+
+    @Override
+    public ImmutableSet<N> directSuccessorsOf(N node, A arcLabel)
+    {
+        return directSuccessorsOf(node, arcLabel, FORWARD);
+    }
+
+    @Override
+    public SetIterable<N> directPredecessorsOf(N node)
+    {
+        return directSuccessorsOf(node, BACKWARD);
+    }
+
+    @Override
+    public ImmutableSet<N> directPredecessorsOf(N node, A arcLabel)
+    {
+        return directSuccessorsOf(node, arcLabel, BACKWARD);
     }
 
     @Override

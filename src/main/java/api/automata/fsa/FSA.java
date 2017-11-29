@@ -32,7 +32,7 @@ public interface FSA<S> extends Automaton<S>
         final TransitionGraph<State, S> delta = transitionGraph();
         final ImmutableSet<S> complete = alphabet().noEpsilonSet();
 
-        return states().select(state -> !delta.enabledArcsOn(state).containsAllIterable(complete));
+        return states().select(state -> !delta.arcLabelsFrom(state).containsAllIterable(complete));
     }
 
     default boolean isComplete()
@@ -53,7 +53,7 @@ public interface FSA<S> extends Automaton<S>
             if (symbol.equals(epsilon)) {
                 continue;
             }
-            if ((nextState = delta.successorsOf(currState, symbol)).isEmpty()) {
+            if ((nextState = delta.directSuccessorsOf(currState, symbol)).isEmpty()) {
                 return false;
             }
             currState = nextState.getOnly();
@@ -115,8 +115,8 @@ public interface FSA<S> extends Automaton<S>
                 return word.reverseThis().toImmutable();
             }
             final State state = currState; // effectively finalized for the lambda expression
-            for (S symbol : delta.enabledArcsOn(currState)) {
-                touchedBy.computeIfAbsent(delta.successorOf(state, symbol), touchedState -> {
+            for (S symbol : delta.arcLabelsFrom(currState)) {
+                touchedBy.computeIfAbsent(delta.directSuccessorOf(state, symbol), touchedState -> {
                     pendingChecks.add(touchedState);
                     return Tuples.pair(state, symbol);
                 });

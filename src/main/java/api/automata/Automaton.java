@@ -71,12 +71,12 @@ public interface Automaton<S>
 
     default ImmutableSet<State> unreachableStates()
     {
-        return states().newWithoutAll(reachableStatesWith(startStates(), transitionGraph()::successorsOf));
+        return states().newWithoutAll(reachableStatesWith(startStates(), transitionGraph()::directSuccessorsOf));
     }
 
     default ImmutableSet<State> deadEndStates()
     {
-        return states().newWithoutAll(reachableStatesWith(acceptStates(), transitionGraph()::predecessorsOf));
+        return states().newWithoutAll(reachableStatesWith(acceptStates(), transitionGraph()::directPredecessorsOf));
     }
 
     default SetIterable<State> danglingStates()

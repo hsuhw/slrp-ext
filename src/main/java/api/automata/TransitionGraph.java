@@ -1,12 +1,13 @@
 package api.automata;
 
+import api.common.Digraph;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
-public interface TransitionGraph<N, A>
+public interface TransitionGraph<N, A> extends Digraph<N, A>
 {
     int size();
 
@@ -15,50 +16,22 @@ public interface TransitionGraph<N, A>
         return size() == 0;
     }
 
-    ImmutableSet<N> referredNodes();
-
-    ImmutableSet<A> referredArcLabels();
-
     A epsilonLabel();
 
     boolean arcDeterministic();
 
-    SetIterable<A> enabledArcsOn(N node);
-
-    SetIterable<A> enabledArcsOn(N dept, N dest);
-
-    default ImmutableSet<A> nonEpsilonArcsOn(N node)
+    default ImmutableSet<A> nonEpsilonArcLabelsFrom(N node)
     {
-        return enabledArcsOn(node).toSet().toImmutable().newWithout(epsilonLabel());
+        return arcLabelsFrom(node).toSet().toImmutable().newWithout(epsilonLabel());
     }
 
-    boolean hasArc(N node, A arcLabel);
-
-    SetIterable<N> successorsOf(N node);
-
-    ImmutableSet<N> successorsOf(N node, A arcLabel);
-
-    default SetIterable<N> successorsOf(SetIterable<N> nodes, A arcLabel)
-    {
-        return nodes.flatCollect(state -> successorsOf(state, arcLabel)).toSet(); // one-off
-    }
-
-    default N successorOf(N node, A arcLabel)
+    default N directSuccessorOf(N node, A arcLabel)
     {
         if (!arcDeterministic() || arcLabel.equals(epsilonLabel())) {
             throw new UnsupportedOperationException("only available on deterministic instances");
         }
 
-        return successorsOf(node, arcLabel).getOnly();
-    }
-
-    SetIterable<N> predecessorsOf(N node);
-
-    ImmutableSet<N> predecessorsOf(N node, A arcLabel);
-
-    default SetIterable<N> predecessorsOf(SetIterable<N> nodes, A arcLabel)
-    {
-        return nodes.flatCollect(state -> predecessorsOf(state, arcLabel)).toSet(); // one-off
+        return directSuccessorsOf(node, arcLabel).getOnly();
     }
 
     default SetIterable<N> epsilonClosureOf(SetIterable<N> nodes)
@@ -79,12 +52,12 @@ public interface TransitionGraph<N, A>
         MutableSet<N> base = UnifiedSet.newSet(referredNodes().size()); // upper bound
         base.addAllIterable(nodes);
         while (true) {
-            if (!base.addAllIterable(successorsOf(base, epsilonLabel()))) {
+            if (!base.addAllIterable(directSuccessorsOf(base, epsilonLabel()))) {
                 break; // `base` has converged
             }
         }
 
-        return arcLabel.equals(epsilonLabel()) ? base : epsilonClosureOf(successorsOf(base, arcLabel));
+        return arcLabel.equals(epsilonLabel()) ? base : epsilonClosureOf(directSuccessorsOf(base, arcLabel));
     }
 
     @Override
@@ -103,6 +76,8 @@ public interface TransitionGraph<N, A>
         Builder<N, A> removeArc(N from, N to, A arcLabel);
 
         Builder<N, A> removeNode(N node);
+
+        Digraph<N, A> asGraph();
 
         TransitionGraph<N, A> build();
     }

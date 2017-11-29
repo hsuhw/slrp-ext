@@ -118,7 +118,7 @@ public interface FSAManipulator extends AutomatonManipulator
         });
         final TransitionGraph<State, S> delta = target.transitionGraph();
         incomplete.forEach(state -> {
-            completeAlphabet.newWithoutAll(delta.enabledArcsOn(state)).forEach(symbol -> {
+            completeAlphabet.newWithoutAll(delta.arcLabelsFrom(state)).forEach(symbol -> {
                 builder.addTransition(state, deadEndState, symbol);
             });
         });
@@ -131,7 +131,8 @@ public interface FSAManipulator extends AutomatonManipulator
     {
         final S symbol = splitter.getTwo();
         final ImmutableList<State> filter = splitter.getOne();
-        final ImmutableList<State> split1 = part.select(state -> filter.contains(delta.successorOf(state, symbol)));
+        final ImmutableList<State> split1 = part
+            .select(state -> filter.contains(delta.directSuccessorOf(state, symbol)));
         final ImmutableList<State> split2 = part.newWithoutAll(split1);
 
         return split1.size() < split2.size() ? Tuples.twin(split1, split2) : Tuples.twin(split2, split1);
@@ -191,7 +192,7 @@ public interface FSAManipulator extends AutomatonManipulator
                 builder.addAcceptState(state);
             }
             symbols.forEach(symbol -> {
-                final State dest = stateToNewState.get(delta.successorOf(part.getFirst(), symbol));
+                final State dest = stateToNewState.get(delta.directSuccessorOf(part.getFirst(), symbol));
                 builder.addTransition(state, dest, symbol);
             });
         });
@@ -327,8 +328,8 @@ public interface FSAManipulator extends AutomatonManipulator
             final TransitionGraph<State, S> delta = target.transitionGraph();
             R newSymbol;
             for (State dept : target.states()) {
-                for (S symbol : delta.enabledArcsOn(dept)) {
-                    for (State dest : delta.successorsOf(dept, symbol)) {
+                for (S symbol : delta.arcLabelsFrom(dept)) {
+                    for (State dest : delta.directSuccessorsOf(dept, symbol)) {
                         if ((newSymbol = projector.apply(symbol)) != null) {
                             builder.addTransition(dept, dest, newSymbol);
                         }

@@ -6,8 +6,6 @@ import api.automata.fsa.FSAManipulator;
 import api.automata.fsa.FSAs;
 import api.automata.fsa.LanguageSubsetChecker;
 import org.eclipse.collections.api.bimap.MutableBiMap;
-import org.eclipse.collections.api.set.MutableSet;
-import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.bimap.mutable.HashBiMap;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -18,7 +16,6 @@ import java.util.function.BiFunction;
 
 import static api.automata.fsa.FSA.Builder;
 import static api.automata.fsa.FSAs.builder;
-import static api.util.Values.NOT_IMPLEMENTED_YET;
 
 public class BasicFSAManipulator implements FSAManipulator.Decorator
 {
@@ -102,10 +99,10 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
             final State deptP = getState(statePair);
             final State dept1 = statePair.getOne();
             final State dept2 = statePair.getTwo();
-            delta1.successorsOf(dept1, epsilon1).forEach(dest1 -> {
+            delta1.directSuccessorsOf(dept1, epsilon1).forEach(dest1 -> {
                 carrier.addTransition(deptP, getState(dest1, dept2), epsilonP);
             });
-            delta2.successorsOf(dept2, epsilon2).forEach(dest2 -> {
+            delta2.directSuccessorsOf(dept2, epsilon2).forEach(dest2 -> {
                 carrier.addTransition(deptP, getState(dept1, dest2), epsilonP);
             });
         }
@@ -124,14 +121,14 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
                 handleEpsilonTransitions(carrier, currStatePair, epsilonP);
                 final State dept1 = currStatePair.getOne();
                 final State dept2 = currStatePair.getTwo();
-                for (S symbol1 : delta1.nonEpsilonArcsOn(dept1)) {
-                    for (T symbolB : delta2.nonEpsilonArcsOn(dept2)) {
-                        final R symbolP = transitionDecider.apply(symbol1, symbolB);
+                for (S symbol1 : delta1.nonEpsilonArcLabelsFrom(dept1)) {
+                    for (T symbol2 : delta2.nonEpsilonArcLabelsFrom(dept2)) {
+                        final R symbolP = transitionDecider.apply(symbol1, symbol2);
                         if (symbolP == null) {
                             continue;
                         }
-                        delta1.successorsOf(dept1, symbol1).forEach(dest1 -> {
-                            delta2.successorsOf(dept2, symbolB).forEach(dest2 -> {
+                        delta1.directSuccessorsOf(dept1, symbol1).forEach(dest1 -> {
+                            delta2.directSuccessorsOf(dept2, symbol2).forEach(dest2 -> {
                                 carrier.addTransition(deptP, getState(dest1, dest2), symbolP);
                             });
                         });

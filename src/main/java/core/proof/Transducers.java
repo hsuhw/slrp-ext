@@ -55,9 +55,9 @@ public final class Transducers
         final MutableSet<MutableStack<S>> result = UnifiedSet.newSet(resultCapacity);
 
         SetIterable<MutableStack<S>> postfixes;
-        for (U trans : delta.enabledArcsOn(state)) {
+        for (U trans : delta.arcLabelsFrom(state)) {
             if (trans.getTwo().equals(word.get(0))) {
-                for (State dest : delta.successorsOf(state, trans)) {
+                for (State dest : delta.directSuccessorsOf(state, trans)) {
                     postfixes = preImageAt(transducer, dest, word.subList(1, word.size()), capacity);
                     for (MutableStack<S> postfix : postfixes) {
                         postfix.push(trans.getOne());
@@ -91,9 +91,9 @@ public final class Transducers
         final MutableSet<MutableStack<T>> result = UnifiedSet.newSet(resultCapacity);
 
         SetIterable<MutableStack<T>> postfixes;
-        for (U trans : delta.enabledArcsOn(state)) {
+        for (U trans : delta.arcLabelsFrom(state)) {
             if (trans.getOne().equals(word.get(0))) {
-                for (State dest : delta.successorsOf(state, trans)) {
+                for (State dest : delta.directSuccessorsOf(state, trans)) {
                     postfixes = postImageAt(transducer, dest, word.subList(1, word.size()), capacity);
                     for (MutableStack<T> postfix : postfixes) {
                         postfix.push(trans.getTwo());

@@ -497,7 +497,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
                     for (int qj = 0; qj < stateNumber; qj++) {
                         final int takenQjAsNext = stepIndicators[pos + 1].get(qj);
                         final State stateQj = stateDecoder.get(qj);
-                        final SetIterable<S> enabledQiToQjArc = delta.enabledArcsOn(stateQi, stateQj);
+                        final SetIterable<S> enabledQiToQjArc = delta.arcLabelsOn(stateQi, stateQj);
                         for (S disableSymbol : alphabet().set().newWithoutAll(enabledQiToQjArc)) {
                             final int posBeDisableSymbol = possibleSymbol.get(intAlphabet.encode(disableSymbol));
                             solver.addClause(-takenQiAsCurr, -takenQjAsNext, -posBeDisableSymbol);

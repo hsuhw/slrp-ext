@@ -239,8 +239,8 @@ public abstract class AbstractTransitionGraphTest
             describe("#enableArcsOn", () -> {
 
                 it("returns the arcs including epsilon", () -> {
-                    final SetIterable<Object> n1Arcs = graph.enabledArcsOn(n1);
-                    final SetIterable<Object> n2Arcs = graph.enabledArcsOn(n2);
+                    final SetIterable<Object> n1Arcs = graph.arcLabelsFrom(n1);
+                    final SetIterable<Object> n2Arcs = graph.arcLabelsFrom(n2);
                     expect(n1Arcs.size()).toEqual(2);
                     expect(n1Arcs.containsAllArguments(epsilon, label)).toBeTrue();
                     expect(n2Arcs.size()).toEqual(1);
@@ -248,44 +248,44 @@ public abstract class AbstractTransitionGraphTest
                 });
 
                 it("returns empty if it's a dead end", () -> {
-                    expect(graph.enabledArcsOn(n3).isEmpty()).toBeTrue();
+                    expect(graph.arcLabelsFrom(n3).isEmpty()).toBeTrue();
                 });
 
             });
 
-            describe("#nonEpsilonArcsOn", () -> {
+            describe("#nonEpsilonArcLabelsFrom", () -> {
 
                 it("returns the non-epsilon arcs", () -> {
-                    final SetIterable<Object> n1Arcs = graph.nonEpsilonArcsOn(n1);
+                    final SetIterable<Object> n1Arcs = graph.nonEpsilonArcLabelsFrom(n1);
                     expect(n1Arcs.size()).toEqual(1);
                     expect(n1Arcs.contains(label)).toBeTrue();
-                    expect(graph.nonEpsilonArcsOn(n2).isEmpty()).toBeTrue();
+                    expect(graph.nonEpsilonArcLabelsFrom(n2).isEmpty()).toBeTrue();
                 });
 
                 it("returns empty if it's a dead end", () -> {
-                    expect(graph.nonEpsilonArcsOn(n3).isEmpty()).toBeTrue();
+                    expect(graph.nonEpsilonArcLabelsFrom(n3).isEmpty()).toBeTrue();
                 });
 
             });
 
-            describe("#hasArc", () -> {
+            describe("#arcLabeledFrom", () -> {
 
                 it("returns whether an arc exists", () -> {
-                    expect(graph.hasArc(n1, epsilon)).toBeTrue();
-                    expect(graph.hasArc(n1, label)).toBeTrue();
-                    expect(graph.hasArc(n2, epsilon)).toBeTrue();
-                    expect(graph.hasArc(n2, label)).toBeFalse();
-                    expect(graph.hasArc(n3, epsilon)).toBeFalse();
-                    expect(graph.hasArc(n3, label)).toBeFalse();
+                    expect(graph.arcLabeledFrom(n1, epsilon)).toBeTrue();
+                    expect(graph.arcLabeledFrom(n1, label)).toBeTrue();
+                    expect(graph.arcLabeledFrom(n2, epsilon)).toBeTrue();
+                    expect(graph.arcLabeledFrom(n2, label)).toBeFalse();
+                    expect(graph.arcLabeledFrom(n3, epsilon)).toBeFalse();
+                    expect(graph.arcLabeledFrom(n3, label)).toBeFalse();
                 });
 
             });
 
-            describe("#successorsOf(node)", () -> {
+            describe("#directSuccessorsOf(node)", () -> {
 
                 it("returns the successors", () -> {
-                    final SetIterable<Object> succs1 = graph.successorsOf(n1);
-                    final SetIterable<Object> succs2 = graph.successorsOf(n2);
+                    final SetIterable<Object> succs1 = graph.directSuccessorsOf(n1);
+                    final SetIterable<Object> succs2 = graph.directSuccessorsOf(n2);
                     expect(succs1.size()).toEqual(3);
                     expect(succs1.containsAllArguments(n1, n2, n3)).toBeTrue();
                     expect(succs2.size()).toEqual(1);
@@ -293,16 +293,16 @@ public abstract class AbstractTransitionGraphTest
                 });
 
                 it("returns empty if it's a dead end", () -> {
-                    expect(graph.successorsOf(n3).isEmpty()).toBeTrue();
+                    expect(graph.directSuccessorsOf(n3).isEmpty()).toBeTrue();
                 });
 
             });
 
-            describe("#successorsOf(node, label)", () -> {
+            describe("#directSuccessorsOf(node, label)", () -> {
 
                 it("returns the successors", () -> {
-                    final ImmutableSet<Object> succs1 = graph.successorsOf(n1, label);
-                    final ImmutableSet<Object> succs2 = graph.successorsOf(n2, epsilon);
+                    final ImmutableSet<Object> succs1 = graph.directSuccessorsOf(n1, label);
+                    final ImmutableSet<Object> succs2 = graph.directSuccessorsOf(n2, epsilon);
                     expect(succs1.size()).toEqual(2);
                     expect(succs1.containsAllArguments(n1, n2)).toBeTrue();
                     expect(succs2.size()).toEqual(1);
@@ -310,19 +310,19 @@ public abstract class AbstractTransitionGraphTest
                 });
 
                 it("returns empty if it's a dead end", () -> {
-                    expect(graph.successorsOf(n3, epsilon).isEmpty()).toBeTrue();
-                    expect(graph.successorsOf(n3, label).isEmpty()).toBeTrue();
+                    expect(graph.directSuccessorsOf(n3, epsilon).isEmpty()).toBeTrue();
+                    expect(graph.directSuccessorsOf(n3, label).isEmpty()).toBeTrue();
                 });
 
             });
 
-            describe("#successorsOf(nodes, label)", () -> {
+            describe("#directSuccessorsOf(nodes, label)", () -> {
 
                 it("returns the successors", () -> {
                     final SetIterable<Object> set1 = Sets.immutable.of(n1, n3);
-                    final SetIterable<Object> succs1 = graph.successorsOf(set1, label);
+                    final SetIterable<Object> succs1 = graph.directSuccessorsOf(set1, label);
                     final SetIterable<Object> set2 = Sets.immutable.of(n1, n2);
-                    final SetIterable<Object> succs2 = graph.successorsOf(set2, epsilon);
+                    final SetIterable<Object> succs2 = graph.directSuccessorsOf(set2, epsilon);
                     expect(succs1.size()).toEqual(2);
                     expect(succs1.containsAllArguments(n1, n2)).toBeTrue();
                     expect(succs2.size()).toEqual(2);
@@ -331,31 +331,31 @@ public abstract class AbstractTransitionGraphTest
 
                 it("returns empty if it's a dead end singleton", () -> {
                     final ImmutableSet<Object> set = Sets.immutable.of(n3);
-                    expect(graph.successorsOf(set, epsilon).isEmpty()).toBeTrue();
-                    expect(graph.successorsOf(set, label).isEmpty()).toBeTrue();
+                    expect(graph.directSuccessorsOf(set, epsilon).isEmpty()).toBeTrue();
+                    expect(graph.directSuccessorsOf(set, label).isEmpty()).toBeTrue();
                 });
 
                 it("returns empty if an empty is given", () -> {
                     final ImmutableSet<Object> set = Sets.immutable.empty();
-                    expect(graph.successorsOf(set, epsilon).isEmpty()).toBeTrue();
-                    expect(graph.successorsOf(set, label).isEmpty()).toBeTrue();
+                    expect(graph.directSuccessorsOf(set, epsilon).isEmpty()).toBeTrue();
+                    expect(graph.directSuccessorsOf(set, label).isEmpty()).toBeTrue();
                 });
 
             });
 
-            describe("#successorOf(node, label)", () -> {
+            describe("#directSuccessorOf(node, label)", () -> {
 
                 it("complains", () -> {
-                    expect(() -> graph.successorOf(n1, label)).toThrow(UnsupportedOperationException.class);
+                    expect(() -> graph.directSuccessorOf(n1, label)).toThrow(UnsupportedOperationException.class);
                 });
 
             });
 
-            describe("#predecessorsOf(node)", () -> {
+            describe("#directPredecessorsOf(node)", () -> {
 
                 it("returns the predecessors", () -> {
-                    final SetIterable<Object> preds1 = graph.predecessorsOf(n1);
-                    final SetIterable<Object> preds2 = graph.predecessorsOf(n2);
+                    final SetIterable<Object> preds1 = graph.directPredecessorsOf(n1);
+                    final SetIterable<Object> preds2 = graph.directPredecessorsOf(n2);
                     expect(preds1.size()).toEqual(3);
                     expect(preds1.containsAllArguments(n0, n1, n2)).toBeTrue();
                     expect(preds2.size()).toEqual(1);
@@ -363,18 +363,18 @@ public abstract class AbstractTransitionGraphTest
                 });
 
                 it("returns empty if it's a start node", () -> {
-                    expect(graph.predecessorsOf(n0).isEmpty()).toBeTrue();
+                    expect(graph.directPredecessorsOf(n0).isEmpty()).toBeTrue();
                 });
 
             });
 
-            describe("#predecessorsOf(node, label)", () -> {
+            describe("#directPredecessorsOf(node, label)", () -> {
 
                 it("returns the predecessors", () -> {
-                    final ImmutableSet<Object> n1preds1 = graph.predecessorsOf(n1, epsilon);
-                    final ImmutableSet<Object> n1preds2 = graph.predecessorsOf(n1, label);
-                    final ImmutableSet<Object> n2preds1 = graph.predecessorsOf(n2, epsilon);
-                    final ImmutableSet<Object> n2preds2 = graph.predecessorsOf(n2, label);
+                    final ImmutableSet<Object> n1preds1 = graph.directPredecessorsOf(n1, epsilon);
+                    final ImmutableSet<Object> n1preds2 = graph.directPredecessorsOf(n1, label);
+                    final ImmutableSet<Object> n2preds1 = graph.directPredecessorsOf(n2, epsilon);
+                    final ImmutableSet<Object> n2preds2 = graph.directPredecessorsOf(n2, label);
                     expect(n1preds1.size()).toEqual(1);
                     expect(n1preds1.contains(n2)).toBeTrue();
                     expect(n1preds2.size()).toEqual(2);
@@ -385,19 +385,19 @@ public abstract class AbstractTransitionGraphTest
                 });
 
                 it("returns empty if it's a start node", () -> {
-                    expect(graph.predecessorsOf(n0, epsilon).isEmpty()).toBeTrue();
-                    expect(graph.predecessorsOf(n0, label).isEmpty()).toBeTrue();
+                    expect(graph.directPredecessorsOf(n0, epsilon).isEmpty()).toBeTrue();
+                    expect(graph.directPredecessorsOf(n0, label).isEmpty()).toBeTrue();
                 });
 
             });
 
-            describe("#predecessorsOf(nodes, label)", () -> {
+            describe("#directPredecessorsOf(nodes, label)", () -> {
 
                 it("returns the predecessors", () -> {
                     final SetIterable<Object> set1 = Sets.immutable.of(n1, n3);
-                    final SetIterable<Object> preds1 = graph.predecessorsOf(set1, label);
+                    final SetIterable<Object> preds1 = graph.directPredecessorsOf(set1, label);
                     final SetIterable<Object> set2 = Sets.immutable.of(n1, n2);
-                    final SetIterable<Object> preds2 = graph.predecessorsOf(set2, epsilon);
+                    final SetIterable<Object> preds2 = graph.directPredecessorsOf(set2, epsilon);
                     expect(preds1.size()).toEqual(2);
                     expect(preds1.containsAllArguments(n0, n1)).toBeTrue();
                     expect(preds2.size()).toEqual(1);
@@ -406,14 +406,14 @@ public abstract class AbstractTransitionGraphTest
 
                 it("returns empty if it's a dead end singleton", () -> {
                     final ImmutableSet<Object> set = Sets.immutable.of(n0);
-                    expect(graph.predecessorsOf(set, epsilon).isEmpty()).toBeTrue();
-                    expect(graph.predecessorsOf(set, label).isEmpty()).toBeTrue();
+                    expect(graph.directPredecessorsOf(set, epsilon).isEmpty()).toBeTrue();
+                    expect(graph.directPredecessorsOf(set, label).isEmpty()).toBeTrue();
                 });
 
                 it("returns empty if an empty is given", () -> {
                     final ImmutableSet<Object> set = Sets.immutable.empty();
-                    expect(graph.predecessorsOf(set, epsilon).isEmpty()).toBeTrue();
-                    expect(graph.predecessorsOf(set, label).isEmpty()).toBeTrue();
+                    expect(graph.directPredecessorsOf(set, epsilon).isEmpty()).toBeTrue();
+                    expect(graph.directPredecessorsOf(set, label).isEmpty()).toBeTrue();
                 });
 
             });
