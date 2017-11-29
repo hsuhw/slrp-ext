@@ -73,7 +73,7 @@ public abstract class AbstractFSAEncodingTest
 
         });
 
-        fdescribe("No-dangling", () -> {
+        describe("No-dangling", () -> {
 
             describe("set up ahead", () -> {
 

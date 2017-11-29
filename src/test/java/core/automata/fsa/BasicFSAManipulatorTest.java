@@ -17,7 +17,6 @@ import org.junit.runner.RunWith;
 
 import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.describe;
-import static com.mscharhag.oleaster.runner.StaticRunnerSupport.fdescribe;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.it;
 
 @RunWith(OleasterRunner.class)
@@ -137,7 +136,7 @@ public class BasicFSAManipulatorTest
 
         });
 
-        fdescribe("#minimize", () -> {
+        describe("#minimize", () -> {
 
             it("complains on nondeterministic instances", () -> {
                 final FSA<Object> fsa = FSAs.thatAcceptsOnly(alphabet, Sets.immutable.of(word1, word2));
