@@ -23,7 +23,7 @@ public class SetAlphabetBuilder<S> implements Alphabet.Builder<S>
     public SetAlphabetBuilder(SetAlphabet<S> alphabet)
     {
         symbols = UnifiedSet.newSet(estimateExtendedSize(alphabet.size()));
-        symbols.addAllIterable(alphabet.set());
+        symbols.addAllIterable(alphabet.asSet());
         epsilon = alphabet.epsilon();
     }
 

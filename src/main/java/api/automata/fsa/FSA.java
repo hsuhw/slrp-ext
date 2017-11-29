@@ -85,7 +85,7 @@ public interface FSA<S> extends Automaton<S>
 
     default boolean accepts(ImmutableList<S> word)
     {
-        return alphabet().set().containsAllIterable(word) && // valid word given
+        return alphabet().asSet().containsAllIterable(word) && // valid word given
             (isDeterministic() ? acceptsDeterminedly(word) : acceptsNondeterminedly(word));
     }
 

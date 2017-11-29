@@ -34,7 +34,7 @@ public abstract class AbstractAlphabetTest
                 final Alphabet<Object> alphabet = Alphabets.builder(3, e).add(a1).add(a2).build();
                 final Alphabet<Twin<Object>> product = Alphabets.product(alphabet);
                 expect(product.size()).toEqual(5);
-                expect(product.set().containsAllArguments(p1, p2, p3, p4)).toBeTrue();
+                expect(product.asSet().containsAllArguments(p1, p2, p3, p4)).toBeTrue();
             });
 
         });

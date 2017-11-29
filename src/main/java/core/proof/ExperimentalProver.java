@@ -64,7 +64,7 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
     {
         final AlphabetIntEncoder<S> invSymbolEncoding = AlphabetIntEncoders.create(allAlphabet);
         final AlphabetIntEncoder<Twin<S>> ordSymbolEncoding = AlphabetIntEncoders.create(orderAlphabet);
-        final ImmutableSet<Twin<S>> ordReflexiveSymbols = steadyAlphabet.set().collect(s -> Tuples.twin(s, s));
+        final ImmutableSet<Twin<S>> ordReflexiveSymbols = steadyAlphabet.asSet().collect(s -> Tuples.twin(s, s));
 
         // having empty string excluded makes searching from 0 or 1 meaningless
         invariantSizeBegin = invariantSizeBegin < 2 ? 2 : invariantSizeBegin;

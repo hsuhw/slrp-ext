@@ -206,7 +206,7 @@ public class MapMapSetFSABuilder<S> implements FSA.Builder<S>
     @Override
     public FSA<S> buildWith(Alphabet<S> override)
     {
-        if (!override.set().containsAllIterable(alphabetBuilder.addedSymbols())) {
+        if (!override.asSet().containsAllIterable(alphabetBuilder.addedSymbols())) {
             throw new IllegalArgumentException("given alphabet does not contain all the symbols");
         }
 

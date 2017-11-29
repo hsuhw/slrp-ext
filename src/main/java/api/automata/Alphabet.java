@@ -16,7 +16,7 @@ public interface Alphabet<S>
 
     S epsilon();
 
-    ImmutableSet<S> set();
+    ImmutableSet<S> asSet();
 
     ImmutableSet<S> noEpsilonSet();
 

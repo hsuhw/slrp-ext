@@ -43,7 +43,7 @@ public class SetAlphabet<S> implements Alphabet<S>
     }
 
     @Override
-    public ImmutableSet<S> set()
+    public ImmutableSet<S> asSet()
     {
         return symbols;
     }

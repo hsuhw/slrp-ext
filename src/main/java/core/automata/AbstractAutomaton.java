@@ -37,7 +37,7 @@ public abstract class AbstractAutomaton<S> implements Automaton<S>
     {
         final boolean validStartStates = states.containsAllIterable(startStates);
         final boolean validAcceptStates = states.containsAllIterable(acceptStates);
-        final boolean validTransSymbols = sigma.set().containsAllIterable(transitionGraph.referredArcLabels());
+        final boolean validTransSymbols = sigma.asSet().containsAllIterable(transitionGraph.referredArcLabels());
         final boolean validTransStates = states.containsAllIterable(transitionGraph.referredNodes());
         final boolean validTransGraph = validTransSymbols && validTransStates;
         final boolean atLeastOneStartState = startStates.size() > 0;
