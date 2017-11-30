@@ -20,7 +20,6 @@ import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static api.automata.AutomatonManipulator.selectFrom;
@@ -57,7 +56,11 @@ public interface FSAManipulator extends AutomatonManipulator
 
     @Override
     <S, T, R> FSA<R> product(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
-                             BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer);
+                             SymbolDecider<S, T, R> symbolDecider, Finalizer<R> finalizer);
+
+    @Override
+    <S, T, R> FSA<R> product(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet, StepFilter<S, T, R> stepFilter,
+                             Finalizer<R> finalizer);
 
     default <S> FSA<S> determinize(FSA<S> target)
     {
@@ -349,20 +352,33 @@ public interface FSAManipulator extends AutomatonManipulator
         }
 
         default <S, T, R> FSA<R> productImpl(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
-                                             BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer)
+                                             SymbolDecider<S, T, R> decider, Finalizer<R> finalizer)
         {
             return null;
         }
 
         @Override
         default <S, T, R> FSA<R> product(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
-                                         BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer)
+                                         SymbolDecider<S, T, R> symbolDecider, Finalizer<R> finalizer)
         {
-            final FSA<R> delegated = productImpl(one, two, alphabet, transitionDecider, finalizer);
+            final FSA<R> delegated = productImpl(one, two, alphabet, symbolDecider, finalizer);
 
-            return delegated != null
-                   ? delegated
-                   : decoratee().product(one, two, alphabet, transitionDecider, finalizer);
+            return delegated != null ? delegated : decoratee().product(one, two, alphabet, symbolDecider, finalizer);
+        }
+
+        default <S, T, R> FSA<R> productImpl(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
+                                             StepFilter<S, T, R> stepFilter, Finalizer<R> finalizer)
+        {
+            return null;
+        }
+
+        @Override
+        default <S, T, R> FSA<R> product(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
+                                         StepFilter<S, T, R> stepFilter, Finalizer<R> finalizer)
+        {
+            final FSA<R> delegated = productImpl(one, two, alphabet, stepFilter, finalizer);
+
+            return delegated != null ? delegated : decoratee().product(one, two, alphabet, stepFilter, finalizer);
         }
 
         default <S> FSA<S> determinizeImpl(FSA<S> target)

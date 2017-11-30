@@ -9,10 +9,9 @@ import org.eclipse.collections.impl.tuple.Tuples;
 import java.lang.ref.SoftReference;
 import java.util.ServiceLoader;
 import java.util.WeakHashMap;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
-import static api.automata.AutomatonManipulator.Finalizer;
+import static api.automata.AutomatonManipulator.*;
 import static api.automata.fsa.FSA.Builder;
 import static api.automata.fsa.FSA.Provider;
 
@@ -101,7 +100,13 @@ public final class FSAs
     }
 
     public static <S, T, R> FSA<R> product(FSA<S> one, FSA<T> two, Alphabet<R> alphabet,
-                                           BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer)
+                                           SymbolDecider<S, T, R> transitionDecider, Finalizer<R> finalizer)
+    {
+        return manipulator().product(one, two, alphabet, transitionDecider, finalizer);
+    }
+
+    public static <S, T, R> FSA<R> product(FSA<S> one, FSA<T> two, Alphabet<R> alphabet,
+                                           StepFilter<S, T, R> transitionDecider, Finalizer<R> finalizer)
     {
         return manipulator().product(one, two, alphabet, transitionDecider, finalizer);
     }

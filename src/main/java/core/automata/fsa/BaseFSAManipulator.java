@@ -6,7 +6,6 @@ import api.automata.fsa.FSA;
 import api.automata.fsa.FSAManipulator;
 import api.automata.fsa.LanguageSubsetChecker;
 
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 import static api.util.Values.NO_MATCHED_IMPLEMENTATION_FOUND;
@@ -39,7 +38,14 @@ public final class BaseFSAManipulator implements FSAManipulator
 
     @Override
     public <S, T, R> FSA<R> product(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
-                                    BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer)
+                                    SymbolDecider<S, T, R> transitionDecider, Finalizer<R> finalizer)
+    {
+        throw new UnsupportedOperationException(NO_MATCHED_IMPLEMENTATION_FOUND);
+    }
+
+    @Override
+    public <S, T, R> FSA<R> product(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
+                                    StepFilter<S, T, R> stepFilter, Finalizer<R> finalizer)
     {
         throw new UnsupportedOperationException(NO_MATCHED_IMPLEMENTATION_FOUND);
     }

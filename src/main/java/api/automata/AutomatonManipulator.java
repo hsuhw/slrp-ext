@@ -7,7 +7,6 @@ import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -37,7 +36,28 @@ public interface AutomatonManipulator
     <S, R> Automaton<R> project(Automaton<S> target, Alphabet<R> alphabet, Function<S, R> projector);
 
     <S, T, R> Automaton<R> product(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
-                                   BiFunction<S, T, R> transitionDecider, Finalizer<R> finalizer);
+                                   SymbolDecider<S, T, R> symbolDecider, Finalizer<R> finalizer);
+
+    <S, T, R> Automaton<R> product(Automaton<S> one, Automaton<T> two, Alphabet<R> alphabet,
+                                   StepFilter<S, T, R> stepFilter, Finalizer<R> finalizer);
+
+    @FunctionalInterface
+    interface SymbolDecider<S, T, R>
+    {
+        R apply(S symbol1, T symbol2);
+    }
+
+    @FunctionalInterface
+    interface StepFilter<S, T, R>
+    {
+        R apply(Twin<State> depts, S symbol1, T symbol2);
+    }
+
+    @FunctionalInterface
+    interface StepDecider<S, T, R>
+    {
+        R apply(Twin<State> depts, Twin<State> dests, S symbol1, T symbol2);
+    }
 
     @FunctionalInterface
     interface Finalizer<S>
