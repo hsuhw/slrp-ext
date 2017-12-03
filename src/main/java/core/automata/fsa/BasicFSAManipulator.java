@@ -175,6 +175,7 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
                 handleEpsilonTransitions(currStatePair);
                 final State dept1 = currStatePair.getOne();
                 final State dept2 = currStatePair.getTwo();
+                stepFilter.apply(currStatePair, epsilon1, epsilon2); // dummy visiting
                 for (S symbol1 : delta1.nonEpsilonArcLabelsFrom(dept1)) {
                     for (T symbol2 : delta2.nonEpsilonArcLabelsFrom(dept2)) {
                         final R symbolP = stepFilter.apply(currStatePair, symbol1, symbol2);
@@ -201,6 +202,6 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
 
     private static final class LanguageSubsetCheckerSingleton
     {
-        private static final LanguageSubsetChecker INSTANCE = new BasicLanguageSubsetChecker();
+        private static final LanguageSubsetChecker INSTANCE = new LightLanguageSubsetChecker();
     }
 }

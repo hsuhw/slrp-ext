@@ -26,14 +26,9 @@ public interface BehaviorEnclosureChecker
 
     interface Counterexample<S>
     {
-        FSA<S> sourceImage();
-
         ImmutableSet<ImmutableList<S>> causes();
 
-        default ImmutableList<S> get()
-        {
-            return sourceImage().enumerateOneShortest();
-        }
+        ImmutableList<S> get();
 
         @Override
         String toString();

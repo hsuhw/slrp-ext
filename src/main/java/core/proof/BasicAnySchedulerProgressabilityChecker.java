@@ -4,7 +4,6 @@ import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.automata.fsa.LanguageSubsetChecker;
 import api.proof.AnySchedulerProgressabilityChecker;
-import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -33,9 +32,8 @@ public class BasicAnySchedulerProgressabilityChecker implements AnySchedulerProg
         if (alwaysSmallerAvail.passed()) {
             return new Result<>(true, null);
         }
-        final FSA<Twin<S>> witnessImage = alwaysSmallerAvail.counterexample().sourceImage();
 
-        return new Result<>(false, new Counterexample<>(witnessImage));
+        return new Result<>(false, new Counterexample<>(alwaysSmallerAvail.counterexample().get()));
     }
 
     private class Result<S> implements AnySchedulerProgressabilityChecker.Result<S>
@@ -70,28 +68,16 @@ public class BasicAnySchedulerProgressabilityChecker implements AnySchedulerProg
 
     private class Counterexample<S> implements AnySchedulerProgressabilityChecker.Counterexample<S>
     {
-        private final FSA<Twin<S>> sourceImage;
         private ImmutableList<Twin<S>> instance;
 
-        Counterexample(FSA<Twin<S>> source)
+        Counterexample(ImmutableList<Twin<S>> instance)
         {
-            sourceImage = source;
-        }
-
-        @Override
-        public FSA<Twin<S>> sourceImage()
-        {
-            return sourceImage;
+            this.instance = instance;
         }
 
         @Override
         public ImmutableList<Twin<S>> get()
         {
-            if (instance == null) {
-                instance = AnySchedulerProgressabilityChecker.Counterexample.super.get();
-                Assertions.referenceNotNull(instance); // a counterexample will always have a witness
-            }
-
             return instance;
         }
 

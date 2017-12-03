@@ -4,7 +4,6 @@ import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.automata.fsa.LanguageSubsetChecker;
 import api.proof.FairnessProgressabilityChecker;
-import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.tuple.Twin;
@@ -25,9 +24,8 @@ public class BasicFairnessProgressabilityChecker implements FairnessProgressabil
         if (nonfinalSmallerAvail.passed()) {
             return new Result<>(true, null);
         }
-        final FSA<S> witnessImage = nonfinalSmallerAvail.counterexample().sourceImage();
 
-        return new Result<>(false, new Counterexample<>(behavior, witnessImage));
+        return new Result<>(false, new Counterexample<>(behavior, nonfinalSmallerAvail.counterexample().get()));
     }
 
     private class Result<S> implements FairnessProgressabilityChecker.Result<S>
@@ -62,21 +60,14 @@ public class BasicFairnessProgressabilityChecker implements FairnessProgressabil
 
     private class Counterexample<S> implements FairnessProgressabilityChecker.Counterexample<S>
     {
-        private final FSA<Twin<S>> behavior;
-        private final FSA<S> sourceImage;
-        private ImmutableSet<ImmutableList<S>> causes;
         private ImmutableList<S> instance;
+        private final FSA<Twin<S>> behavior;
+        private ImmutableSet<ImmutableList<S>> causes;
 
-        Counterexample(FSA<Twin<S>> behavior, FSA<S> source)
+        Counterexample(FSA<Twin<S>> behavior, ImmutableList<S> instance)
         {
             this.behavior = behavior;
-            sourceImage = source;
-        }
-
-        @Override
-        public FSA<S> sourceImage()
-        {
-            return sourceImage;
+            this.instance = instance;
         }
 
         @Override
@@ -92,11 +83,6 @@ public class BasicFairnessProgressabilityChecker implements FairnessProgressabil
         @Override
         public ImmutableList<S> get()
         {
-            if (instance == null) {
-                instance = FairnessProgressabilityChecker.Counterexample.super.get();
-                Assertions.referenceNotNull(instance); // a counterexample will always have a witness
-            }
-
             return instance;
         }
 

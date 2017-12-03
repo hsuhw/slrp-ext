@@ -4,7 +4,6 @@ import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.automata.fsa.LanguageSubsetChecker;
 import api.proof.BehaviorEnclosureChecker;
-import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.tuple.Twin;
@@ -23,9 +22,8 @@ public class BasicBehaviorEnclosureChecker implements BehaviorEnclosureChecker
         if (postBehaviorEnclosed.passed()) {
             return new Result<>(true, null);
         }
-        final FSA<S> witnessImage = postBehaviorEnclosed.counterexample().sourceImage();
 
-        return new Result<>(false, new Counterexample<>(behavior, witnessImage));
+        return new Result<>(false, new Counterexample<>(behavior, postBehaviorEnclosed.counterexample().get()));
     }
 
     private class Result<S> implements BehaviorEnclosureChecker.Result<S>
@@ -60,21 +58,14 @@ public class BasicBehaviorEnclosureChecker implements BehaviorEnclosureChecker
 
     private class Counterexample<S> implements BehaviorEnclosureChecker.Counterexample<S>
     {
-        private final FSA<Twin<S>> behavior;
-        private final FSA<S> sourceImage;
-        private ImmutableSet<ImmutableList<S>> causes;
         private ImmutableList<S> instance;
+        private final FSA<Twin<S>> behavior;
+        private ImmutableSet<ImmutableList<S>> causes;
 
-        Counterexample(FSA<Twin<S>> behavior, FSA<S> source)
+        Counterexample(FSA<Twin<S>> behavior, ImmutableList<S> instance)
         {
             this.behavior = behavior;
-            sourceImage = source;
-        }
-
-        @Override
-        public FSA<S> sourceImage()
-        {
-            return sourceImage;
+            this.instance = instance;
         }
 
         @Override
@@ -90,11 +81,6 @@ public class BasicBehaviorEnclosureChecker implements BehaviorEnclosureChecker
         @Override
         public ImmutableList<S> get()
         {
-            if (instance == null) {
-                instance = BehaviorEnclosureChecker.Counterexample.super.get();
-                Assertions.referenceNotNull(instance); // a counterexample will always have a witness
-            }
-
             return instance;
         }
 

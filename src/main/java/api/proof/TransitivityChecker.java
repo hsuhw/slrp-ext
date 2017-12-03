@@ -26,14 +26,9 @@ public interface TransitivityChecker
 
     interface Counterexample<S>
     {
-        FSA<Twin<S>> sourceImage();
-
         ImmutableSet<Twin<ImmutableList<Twin<S>>>> causes();
 
-        default ImmutableList<Twin<S>> get()
-        {
-            return sourceImage().enumerateOneShortest();
-        }
+        ImmutableList<Twin<S>> get();
 
         @Override
         String toString();

@@ -17,6 +17,7 @@ import org.junit.runner.RunWith;
 
 import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.describe;
+import static com.mscharhag.oleaster.runner.StaticRunnerSupport.fdescribe;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.it;
 
 @RunWith(OleasterRunner.class)
@@ -236,22 +237,30 @@ public class BasicFSAManipulatorTest
                 expect(manipulator.checkSubset(none, fsa1).passed()).toBeTrue();
                 expect(manipulator.checkSubset(fsa1, fsa1).passed()).toBeTrue();
                 expect(manipulator.checkSubset(fsa2, fsa1).passed()).toBeFalse();
+                expect(manipulator.checkSubset(fsa2, fsa1).counterexample().get()).toEqual(word2);
                 expect(manipulator.checkSubset(fsa3, fsa1).passed()).toBeFalse();
+                expect(manipulator.checkSubset(fsa3, fsa1).counterexample().get()).toEqual(word2);
                 expect(manipulator.checkSubset(all, fsa1).passed()).toBeFalse();
                 expect(manipulator.checkSubset(none, fsa2).passed()).toBeTrue();
                 expect(manipulator.checkSubset(fsa1, fsa2).passed()).toBeFalse();
+                expect(manipulator.checkSubset(fsa1, fsa2).counterexample().get()).toEqual(word1);
                 expect(manipulator.checkSubset(fsa2, fsa2).passed()).toBeTrue();
                 expect(manipulator.checkSubset(fsa3, fsa2).passed()).toBeFalse();
+                expect(manipulator.checkSubset(fsa3, fsa2).counterexample().get()).toEqual(word3);
                 expect(manipulator.checkSubset(all, fsa2).passed()).toBeFalse();
                 expect(manipulator.checkSubset(none, fsa3).passed()).toBeTrue();
                 expect(manipulator.checkSubset(fsa1, fsa3).passed()).toBeFalse();
+                expect(manipulator.checkSubset(fsa1, fsa2).counterexample().get()).toEqual(word1);
                 expect(manipulator.checkSubset(fsa2, fsa3).passed()).toBeTrue();
                 expect(manipulator.checkSubset(fsa3, fsa3).passed()).toBeTrue();
                 expect(manipulator.checkSubset(all, fsa3).passed()).toBeFalse();
                 expect(manipulator.checkSubset(none, none).passed()).toBeTrue();
                 expect(manipulator.checkSubset(fsa1, none).passed()).toBeFalse();
+                expect(manipulator.checkSubset(fsa1, none).counterexample().get()).toEqual(word1);
                 expect(manipulator.checkSubset(fsa2, none).passed()).toBeFalse();
+                expect(manipulator.checkSubset(fsa2, none).counterexample().get()).toEqual(word2);
                 expect(manipulator.checkSubset(fsa3, none).passed()).toBeFalse();
+                expect(manipulator.checkSubset(fsa3, none).counterexample().get()).toEqual(word2);
                 expect(manipulator.checkSubset(all, none).passed()).toBeFalse();
                 expect(manipulator.checkSubset(none, all).passed()).toBeTrue();
                 expect(manipulator.checkSubset(fsa1, all).passed()).toBeTrue();

@@ -5,7 +5,6 @@ import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.automata.fsa.LanguageSubsetChecker;
 import api.proof.TransitivityChecker;
-import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.tuple.Twin;
@@ -28,9 +27,8 @@ public class BasicTransitivityChecker implements TransitivityChecker
         if (targetBeTransitive.passed()) {
             return new Result<>(true, null);
         }
-        final FSA<Twin<S>> witnessImage = targetBeTransitive.counterexample().sourceImage();
 
-        return new Result<>(false, new Counterexample<>(target, witnessImage));
+        return new Result<>(false, new Counterexample<>(target, targetBeTransitive.counterexample().get()));
     }
 
     private class Result<S> implements TransitivityChecker.Result<S>
@@ -65,21 +63,14 @@ public class BasicTransitivityChecker implements TransitivityChecker
 
     private class Counterexample<S> implements TransitivityChecker.Counterexample<S>
     {
-        private final FSA<Twin<S>> relation;
-        private final FSA<Twin<S>> sourceImage;
-        private ImmutableSet<Twin<ImmutableList<Twin<S>>>> causes;
         private ImmutableList<Twin<S>> instance;
+        private final FSA<Twin<S>> relation;
+        private ImmutableSet<Twin<ImmutableList<Twin<S>>>> causes;
 
-        Counterexample(FSA<Twin<S>> relation, FSA<Twin<S>> source)
+        Counterexample(FSA<Twin<S>> relation, ImmutableList<Twin<S>> instance)
         {
+            this.instance = instance;
             this.relation = relation;
-            sourceImage = source;
-        }
-
-        @Override
-        public FSA<Twin<S>> sourceImage()
-        {
-            return sourceImage;
         }
 
         @Override
@@ -102,11 +93,6 @@ public class BasicTransitivityChecker implements TransitivityChecker
         @Override
         public ImmutableList<Twin<S>> get()
         {
-            if (instance == null) {
-                instance = TransitivityChecker.Counterexample.super.get();
-                Assertions.referenceNotNull(instance); // a counterexample will always have a witness
-            }
-
             return instance;
         }
 

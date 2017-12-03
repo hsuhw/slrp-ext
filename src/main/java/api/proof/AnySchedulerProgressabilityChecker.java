@@ -26,12 +26,7 @@ public interface AnySchedulerProgressabilityChecker
 
     interface Counterexample<S>
     {
-        FSA<Twin<S>> sourceImage();
-
-        default ImmutableList<Twin<S>> get()
-        {
-            return sourceImage().enumerateOneShortest();
-        }
+        ImmutableList<Twin<S>> get();
 
         @Override
         String toString();
