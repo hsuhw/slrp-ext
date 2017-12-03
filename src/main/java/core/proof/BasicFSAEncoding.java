@@ -476,7 +476,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
             final MutableList<State> stateDecoder = dfa.states().toList();
             final MutableObjectIntMap<State> stateEncoder = new ObjectIntHashMap<>(stateNumber);
             stateDecoder.forEachWithIndex(stateEncoder::put);
-            final TransitionGraph<State, S> delta = fsa.transitionGraph();
+            final TransitionGraph<State, S> delta = dfa.transitionGraph();
 
             // define each possible step over the DFA's states with each character of the word
             final ImmutableIntList[] stepIndicators = new ImmutableIntList[length + 1];
