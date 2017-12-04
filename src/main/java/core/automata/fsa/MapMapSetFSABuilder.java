@@ -3,6 +3,7 @@ package core.automata.fsa;
 import api.automata.Alphabet;
 import api.automata.Alphabets;
 import api.automata.State;
+import api.automata.TransitionGraph;
 import api.automata.fsa.FSA;
 import core.automata.MapMapSetGraph;
 import core.automata.MapMapSetGraphBuilder;
@@ -33,6 +34,20 @@ public class MapMapSetFSABuilder<S> implements FSA.Builder<S>
         states = UnifiedSet.newSet(stateCapacity);
         startStates = UnifiedSet.newSet(stateCapacity);
         acceptStates = UnifiedSet.newSet(stateCapacity);
+    }
+
+    public MapMapSetFSABuilder(MapMapSetFSA<S> fsa, int stateCapacity, int transitionCapacity)
+    {
+        alphabetBuilder = Alphabets.builder(fsa.alphabet());
+        deltaBuilder = new MapMapSetGraphBuilder<>(fsa.transitionGraph(), stateCapacity, transitionCapacity);
+
+        this.stateCapacity = stateCapacity;
+        states = UnifiedSet.newSet(stateCapacity);
+        startStates = UnifiedSet.newSet(stateCapacity);
+        acceptStates = UnifiedSet.newSet(stateCapacity);
+        states.addAllIterable(fsa.states());
+        startStates.addAllIterable(fsa.startStates());
+        acceptStates.addAllIterable(fsa.acceptStates());
     }
 
     public MapMapSetFSABuilder(MapMapSetFSA<S> fsa)
@@ -182,6 +197,18 @@ public class MapMapSetFSABuilder<S> implements FSA.Builder<S>
     {
         addState(dept).addState(dest).addSymbol(symbol);
         deltaBuilder.addArc(dept, dest, symbol);
+
+        return this;
+    }
+
+    @Override
+    public Builder<S> addTransitions(TransitionGraph<State, S> graph)
+    {
+        ((MapMapSetGraph<State, S>) graph).forwardGraph().forEachKeyValue((dept, arcRecord) -> {
+            arcRecord.forEachKeyValue((arcLabel, dests) -> {
+                dests.forEach(dest -> addTransition(dept, dest, arcLabel));
+            });
+        });
 
         return this;
     }

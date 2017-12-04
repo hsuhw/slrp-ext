@@ -239,12 +239,12 @@ public class MapMapSetGraph<N, A> implements TransitionGraph<N, A>
         return layout.toString();
     }
 
-    final ImmutableMap<N, ImmutableMap<A, ImmutableSet<N>>> forwardGraph()
+    public final ImmutableMap<N, ImmutableMap<A, ImmutableSet<N>>> forwardGraph()
     {
         return forwardGraph;
     }
 
-    final ImmutableMap<N, ImmutableMap<A, ImmutableSet<N>>> backwardGraph()
+    public final ImmutableMap<N, ImmutableMap<A, ImmutableSet<N>>> backwardGraph()
     {
         return backwardGraph;
     }

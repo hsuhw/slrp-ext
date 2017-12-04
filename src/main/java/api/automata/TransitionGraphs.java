@@ -16,9 +16,14 @@ public final class TransitionGraphs
         return Singleton.INSTANCE.builder(nodeCapacity, arcCapacity, epsilonLabel);
     }
 
-    public static <N, A> Builder<N, A> builderOn(TransitionGraph<N, A> graph)
+    public static <N, A> Builder<N, A> builder(TransitionGraph<N, A> graph)
     {
         return Singleton.INSTANCE.builder(graph);
+    }
+
+    public static <N, A> Builder<N, A> builder(TransitionGraph<N, A> graph, int nodeCapacity, int arcCapacity)
+    {
+        return Singleton.INSTANCE.builder(graph, nodeCapacity, arcCapacity);
     }
 
     private static final class Singleton

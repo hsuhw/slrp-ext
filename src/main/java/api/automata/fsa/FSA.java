@@ -209,6 +209,8 @@ public interface FSA<S> extends Automaton<S>
         @Override
         Builder<S> addTransition(State dept, State dest, S symbol);
 
+        Builder<S> addTransitions(TransitionGraph<State, S> graph);
+
         @Override
         FSA<S> build();
 
@@ -218,6 +220,8 @@ public interface FSA<S> extends Automaton<S>
     interface Provider
     {
         <S> Builder<S> builder(int stateCapacity, int symbolCapacity, S epsilonSymbol);
+
+        <S> Builder<S> builder(FSA<S> base, int stateCapacity, int transitionCapacity);
 
         <S> Builder<S> builder(FSA<S> base);
 

@@ -25,7 +25,8 @@ import java.util.function.Function;
 import static api.automata.AutomatonManipulator.selectFrom;
 import static api.automata.fsa.FSA.Builder;
 import static api.automata.fsa.FSAs.builder;
-import static api.util.Connectives.*;
+import static api.util.Connectives.AND;
+import static api.util.Connectives.Labels;
 
 public interface FSAManipulator extends AutomatonManipulator
 {
@@ -241,13 +242,23 @@ public interface FSAManipulator extends AutomatonManipulator
 
     default <S> FSA<S> union(FSA<S> one, FSA<S> two)
     {
-        final FSA<S> oneFixed = FSAs.complete(determinize(one));
-        final FSA<S> twoFixed = FSAs.complete(determinize(two));
+        final boolean oneBigger = one.states().size() > two.states().size();
+        final FSA<S> bigger = oneBigger ? one : two;
+        final FSA<S> smaller = oneBigger ? two : one;
+        final int stateCapacity = one.states().size() + two.states().size();
+        final int transitionCapacity = one.transitionGraph().size() + two.transitionGraph().size();
+        final FSA.Builder<S> builder = FSAs.builder(bigger, stateCapacity, transitionCapacity);
 
-        return FSAs.product(oneFixed, twoFixed, oneFixed.alphabet(), Labels.matched(), (stateMapping, builder) -> {
-            builder.addStartStates(selectFrom(stateMapping, oneFixed::isStartState, AND, twoFixed::isStartState));
-            builder.addAcceptStates(selectFrom(stateMapping, oneFixed::isAcceptState, OR, twoFixed::isAcceptState));
-        });
+        builder.addTransitions(smaller.transitionGraph());
+        builder.addAcceptStates(smaller.acceptStates());
+        final S epsilonSymbol = bigger.alphabet().epsilon();
+        final State newStartState = States.generate();
+        builder.resetStartStates();
+        builder.addStartState(newStartState);
+        bigger.startStates().forEach(state -> builder.addTransition(newStartState, state, epsilonSymbol));
+        smaller.startStates().forEach(state -> builder.addTransition(newStartState, state, epsilonSymbol));
+
+        return builder.buildWith(bigger.alphabet());
     }
 
     <S> LanguageSubsetChecker.Result<S> checkSubset(FSA<S> subsumer, FSA<S> includer);

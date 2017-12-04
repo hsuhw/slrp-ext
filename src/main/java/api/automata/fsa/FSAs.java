@@ -29,6 +29,11 @@ public final class FSAs
         return Singleton.INSTANCE.builder(stateCapacity, symbolCapacity, epsilonSymbol);
     }
 
+    public static <S> Builder<S> builder(FSA<S> base, int stateCapacity, int transitionCapacity)
+    {
+        return Singleton.INSTANCE.builder(base, stateCapacity, transitionCapacity);
+    }
+
     public static <S> Builder<S> builder(FSA<S> base)
     {
         return Singleton.INSTANCE.builder(base);

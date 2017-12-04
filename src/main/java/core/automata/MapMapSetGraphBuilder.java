@@ -63,13 +63,18 @@ public class MapMapSetGraphBuilder<N, A> implements TransitionGraph.Builder<N, A
         return result;
     }
 
-    public MapMapSetGraphBuilder(MapMapSetGraph<N, A> graph)
+    public MapMapSetGraphBuilder(MapMapSetGraph<N, A> graph, int nodeCapacity, int arcCapacity)
     {
-        final int nodeCapacity = estimateExtendedSize(graph.referredNodes().size());
-        arcCapacity = estimateExtendedSize(graph.referredArcLabels().size());
+        this.arcCapacity = arcCapacity;
         forwardGraph = toMutable(graph.forwardGraph(), nodeCapacity, arcCapacity);
         backwardGraph = toMutable(graph.backwardGraph(), nodeCapacity, arcCapacity);
         epsilonLabel = graph.epsilonLabel();
+    }
+
+    public MapMapSetGraphBuilder(MapMapSetGraph<N, A> graph)
+    {
+        this(graph, estimateExtendedSize(graph.referredNodes().size()),
+             estimateExtendedSize(graph.referredArcLabels().size()));
     }
 
     private MutableMap<A, MutableSet<N>> newArcRecord()

@@ -15,6 +15,12 @@ public class BasicFSAProvider implements FSA.Provider
     }
 
     @Override
+    public <S> FSA.Builder<S> builder(FSA<S> base, int stateCapacity, int transitionCapacity)
+    {
+        return new MapMapSetFSABuilder<>((MapMapSetFSA<S>) base, stateCapacity, transitionCapacity);
+    }
+
+    @Override
     public <S> FSA.Builder<S> builder(FSA<S> base)
     {
         return new MapMapSetFSABuilder<>((MapMapSetFSA<S>) base);

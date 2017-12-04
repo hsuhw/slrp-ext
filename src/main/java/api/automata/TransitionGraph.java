@@ -87,5 +87,7 @@ public interface TransitionGraph<N, A> extends Digraph<N, A>
         <N, A> Builder<N, A> builder(int nodeCapacity, int arcCapacity, A epsilonLabel);
 
         <N, A> Builder<N, A> builder(TransitionGraph<N, A> base);
+
+        <N, A> Builder<N, A> builder(TransitionGraph<N, A> base, int nodeCapacity, int arcCapacity);
     }
 }
