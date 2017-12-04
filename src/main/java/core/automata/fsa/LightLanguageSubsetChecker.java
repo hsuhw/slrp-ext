@@ -84,7 +84,7 @@ public class LightLanguageSubsetChecker implements LanguageSubsetChecker
     {
         private ImmutableList<S> instance;
 
-        Counterexample(ImmutableList<S> instance)
+        private Counterexample(ImmutableList<S> instance)
         {
             this.instance = instance;
         }

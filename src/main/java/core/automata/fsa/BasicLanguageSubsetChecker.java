@@ -67,7 +67,7 @@ public class BasicLanguageSubsetChecker implements LanguageSubsetChecker
         private final FSA<S> sourceImage;
         private ImmutableList<S> instance;
 
-        Counterexample(FSA<S> source)
+        private Counterexample(FSA<S> source)
         {
             sourceImage = source;
         }

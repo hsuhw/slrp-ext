@@ -67,7 +67,7 @@ public class BasicTransitivityChecker implements TransitivityChecker
         private final FSA<Twin<S>> relation;
         private ImmutableSet<Twin<ImmutableList<Twin<S>>>> causes;
 
-        Counterexample(FSA<Twin<S>> relation, ImmutableList<Twin<S>> instance)
+        private Counterexample(FSA<Twin<S>> relation, ImmutableList<Twin<S>> instance)
         {
             this.instance = instance;
             this.relation = relation;

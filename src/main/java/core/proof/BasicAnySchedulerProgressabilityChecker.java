@@ -1,5 +1,6 @@
 package core.proof;
 
+import api.automata.State;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.automata.fsa.LanguageSubsetChecker;
@@ -68,7 +69,7 @@ public class BasicAnySchedulerProgressabilityChecker implements AnySchedulerProg
     {
         private ImmutableList<Twin<S>> instance;
 
-        Counterexample(ImmutableList<Twin<S>> instance)
+        private Counterexample(ImmutableList<Twin<S>> instance)
         {
             this.instance = instance;
         }

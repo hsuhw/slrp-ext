@@ -62,7 +62,7 @@ public class BasicBehaviorEnclosureChecker implements BehaviorEnclosureChecker
         private final FSA<Twin<S>> behavior;
         private ImmutableSet<ImmutableList<S>> causes;
 
-        Counterexample(FSA<Twin<S>> behavior, ImmutableList<S> instance)
+        private Counterexample(FSA<Twin<S>> behavior, ImmutableList<S> instance)
         {
             this.behavior = behavior;
             this.instance = instance;
