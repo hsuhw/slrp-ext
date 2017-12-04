@@ -21,16 +21,17 @@ public class BasicAnySchedulerProgressabilityChecker implements AnySchedulerProg
     {
         final FSA<S> nfInv = FSAs.intersect(inv, nfConfigs);
         final FSA<Twin<S>> anySchedMove = Transducers.filterByInput(nfSched, nfInv);
-        final FSA<Twin<S>> smallerStepAvail = FSAs.product(proc, order, proc.alphabet(), (trans, ord) -> {
+        final FSA<Twin<S>> enclosedProc = Transducers.filterByOutput(proc, inv);
+        final FSA<Twin<S>> smallerStepEnclosed = FSAs.product(enclosedProc, order, proc.alphabet(), (trans, ord) -> {
             return trans.getTwo().equals(ord.getTwo()) ? Tuples.twin(ord.getOne(), trans.getOne()) : null;
-        }, makeStartAndAcceptStates(proc, order, AND, AND));
-        final LanguageSubsetChecker.Result<Twin<S>> alwaysSmallerAvail = checkSubset(anySchedMove, smallerStepAvail);
+        }, makeStartAndAcceptStates(enclosedProc, order, AND, AND));
+        final LanguageSubsetChecker.Result<Twin<S>> alwaysProgressable = checkSubset(anySchedMove, smallerStepEnclosed);
 
-        if (alwaysSmallerAvail.passed()) {
+        if (alwaysProgressable.passed()) {
             return new Result<>(true, null);
         }
 
-        return new Result<>(false, new Counterexample<>(alwaysSmallerAvail.counterexample().get()));
+        return new Result<>(false, new Counterexample<>(alwaysProgressable.counterexample().get()));
     }
 
     private class Result<S> implements AnySchedulerProgressabilityChecker.Result<S>

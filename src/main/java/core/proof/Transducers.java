@@ -35,6 +35,12 @@ public final class Transducers
                             makeStartAndAcceptStates(target, filter, AND, AND));
     }
 
+    static <S, T, U extends Pair<S, T>> FSA<U> filterByOutput(FSA<U> target, FSA<S> filter)
+    {
+        return FSAs.product(target, filter, target.alphabet(), Labels.whoseOutputMatched(),
+                            makeStartAndAcceptStates(target, filter, AND, AND));
+    }
+
     private static <S, T, U extends Pair<S, T>> SetIterable<MutableStack<S>> preImageAt(FSA<U> transducer, State state,
                                                                                         ImmutableList<T> word,
                                                                                         int capacity)
