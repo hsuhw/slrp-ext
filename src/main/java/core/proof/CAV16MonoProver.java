@@ -58,7 +58,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         super(problem);
 
         nfScheduler = makeNonfinalScheduler(scheduler, nonfinalConfigs);
-        allBehavior = FSAs.minimize(FSAs.determinize(FSAs.union(scheduler, process)));
+        allBehavior = FSAs.union(scheduler, process); // FIXME: see how to escape this
         invEnclosesAll = problem.invariantEnclosesAllBehavior();
     }
 
@@ -144,7 +144,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         invariantEncoding.ensureAcceptingIfOnlyIf(takenX, x);
         final int shouldBeCertainZ = solver.newFreeVariable();
         final CertainWord<S> z = invariantEncoding.ensureAcceptingCertainWordIf(shouldBeCertainZ, x.size());
-        z.ensureAcceptedBy(FSAs.minimize(FSAs.determinize(possibleZ)));
+        z.ensureAcceptedBy(possibleZ);
         final CertainWord<Twin<S>> xz = orderEncoding.ensureAcceptingCertainWordIf(shouldBeCertainZ, x.size());
         x.forEachWithIndex((chx, pos) -> {
             steadyAlphabet.noEpsilonSet().forEach(chz -> {

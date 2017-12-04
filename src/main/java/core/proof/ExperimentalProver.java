@@ -34,7 +34,7 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
     {
         super(problem);
 
-        allBehavior = FSAs.determinize(Transducers.compose(scheduler, process, scheduler.alphabet()));
+        allBehavior = Transducers.compose(scheduler, process, scheduler.alphabet());
     }
 
     static <S> FairnessProgressabilityChecker.Result<S> checkProgressability(FSA<Twin<S>> behavior,

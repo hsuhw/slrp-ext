@@ -53,15 +53,18 @@ public final class Transducers
         final TransitionGraph<State, U> delta = transducer.transitionGraph();
         final int resultCapacity = estimateExtendedSize(word.size() * word.size()); // heuristic
         final MutableSet<MutableStack<S>> result = UnifiedSet.newSet(resultCapacity);
+        final U epsilonTrans = transducer.alphabet().epsilon();
 
-        SetIterable<MutableStack<S>> postfixes;
+        SetIterable<MutableStack<S>> postfixImages;
+        boolean isEpsilonTrans;
         for (U trans : delta.arcLabelsFrom(state)) {
-            if (trans.getTwo().equals(word.get(0))) {
+            if ((isEpsilonTrans = trans.equals(epsilonTrans)) || trans.getTwo().equals(word.get(0))) {
                 for (State dest : delta.directSuccessorsOf(state, trans)) {
-                    postfixes = preImageAt(transducer, dest, word.subList(1, word.size()), capacity);
-                    for (MutableStack<S> postfix : postfixes) {
-                        postfix.push(trans.getOne());
-                        result.add(postfix);
+                    final ImmutableList<T> postfix = isEpsilonTrans ? word : word.subList(1, word.size());
+                    postfixImages = preImageAt(transducer, dest, postfix, capacity);
+                    for (MutableStack<S> postfixImage : postfixImages) {
+                        postfixImage.push(trans.getOne());
+                        result.add(postfixImage);
                     }
                 }
             }
@@ -89,15 +92,20 @@ public final class Transducers
         final TransitionGraph<State, U> delta = transducer.transitionGraph();
         final int resultCapacity = estimateExtendedSize(word.size() * word.size()); // heuristic
         final MutableSet<MutableStack<T>> result = UnifiedSet.newSet(resultCapacity);
+        final U epsilonTrans = transducer.alphabet().epsilon();
 
-        SetIterable<MutableStack<T>> postfixes;
+        SetIterable<MutableStack<T>> postfixImages;
+        boolean isEpsilonTrans;
         for (U trans : delta.arcLabelsFrom(state)) {
-            if (trans.getOne().equals(word.get(0))) {
+            if ((isEpsilonTrans = trans.equals(epsilonTrans)) || trans.getOne().equals(word.get(0))) {
                 for (State dest : delta.directSuccessorsOf(state, trans)) {
-                    postfixes = postImageAt(transducer, dest, word.subList(1, word.size()), capacity);
-                    for (MutableStack<T> postfix : postfixes) {
-                        postfix.push(trans.getTwo());
-                        result.add(postfix);
+                    final ImmutableList<S> postfix = isEpsilonTrans ? word : word.subList(1, word.size());
+                    postfixImages = postImageAt(transducer, dest, postfix, capacity);
+                    for (MutableStack<T> postImage : postfixImages) {
+                        if (!isEpsilonTrans) {
+                            postImage.push(trans.getTwo());
+                        }
+                        result.add(postImage);
                     }
                 }
             }
