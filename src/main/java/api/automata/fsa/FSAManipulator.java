@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Queue;
 import java.util.function.Function;
 
-import static api.automata.AutomatonManipulator.selectFrom;
+import static api.automata.AutomatonManipulator.makeStartAndAcceptStates;
 import static api.automata.fsa.FSA.Builder;
 import static api.automata.fsa.FSAs.builder;
 import static api.util.Connectives.AND;
@@ -234,10 +234,7 @@ public interface FSAManipulator extends AutomatonManipulator
 
     default <S> FSA<S> intersect(FSA<S> one, FSA<S> two)
     {
-        return FSAs.product(one, two, one.alphabet(), Labels.matched(), (stateMapping, builder) -> {
-            builder.addStartStates(selectFrom(stateMapping, one::isStartState, AND, two::isStartState));
-            builder.addAcceptStates(selectFrom(stateMapping, one::isAcceptState, AND, two::isAcceptState));
-        });
+        return FSAs.product(one, two, one.alphabet(), Labels.matched(), makeStartAndAcceptStates(one, two, AND, AND));
     }
 
     default <S> FSA<S> union(FSA<S> one, FSA<S> two)

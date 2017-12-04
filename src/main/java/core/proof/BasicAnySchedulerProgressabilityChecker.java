@@ -8,7 +8,7 @@ import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.tuple.Tuples;
 
-import static api.automata.AutomatonManipulator.selectFrom;
+import static api.automata.AutomatonManipulator.makeStartAndAcceptStates;
 import static api.automata.fsa.FSAs.checkSubset;
 import static api.util.Connectives.AND;
 import static api.util.Values.DISPLAY_INDENT;
@@ -23,10 +23,7 @@ public class BasicAnySchedulerProgressabilityChecker implements AnySchedulerProg
         final FSA<Twin<S>> anySchedMove = Transducers.filterByInput(nfSched, nfInv);
         final FSA<Twin<S>> smallerStepAvail = FSAs.product(proc, order, proc.alphabet(), (trans, ord) -> {
             return trans.getTwo().equals(ord.getTwo()) ? Tuples.twin(ord.getOne(), trans.getOne()) : null;
-        }, (stateMapping, builder) -> {
-            builder.addStartStates(selectFrom(stateMapping, proc::isStartState, AND, order::isStartState));
-            builder.addAcceptStates(selectFrom(stateMapping, proc::isAcceptState, AND, order::isAcceptState));
-        });
+        }, makeStartAndAcceptStates(proc, order, AND, AND));
         final LanguageSubsetChecker.Result<Twin<S>> alwaysSmallerAvail = checkSubset(anySchedMove, smallerStepAvail);
 
         if (alwaysSmallerAvail.passed()) {

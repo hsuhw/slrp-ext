@@ -27,6 +27,16 @@ public interface AutomatonManipulator
         return result.toImmutable();
     }
 
+    static <S, T, R> Finalizer<R> makeStartAndAcceptStates(Automaton<S> one, Automaton<T> two,
+                                                           BooleanBooleanPredicate startCombinator,
+                                                           BooleanBooleanPredicate acceptCombinator)
+    {
+        return (stateMapping, builder) -> {
+            builder.addStartStates(selectFrom(stateMapping, one::isStartState, startCombinator, two::isStartState));
+            builder.addAcceptStates(selectFrom(stateMapping, one::isAcceptState, acceptCombinator, two::isAcceptState));
+        };
+    }
+
     <S> Automaton<S> trimUnreachableStates(Automaton<S> target);
 
     <S> Automaton<S> trimDeadEndStates(Automaton<S> target);

@@ -16,7 +16,7 @@ import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.eclipse.collections.impl.stack.mutable.ArrayStack;
 
-import static api.automata.AutomatonManipulator.selectFrom;
+import static api.automata.AutomatonManipulator.makeStartAndAcceptStates;
 import static api.util.Connectives.AND;
 import static api.util.Connectives.Labels;
 import static core.util.Parameters.estimateExtendedSize;
@@ -26,18 +26,13 @@ public final class Transducers
     static <S, T, X extends Pair<S, T>, Y extends Pair<T, S>> FSA<Twin<S>> compose(FSA<X> one, FSA<Y> two,
                                                                                    Alphabet<Twin<S>> alphabet)
     {
-        return FSAs.product(one, two, alphabet, Labels.composable(), (stateMapping, builder) -> {
-            builder.addStartStates(selectFrom(stateMapping, one::isStartState, AND, two::isStartState));
-            builder.addAcceptStates(selectFrom(stateMapping, one::isAcceptState, AND, two::isAcceptState));
-        });
+        return FSAs.product(one, two, alphabet, Labels.composable(), makeStartAndAcceptStates(one, two, AND, AND));
     }
 
     static <S, T, U extends Pair<S, T>> FSA<U> filterByInput(FSA<U> target, FSA<S> filter)
     {
-        return FSAs.product(target, filter, target.alphabet(), Labels.whoseInputMatched(), (stateMapping, builder) -> {
-            builder.addStartStates(selectFrom(stateMapping, target::isStartState, AND, filter::isStartState));
-            builder.addAcceptStates(selectFrom(stateMapping, target::isAcceptState, AND, filter::isAcceptState));
-        });
+        return FSAs.product(target, filter, target.alphabet(), Labels.whoseInputMatched(),
+                            makeStartAndAcceptStates(target, filter, AND, AND));
     }
 
     private static <S, T, U extends Pair<S, T>> SetIterable<MutableStack<S>> preImageAt(FSA<U> transducer, State state,
@@ -122,9 +117,7 @@ public final class Transducers
 
     static <S> FSA<S> postImage(FSA<Twin<S>> transducer, FSA<S> fsa)
     {
-        return FSAs.product(transducer, fsa, fsa.alphabet(), Labels.transducible(), (stateMapping, builder) -> {
-            builder.addStartStates(selectFrom(stateMapping, transducer::isStartState, AND, fsa::isStartState));
-            builder.addAcceptStates(selectFrom(stateMapping, transducer::isAcceptState, AND, fsa::isAcceptState));
-        });
+        return FSAs.product(transducer, fsa, fsa.alphabet(), Labels.transducible(),
+                            makeStartAndAcceptStates(transducer, fsa, AND, AND));
     }
 }
