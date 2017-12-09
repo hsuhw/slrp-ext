@@ -71,7 +71,6 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
         private final TransitionGraph<State, T> delta2;
         private final S epsilon1;
         private final T epsilon2;
-        private final R epsilonP;
         private final Alphabet<R> alphabet;
         private final Builder<R> builder;
         private final MutableBiMap<Twin<State>, State> stateMapping;
@@ -86,14 +85,13 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
             delta2 = two.transitionGraph();
             epsilon1 = delta1.epsilonLabel();
             epsilon2 = delta2.epsilonLabel();
-            epsilonP = alphabet.epsilon();
             this.alphabet = alphabet;
             builder = builder(capacity, alphabet.size(), alphabet.epsilon());
             stateMapping = new HashBiMap<>(capacity);
             pendingProductStates = new LinkedList<>();
         }
 
-        private State getState(Twin<State> statePair)
+        private State takeState(Twin<State> statePair)
         {
             return stateMapping.computeIfAbsent(statePair, pair -> {
                 pendingProductStates.add(pair);
@@ -101,30 +99,28 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
             });
         }
 
-        private State getState(State state1, State state2)
+        private State takeState(State state1, State state2)
         {
-            return getState(Tuples.twin(state1, state2));
+            return takeState(Tuples.twin(state1, state2));
         }
 
         private void handleEpsilonTransitions(Twin<State> statePair)
         {
-            final State deptP = getState(statePair);
+            final State deptP = takeState(statePair);
             final State dept1 = statePair.getOne();
             final State dept2 = statePair.getTwo();
-            delta1.directSuccessorsOf(dept1, epsilon1).forEach(dest1 -> {
-                builder.addTransition(deptP, getState(dest1, dept2), epsilonP);
+            delta1.directSuccessorsOf(dept1, epsilon1).forEach(dest -> {
+                builder.addEpsilonTransition(deptP, takeState(dest, dept2));
             });
-            delta2.directSuccessorsOf(dept2, epsilon2).forEach(dest2 -> {
-                builder.addTransition(deptP, getState(dept1, dest2), epsilonP);
+            delta2.directSuccessorsOf(dept2, epsilon2).forEach(dest -> {
+                builder.addEpsilonTransition(deptP, takeState(dept1, dest));
             });
         }
 
         private void makeProduct(SymbolDecider<S, T, R> symbolDecider)
         {
             // FIXME: currently only handles the single start state FSAs
-            final Twin<State> startStatePair = Tuples.twin(fsa1.startState(), fsa2.startState());
-            stateMapping.put(startStatePair, States.generate());
-            pendingProductStates.add(startStatePair);
+            takeState(fsa1.startState(), fsa2.startState());
             Twin<State> currStatePair;
             while ((currStatePair = pendingProductStates.poll()) != null) {
                 final State deptP = stateMapping.get(currStatePair);
@@ -139,7 +135,7 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
                         }
                         delta1.directSuccessorsOf(dept1, symbol1).forEach(dest1 -> {
                             delta2.directSuccessorsOf(dept2, symbol2).forEach(dest2 -> {
-                                builder.addTransition(deptP, getState(dest1, dest2), symbolP);
+                                builder.addTransition(deptP, takeState(dest1, dest2), symbolP);
                             });
                         });
                     }
@@ -166,9 +162,7 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
         private void makeProduct(StepFilter<S, T, R> stepFilter)
         {
             // FIXME: currently only handles the single start state FSAs
-            final Twin<State> startStatePair = Tuples.twin(fsa1.startState(), fsa2.startState());
-            stateMapping.put(startStatePair, States.generate());
-            pendingProductStates.add(startStatePair);
+            takeState(fsa1.startState(), fsa2.startState());
             Twin<State> currStatePair;
             while ((currStatePair = pendingProductStates.poll()) != null) {
                 final State deptP = stateMapping.get(currStatePair);
@@ -184,7 +178,7 @@ public class BasicFSAManipulator implements FSAManipulator.Decorator
                         }
                         delta1.directSuccessorsOf(dept1, symbol1).forEach(dest1 -> {
                             delta2.directSuccessorsOf(dept2, symbol2).forEach(dest2 -> {
-                                builder.addTransition(deptP, getState(dest1, dest2), symbolP);
+                                builder.addTransition(deptP, takeState(dest1, dest2), symbolP);
                             });
                         });
                     }
