@@ -134,7 +134,7 @@ public interface FSA<S> extends Automaton<S>
         final MutableMap<SetIterable<State>, Pair<SetIterable<State>, S>> touchedBy = UnifiedMap.newMap(stateNumber);
         final Queue<SetIterable<State>> pendingChecks = new LinkedList<>();
 
-        final SetIterable<State> startStates = startStates();
+        final SetIterable<State> startStates = delta.epsilonClosureOf(startStates());
         pendingChecks.add(startStates);
         SetIterable<State> currStates;
         while ((currStates = pendingChecks.poll()) != null) {
