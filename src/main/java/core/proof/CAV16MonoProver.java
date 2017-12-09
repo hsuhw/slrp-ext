@@ -6,6 +6,7 @@ import api.automata.AlphabetIntEncoders;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.automata.fsa.LanguageSubsetChecker;
+import api.common.sat.ContradictionException;
 import api.common.sat.SatSolver;
 import api.proof.*;
 import org.apache.logging.log4j.LogManager;
@@ -16,10 +17,7 @@ import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.tuple.Tuples;
 
-import static api.automata.AutomatonManipulator.selectFrom;
 import static api.proof.FSAEncoding.CertainWord;
-import static api.util.Connectives.AND;
-import static api.util.Connectives.Labels;
 import static api.util.Values.DISPLAY_NEWLINE;
 
 public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
@@ -41,16 +39,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
 
     private static <S> FSA<Twin<S>> makeNonfinalScheduler(FSA<Twin<S>> sched, FSA<S> nfConfigs)
     {
-        final FSA<Twin<S>> nfIn = FSAs
-            .product(sched, nfConfigs, sched.alphabet(), Labels.whoseInputMatched(), (sm, builder) -> {
-                builder.addStartStates(selectFrom(sm, sched::isStartState, AND, nfConfigs::isStartState));
-                builder.addAcceptStates(selectFrom(sm, sched::isAcceptState, AND, nfConfigs::isAcceptState));
-            });
-
-        return FSAs.product(nfIn, nfConfigs, sched.alphabet(), Labels.whoseOutputMatched(), (sm, builder) -> {
-            builder.addStartStates(selectFrom(sm, nfIn::isStartState, AND, nfConfigs::isStartState));
-            builder.addAcceptStates(selectFrom(sm, nfIn::isAcceptState, AND, nfConfigs::isAcceptState));
-        });
+        return Transducers.filterByOutput(Transducers.filterByInput(sched, nfConfigs), nfConfigs);
     }
 
     public CAV16MonoProver(Problem<S> problem)
@@ -58,14 +47,13 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         super(problem);
 
         nfScheduler = makeNonfinalScheduler(scheduler, nonfinalConfigs);
-        allBehavior = FSAs.union(scheduler, process); // FIXME: see how to escape this
+        allBehavior = FSAs.union(scheduler, process);
         invEnclosesAll = problem.invariantEnclosesAllBehavior();
     }
 
     static <S> FSAEncoding<S> newFSAEncoding(SatSolver solver, int size, AlphabetIntEncoder<S> alphabetEncoding)
     {
         FSAEncoding<S> instance = new BasicFSAEncoding<>(solver, size, alphabetEncoding);
-        instance.ensureNoAccepting(Lists.immutable.empty());
         instance.ensureNoDanglingState();
 
         return instance;
@@ -166,7 +154,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         final ImmutableSet<Twin<S>> ordReflexiveSymbols = steadyAlphabet.asSet().collect(s -> Tuples.twin(s, s));
 
         // having empty string excluded makes searching from 0 or 1 meaningless
-        invariantSizeBegin = invariantSizeBegin < 2 ? 2 : invariantSizeBegin;
+        invariantSizeBegin = invariantSizeBegin < 1 ? 1 : invariantSizeBegin;
         orderSizeBegin = orderSizeBegin < 2 ? 2 : orderSizeBegin;
 
         search((invSize, ordSize) -> {
@@ -181,6 +169,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
             TransitivityChecker.Result<S> l3;
             AnySchedulerProgressabilityChecker.Result<S> l4;
             while (solver.findItSatisfiable()) {
+                boolean contradiction = false;
                 final FSA<S> invCand = inv.resolve();
                 final FSA<Twin<S>> ordCand = ord.resolve();
 
@@ -194,7 +183,11 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
                     refineTransitivity(solver, ord, l3.counterexample());
                 }
                 if ((l4 = checkProgressability(nfScheduler, process, nonfinalConfigs, invCand, ordCand)).rejected()) {
-                    refineProgressability(solver, inv, ord, process, steadyAlphabet, l4.counterexample());
+                    try {
+                        refineProgressability(solver, inv, ord, process, steadyAlphabet, l4.counterexample());
+                    } catch (ContradictionException e) {
+                        contradiction = true;
+                    }
                 }
 
                 LOGGER.info("Having counterexamples: {} {} {} {}", //
@@ -208,6 +201,9 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
                     LOGGER.debug("Transition behavior enclosed: {}", invEnclosesAll ? l2 : "--");
                     LOGGER.debug("Strict pre-order relation: {}", l3);
                     LOGGER.debug("Progressability: {}", l4);
+                }
+                if (contradiction) {
+                    break;
                 }
             }
 

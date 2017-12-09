@@ -6,6 +6,7 @@ import api.automata.Alphabets;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.automata.fsa.LanguageSubsetChecker;
+import api.common.sat.ContradictionException;
 import api.common.sat.SatSolver;
 import api.proof.*;
 import org.apache.logging.log4j.LogManager;
@@ -68,7 +69,7 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
         final ImmutableSet<Twin<S>> ordReflexiveSymbols = steadyAlphabet.asSet().collect(s -> Tuples.twin(s, s));
 
         // having empty string excluded makes searching from 0 or 1 meaningless
-        invariantSizeBegin = invariantSizeBegin < 2 ? 2 : invariantSizeBegin;
+        invariantSizeBegin = invariantSizeBegin < 1 ? 1 : invariantSizeBegin;
         orderSizeBegin = orderSizeBegin < 2 ? 2 : orderSizeBegin;
 
         search((invSize, ordSize) -> {
@@ -83,6 +84,7 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
             TransitivityChecker.Result<S> l3;
             FairnessProgressabilityChecker.Result<S> l4;
             while (solver.findItSatisfiable()) {
+                boolean contradiction = false;
                 final FSA<S> invCand = invGuessing.resolve();
                 final FSA<Twin<S>> ordCand = ordGuessing.resolve();
 
@@ -96,7 +98,11 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
                     refineTransitivity(solver, ordGuessing, l3.counterexample());
                 }
                 if ((l4 = checkProgressability(allBehavior, nonfinalConfigs, invCand, ordCand)).rejected()) {
-                    refineProgressability(solver, invGuessing, ordGuessing, l4.counterexample());
+                    try {
+                        refineProgressability(solver, invGuessing, ordGuessing, l4.counterexample());
+                    } catch (ContradictionException e) {
+                        contradiction = true;
+                    }
                 }
 
                 LOGGER.info("Having counterexamples: {} {} {} {}", //
@@ -110,6 +116,9 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
                     LOGGER.debug("Transition behavior enclosed: {}", l2);
                     LOGGER.debug("Strict pre-order relation: {}", l3);
                     LOGGER.debug("Progressability: {}", l4);
+                }
+                if (contradiction) {
+                    break;
                 }
             }
 
