@@ -95,6 +95,12 @@ public class MapMapSetGraphBuilder<N, A> implements TransitionGraph.Builder<N, A
     }
 
     @Override
+    public final A epsilonLabel()
+    {
+        return epsilonLabel;
+    }
+
+    @Override
     public Builder<N, A> addArc(N from, N to, A arcLabel)
     {
         Assertions.argumentNotNull(from, to, arcLabel);
@@ -317,10 +323,5 @@ public class MapMapSetGraphBuilder<N, A> implements TransitionGraph.Builder<N, A
     final ImmutableMap<N, ImmutableMap<A, ImmutableSet<N>>> backwardGraph()
     {
         return toImmutable(backwardGraph);
-    }
-
-    final A epsilonLabel()
-    {
-        return epsilonLabel;
     }
 }

@@ -248,12 +248,11 @@ public interface FSAManipulator extends AutomatonManipulator
 
         builder.addTransitions(smaller.transitionGraph());
         builder.addAcceptStates(smaller.acceptStates());
-        final S epsilonSymbol = bigger.alphabet().epsilon();
         final State newStartState = States.generate();
         builder.resetStartStates();
         builder.addStartState(newStartState);
-        bigger.startStates().forEach(state -> builder.addTransition(newStartState, state, epsilonSymbol));
-        smaller.startStates().forEach(state -> builder.addTransition(newStartState, state, epsilonSymbol));
+        bigger.startStates().forEach(state -> builder.addEpsilonTransition(newStartState, state));
+        smaller.startStates().forEach(state -> builder.addEpsilonTransition(newStartState, state));
 
         return builder.buildWith(bigger.alphabet());
     }

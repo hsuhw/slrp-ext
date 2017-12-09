@@ -202,6 +202,15 @@ public class MapMapSetFSABuilder<S> implements FSA.Builder<S>
     }
 
     @Override
+    public Builder<S> addEpsilonTransition(State dept, State dest)
+    {
+        addState(dept).addState(dest);
+        deltaBuilder.addEpsilonArc(dept, dest);
+
+        return null;
+    }
+
+    @Override
     public Builder<S> addTransitions(TransitionGraph<State, S> graph)
     {
         ((MapMapSetGraph<State, S>) graph).forwardGraph().forEachKeyValue((dept, arcRecord) -> {

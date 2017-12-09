@@ -113,6 +113,8 @@ public interface Automaton<S>
 
         Builder<S> addTransition(State dept, State dest, S symbol);
 
+        Builder<S> addEpsilonTransition(State dept, State dest);
+
         Automaton<S> build();
     }
 }

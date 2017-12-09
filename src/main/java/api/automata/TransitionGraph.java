@@ -71,7 +71,14 @@ public interface TransitionGraph<N, A> extends Digraph<N, A>
 
         boolean isEmpty();
 
+        A epsilonLabel();
+
         Builder<N, A> addArc(N from, N to, A arcLabel);
+
+        default Builder<N, A> addEpsilonArc(N from, N to)
+        {
+            return addArc(from, to, epsilonLabel());
+        }
 
         Builder<N, A> removeArc(N from, N to, A arcLabel);
 

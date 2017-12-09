@@ -209,6 +209,9 @@ public interface FSA<S> extends Automaton<S>
         @Override
         Builder<S> addTransition(State dept, State dest, S symbol);
 
+        @Override
+        Builder<S> addEpsilonTransition(State dept, State dest);
+
         Builder<S> addTransitions(TransitionGraph<State, S> graph);
 
         @Override
