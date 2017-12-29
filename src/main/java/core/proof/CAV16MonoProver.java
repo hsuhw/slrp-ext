@@ -14,7 +14,6 @@ import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.tuple.Twin;
-import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.tuple.Tuples;
 
 import static api.proof.FSAEncoding.CertainWord;
@@ -47,7 +46,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         super(problem);
 
         nfScheduler = makeNonfinalScheduler(scheduler, nonfinalConfigs);
-        allBehavior = FSAs.union(scheduler, process);
+        allBehavior = Transducers.compose(scheduler, process, scheduler.alphabet());
         invEnclosesAll = problem.invariantEnclosesAllBehavior();
     }
 
@@ -123,7 +122,8 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         final ImmutableList<S> y = counterexample.get().collect(Twin::getTwo);
 
         final FSA<S> possibleZ = FSAs.thatAcceptsOnly(steadyAlphabet, Transducers.postImage(process, y));
-        if (possibleZ.acceptsNone()) {
+        final ImmutableSet<S> noEpsilonSteadyAlphabet = steadyAlphabet.noEpsilonSet();
+        if (possibleZ.acceptsNone() || !x.allSatisfy(noEpsilonSteadyAlphabet::contains)) {
             invariantEncoding.ensureNoAccepting(x);
             return;
         }
@@ -135,7 +135,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         z.ensureAcceptedBy(possibleZ);
         final CertainWord<Twin<S>> xz = orderEncoding.ensureAcceptingCertainWordIf(shouldBeCertainZ, x.size());
         x.forEachWithIndex((chx, pos) -> {
-            steadyAlphabet.noEpsilonSet().forEach(chz -> {
+            noEpsilonSteadyAlphabet.forEach(chz -> {
                 final Twin<S> chxz = Tuples.twin(chx, chz);
                 final int zHasChzAtPos = z.getCharacterIndicator(pos, chz);
                 final int xzHasChxzAtPos = xz.getCharacterIndicator(pos, chxz);
