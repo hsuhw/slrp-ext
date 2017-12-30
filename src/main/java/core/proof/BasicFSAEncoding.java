@@ -3,8 +3,8 @@ package core.proof;
 import api.automata.*;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
-import api.proof.FSAEncoding;
 import api.common.sat.SatSolver;
+import api.proof.FSAEncoding;
 import core.util.Assertions;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
@@ -85,7 +85,22 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
         }
     }
 
-    public BasicFSAEncoding(SatSolver solver, int stateNumber, AlphabetIntEncoder<S> intAlphabet)
+    private void applyLinearShapeRestriction()
+    {
+        for (int dept = 0; dept < stateNumber; dept++) {
+            for (int dest = 0; dest < stateNumber; dest++) {
+                for (int symbol = 1; symbol < intAlphabet.size(); symbol++) {
+                    if (dest == dept || dest == (dept + 1) % stateNumber || dest == (dept + 2) % stateNumber) {
+                        continue;
+                    }
+                    solver.setLiteralFalsy(transitionIndicators[dept][symbol].get(dest));
+                }
+            }
+        }
+    }
+
+    public BasicFSAEncoding(SatSolver solver, int stateNumber, AlphabetIntEncoder<S> intAlphabet,
+                            boolean restrictsShape)
     {
         Assertions.argumentNotNull(solver, intAlphabet);
 
@@ -96,7 +111,16 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
         prepareTransitionIndicators();
         prepareAcceptStateIndicators();
         ensureDeterminism();
-        applySymmetryBreakingHeuristics();
+        if (restrictsShape) {
+            applyLinearShapeRestriction();
+        } else {
+            applySymmetryBreakingHeuristics();
+        }
+    }
+
+    public BasicFSAEncoding(SatSolver solver, int stateNumber, AlphabetIntEncoder<S> intAlphabet)
+    {
+        this(solver, stateNumber, intAlphabet, false);
     }
 
     private ImmutableIntList[] prepareDistanceIndicators()

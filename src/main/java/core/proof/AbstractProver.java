@@ -34,7 +34,9 @@ public abstract class AbstractProver<S> implements Prover
     protected final int orderSizeEnd;
     protected final SatSolver solver;
 
-    public AbstractProver(Problem<S> problem)
+    protected boolean automataShaped;
+
+    public AbstractProver(Problem<S> problem, boolean shapesAutomata)
     {
         initialConfigs = FSAs.minimize(FSAs.determinize(problem.initialConfigs()));
         finalConfigs = FSAs.minimize(FSAs.determinize(problem.finalConfigs()));
@@ -58,6 +60,8 @@ public abstract class AbstractProver<S> implements Prover
         orderSizeEnd = ordSizeBound != null ? ordSizeBound.getTwo() : 0;
 
         solver = new Sat4jSolverAdapter();
+
+        automataShaped = shapesAutomata;
     }
 
     protected void search(IntIntToObjectFunction<Pair<FSA<S>, FSA<Twin<S>>>> resultSupplier)

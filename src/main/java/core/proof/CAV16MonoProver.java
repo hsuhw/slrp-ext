@@ -41,18 +41,19 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         return Transducers.filterByOutput(Transducers.filterByInput(sched, nfConfigs), nfConfigs);
     }
 
-    public CAV16MonoProver(Problem<S> problem)
+    public CAV16MonoProver(Problem<S> problem, boolean shapesAutomata)
     {
-        super(problem);
+        super(problem, shapesAutomata);
 
         nfScheduler = makeNonfinalScheduler(scheduler, nonfinalConfigs);
         allBehavior = Transducers.compose(scheduler, process, scheduler.alphabet());
         invEnclosesAll = problem.invariantEnclosesAllBehavior();
     }
 
-    static <S> FSAEncoding<S> newFSAEncoding(SatSolver solver, int size, AlphabetIntEncoder<S> alphabetEncoding)
+    static <S> FSAEncoding<S> newFSAEncoding(SatSolver solver, int size, AlphabetIntEncoder<S> alphabetEncoding,
+                                             boolean restrictsShape)
     {
-        FSAEncoding<S> instance = new BasicFSAEncoding<>(solver, size, alphabetEncoding);
+        FSAEncoding<S> instance = new BasicFSAEncoding<>(solver, size, alphabetEncoding, restrictsShape);
         instance.ensureNoDanglingState();
 
         return instance;
@@ -160,8 +161,8 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         search((invSize, ordSize) -> {
             LOGGER.info("Searching in state spaces {} & {} ..", invSize, ordSize);
 
-            final FSAEncoding<S> inv = newFSAEncoding(solver, invSize, invSymbolEncoding);
-            final FSAEncoding<Twin<S>> ord = newFSAEncoding(solver, ordSize, ordSymbolEncoding);
+            final FSAEncoding<S> inv = newFSAEncoding(solver, invSize, invSymbolEncoding, automataShaped);
+            final FSAEncoding<Twin<S>> ord = newFSAEncoding(solver, ordSize, ordSymbolEncoding, automataShaped);
             ord.ensureNoWordPurelyMadeOf(ordReflexiveSymbols);
 
             LanguageSubsetChecker.Result<S> l1;

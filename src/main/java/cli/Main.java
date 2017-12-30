@@ -34,16 +34,16 @@ public final class Main
         final CommandLineInterface cli = new CommandLineInterface(args);
 
         // handle general CLI arguments
-        if (cli.input().hasOption("help")) {
+        if (cli.invokedCmd().hasOption("help")) {
             cli.printHelpMessage();
             return;
         }
-        if (cli.input().hasOption("version")) {
+        if (cli.invokedCmd().hasOption("version")) {
             System.out.println("0.0.0-SNAPSHOT");
             return;
         }
-        if (cli.input().hasOption("log-level")) {
-            switch (cli.input().getOptionValue("log-level")) {
+        if (cli.invokedCmd().hasOption("log-level")) {
+            switch (cli.invokedCmd().getOptionValue("log-level")) {
                 case "debug":
                     setLogLevel(Level.DEBUG);
                     break;
@@ -60,14 +60,14 @@ public final class Main
                     // use the setting in `resources/log4j2.xml`
             }
         }
-        if (cli.input().getArgList().isEmpty() || cli.input().getArgList().size() > 1) {
+        if (cli.invokedCmd().getArgList().isEmpty() || cli.invokedCmd().getArgList().size() > 1) {
             System.out.println("Input file is not provided correctly." + DISPLAY_NEWLINE);
             cli.printHelpMessage();
             return;
         }
 
         // parse the input file
-        final InputStream input = new FileInputStream(cli.input().getArgList().get(0));
+        final InputStream input = new FileInputStream(cli.invokedCmd().getArgList().get(0));
         final Parser<Problem<String>> problemParser = new StringProblemParser();
         final Problem<String> problem = problemParser.parse(input).getOnly();
         LOGGER.debug("Initial config parsed:" + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", //
@@ -83,13 +83,13 @@ public final class Main
 
         // process the input problem
         final Prover prover;
-        final String mode = cli.input().hasOption("mode") ? cli.input().getOptionValue("mode") : "exp";
+        final String mode = cli.invokedCmd().hasOption("mode") ? cli.invokedCmd().getOptionValue("mode") : "exp";
         switch (mode) {
             case "cav16mono":
-                prover = new CAV16MonoProver<>(problem);
+                prover = new CAV16MonoProver<>(problem, cli.invokedCmd().hasOption("shaped"));
                 break;
             default: // should be 'exp'
-                prover = new ExperimentalProver<>(problem);
+                prover = new ExperimentalProver<>(problem, cli.invokedCmd().hasOption("shaped"));
         }
         if (problem.invariant() != null && problem.order() != null) {
             LOGGER.debug("Invoke a verification on input.");

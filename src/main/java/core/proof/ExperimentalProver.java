@@ -31,9 +31,9 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
         FAIRNESS_PROGRESSABILITY_CHECKER = new BasicFairnessProgressabilityChecker();
     }
 
-    public ExperimentalProver(Problem<S> problem)
+    public ExperimentalProver(Problem<S> problem, boolean shapesAutomata)
     {
-        super(problem);
+        super(problem, shapesAutomata);
 
         allBehavior = Transducers.compose(scheduler, process, scheduler.alphabet());
     }
@@ -75,8 +75,8 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
         search((invSize, ordSize) -> {
             LOGGER.info("Searching in state spaces {} & {} ..", invSize, ordSize);
 
-            final FSAEncoding<S> invGuessing = newFSAEncoding(solver, invSize, invSymbolEncoding);
-            final FSAEncoding<Twin<S>> ordGuessing = newFSAEncoding(solver, ordSize, ordSymbolEncoding);
+            final FSAEncoding<S> invGuessing = newFSAEncoding(solver, invSize, invSymbolEncoding, automataShaped);
+            final FSAEncoding<Twin<S>> ordGuessing = newFSAEncoding(solver, ordSize, ordSymbolEncoding, automataShaped);
             ordGuessing.ensureNoWordPurelyMadeOf(ordReflexiveSymbols);
 
             LanguageSubsetChecker.Result<S> l1;
