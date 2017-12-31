@@ -9,6 +9,7 @@ import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.factory.Lists;
+import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -252,10 +253,10 @@ public interface FSA<S> extends Automaton<S>
 
         default <S> FSA<S> thatAcceptsOnly(Alphabet<S> alphabet, ImmutableList<S> word)
         {
-            return thatAcceptsOnly(alphabet, Lists.immutable.of(word));
+            return thatAcceptsOnly(alphabet, Sets.immutable.of(word));
         }
 
-        default <S> FSA<S> thatAcceptsOnly(Alphabet<S> alphabet, RichIterable<ImmutableList<S>> words)
+        default <S> FSA<S> thatAcceptsOnly(Alphabet<S> alphabet, SetIterable<ImmutableList<S>> words)
         {
             final int stateCapacity = (int) words.collectInt(ImmutableList::size).sum(); // upper bound
             final Builder<S> builder = builder(stateCapacity, alphabet.size(), alphabet.epsilon());
@@ -268,6 +269,10 @@ public interface FSA<S> extends Automaton<S>
             S symbol;
             builder.addStartState(startState);
             for (ImmutableList<S> word : words) {
+                if (word.isEmpty()) {
+                    builder.addEpsilonTransition(currState, acceptState);
+                    continue;
+                }
                 for (int i = 0; i < (lastSymbolPos = word.size() - 1); i++) {
                     if (!(symbol = word.get(i)).equals(alphabet.epsilon())) {
                         nextState = States.generate();

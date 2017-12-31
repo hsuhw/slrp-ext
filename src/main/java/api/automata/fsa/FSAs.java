@@ -3,6 +3,7 @@ package api.automata.fsa;
 import api.automata.Alphabet;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 
@@ -74,7 +75,7 @@ public final class FSAs
         return Singleton.INSTANCE.thatAcceptsOnly(alphabet, word);
     }
 
-    public static <S> FSA<S> thatAcceptsOnly(Alphabet<S> alphabet, RichIterable<ImmutableList<S>> words)
+    public static <S> FSA<S> thatAcceptsOnly(Alphabet<S> alphabet, SetIterable<ImmutableList<S>> words)
     {
         return Singleton.INSTANCE.thatAcceptsOnly(alphabet, words);
     }
