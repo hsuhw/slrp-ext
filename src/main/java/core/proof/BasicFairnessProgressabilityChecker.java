@@ -14,26 +14,26 @@ import static api.util.Values.DISPLAY_NEWLINE;
 public class BasicFairnessProgressabilityChecker implements FairnessProgressabilityChecker
 {
     @Override
-    public <S> Result<S> test(FSA<Twin<S>> behavior, FSA<S> nonfinalConfigs, FSA<S> invariant, FSA<Twin<S>> order)
+    public <S> Result<S> test(FSA<Twin<S>> behavior, FSA<S> matteringConfigs, FSA<S> invariant, FSA<Twin<S>> order)
     {
         final FSA<Twin<S>> smallerStepMoves = FSAs.intersect(behavior, order);
         final FSA<S> smallerStepAvail = FSAs.project(smallerStepMoves, invariant.alphabet(), Twin::getOne);
-        final FSA<S> nonfinalInv = FSAs.intersect(invariant, nonfinalConfigs);
-        final LanguageSubsetChecker.Result<S> nonfinalSmallerAvail = FSAs.checkSubset(nonfinalInv, smallerStepAvail);
+        final FSA<S> matteringInv = FSAs.intersect(invariant, matteringConfigs);
+        final LanguageSubsetChecker.Result<S> someSmallerAvail = FSAs.checkSubset(matteringInv, smallerStepAvail);
 
-        if (nonfinalSmallerAvail.passed()) {
+        if (someSmallerAvail.passed()) {
             return new Result<>(true, null);
         }
 
-        return new Result<>(false, new Counterexample<>(behavior, nonfinalSmallerAvail.counterexample().get()));
+        return new Result<>(false, new Counterexample<>(behavior, someSmallerAvail.counterexample().get()));
     }
 
-    private class Result<S> implements FairnessProgressabilityChecker.Result<S>
+    public static class Result<S> implements FairnessProgressabilityChecker.Result<S>
     {
         private final boolean passed;
-        private final Counterexample<S> counterexample;
+        private final FairnessProgressabilityChecker.Counterexample<S> counterexample;
 
-        private Result(boolean passed, Counterexample<S> counterexample)
+        public Result(boolean passed, FairnessProgressabilityChecker.Counterexample<S> counterexample)
         {
             this.passed = passed;
             this.counterexample = counterexample;
@@ -46,7 +46,7 @@ public class BasicFairnessProgressabilityChecker implements FairnessProgressabil
         }
 
         @Override
-        public Counterexample<S> counterexample()
+        public FairnessProgressabilityChecker.Counterexample<S> counterexample()
         {
             return counterexample;
         }
@@ -58,13 +58,13 @@ public class BasicFairnessProgressabilityChecker implements FairnessProgressabil
         }
     }
 
-    private class Counterexample<S> implements FairnessProgressabilityChecker.Counterexample<S>
+    public static class Counterexample<S> implements FairnessProgressabilityChecker.Counterexample<S>
     {
         private ImmutableList<S> instance;
         private final FSA<Twin<S>> behavior;
         private ImmutableSet<ImmutableList<S>> causes;
 
-        private Counterexample(FSA<Twin<S>> behavior, ImmutableList<S> instance)
+        public Counterexample(FSA<Twin<S>> behavior, ImmutableList<S> instance)
         {
             this.behavior = behavior;
             this.instance = instance;

@@ -6,8 +6,7 @@ import org.eclipse.collections.api.tuple.Twin;
 
 public interface AnySchedulerProgressabilityChecker
 {
-    <S> Result<S> test(FSA<Twin<S>> scheduler, FSA<Twin<S>> process, FSA<S> nonfinalConfigs, FSA<S> invariant,
-                       FSA<Twin<S>> order);
+    <S> Result<S> test(FSA<Twin<S>> scheduler, FSA<Twin<S>> process, FSA<S> invariant, FSA<Twin<S>> order);
 
     interface Result<S>
     {

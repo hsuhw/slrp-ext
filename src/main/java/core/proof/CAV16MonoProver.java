@@ -41,19 +41,21 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         return Transducers.filterByOutput(Transducers.filterByInput(sched, nfConfigs), nfConfigs);
     }
 
-    public CAV16MonoProver(Problem<S> problem, boolean shapesAutomata)
+    public CAV16MonoProver(Problem<S> problem, boolean shapeInvariant, boolean shapeOrder, boolean loosenInvariant)
     {
-        super(problem, shapesAutomata);
+        super(problem, shapeInvariant, shapeOrder, loosenInvariant);
 
         nfScheduler = makeNonfinalScheduler(scheduler, nonfinalConfigs);
-        allBehavior = Transducers.compose(scheduler, process, scheduler.alphabet());
+        allBehavior = loosenInvariant
+                      ? FSAs.union(scheduler, process)
+                      : Transducers.compose(scheduler, process, scheduler.alphabet());
         invEnclosesAll = problem.invariantEnclosesAllBehavior();
     }
 
     static <S> FSAEncoding<S> newFSAEncoding(SatSolver solver, int size, AlphabetIntEncoder<S> alphabetEncoding,
-                                             boolean restrictsShape)
+                                             boolean restrictShape)
     {
-        FSAEncoding<S> instance = new BasicFSAEncoding<>(solver, size, alphabetEncoding, restrictsShape);
+        FSAEncoding<S> instance = new BasicFSAEncoding<>(solver, size, alphabetEncoding, restrictShape);
         instance.ensureNoDanglingState();
 
         return instance;
@@ -108,10 +110,10 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
     }
 
     static <S> AnySchedulerProgressabilityChecker.Result<S> checkProgressability(FSA<Twin<S>> nfScheduler,
-                                                                                 FSA<Twin<S>> process, FSA<S> nfConfigs,
-                                                                                 FSA<S> invariant, FSA<Twin<S>> order)
+                                                                                 FSA<Twin<S>> process, FSA<S> invariant,
+                                                                                 FSA<Twin<S>> order)
     {
-        return ANY_SCHEDULER_PROGRESSABILITY_CHECKER.test(nfScheduler, process, nfConfigs, invariant, order);
+        return ANY_SCHEDULER_PROGRESSABILITY_CHECKER.test(nfScheduler, process, invariant, order);
     }
 
     static <S> void refineProgressability(SatSolver solver, FSAEncoding<S> invariantEncoding,
@@ -121,10 +123,14 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
     {
         final ImmutableList<S> x = counterexample.get().collect(Twin::getOne);
         final ImmutableList<S> y = counterexample.get().collect(Twin::getTwo);
-
+        if (y.isEmpty() || y.get(0) == null) {
+            LOGGER.debug("Blocking {}", x);
+            invariantEncoding.ensureNoAccepting(x);
+            return;
+        }
         final FSA<S> possibleZ = FSAs.thatAcceptsOnly(steadyAlphabet, Transducers.postImage(process, y));
-        final ImmutableSet<S> noEpsilonSteadyAlphabet = steadyAlphabet.noEpsilonSet();
-        if (possibleZ.acceptsNone() || !x.allSatisfy(noEpsilonSteadyAlphabet::contains)) {
+        if (possibleZ.acceptsNone()) {
+            LOGGER.debug("Blocking {}", x);
             invariantEncoding.ensureNoAccepting(x);
             return;
         }
@@ -135,6 +141,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         final CertainWord<S> z = invariantEncoding.ensureAcceptingCertainWordIf(shouldBeCertainZ, x.size());
         z.ensureAcceptedBy(possibleZ);
         final CertainWord<Twin<S>> xz = orderEncoding.ensureAcceptingCertainWordIf(shouldBeCertainZ, x.size());
+        final ImmutableSet<S> noEpsilonSteadyAlphabet = steadyAlphabet.noEpsilonSet();
         x.forEachWithIndex((chx, pos) -> {
             noEpsilonSteadyAlphabet.forEach(chz -> {
                 final Twin<S> chxz = Tuples.twin(chx, chz);
@@ -150,9 +157,8 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
     @Override
     public void prove()
     {
-        final AlphabetIntEncoder<S> invSymbolEncoding = AlphabetIntEncoders.create(allAlphabet);
+        final AlphabetIntEncoder<S> invSymbolEncoding = AlphabetIntEncoders.create(wholeAlphabet);
         final AlphabetIntEncoder<Twin<S>> ordSymbolEncoding = AlphabetIntEncoders.create(orderAlphabet);
-        final ImmutableSet<Twin<S>> ordReflexiveSymbols = steadyAlphabet.asSet().collect(s -> Tuples.twin(s, s));
 
         // having empty string excluded makes searching from 0 or 1 meaningless
         invariantSizeBegin = invariantSizeBegin < 1 ? 1 : invariantSizeBegin;
@@ -161,47 +167,57 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         search((invSize, ordSize) -> {
             LOGGER.info("Searching in state spaces {} & {} ..", invSize, ordSize);
 
-            final FSAEncoding<S> inv = newFSAEncoding(solver, invSize, invSymbolEncoding, automataShaped);
-            final FSAEncoding<Twin<S>> ord = newFSAEncoding(solver, ordSize, ordSymbolEncoding, automataShaped);
-            ord.ensureNoWordPurelyMadeOf(ordReflexiveSymbols);
+            final FSAEncoding<S> invEnc = newFSAEncoding(solver, invSize, invSymbolEncoding, shapeInvariant);
+            final FSAEncoding<Twin<S>> ordEnc = newFSAEncoding(solver, ordSize, ordSymbolEncoding, shapeOrder);
+            ordEnc.ensureNoWordPurelyMadeOf(orderReflexiveSymbols);
 
             LanguageSubsetChecker.Result<S> l1;
             BehaviorEnclosureChecker.Result<S> l2 = null;
             TransitivityChecker.Result<S> l3;
+            LanguageSubsetChecker.Result<S> l4Precheck;
+            AnySchedulerProgressabilityChecker.Counterexample<S> l4PrecheckViolation;
             AnySchedulerProgressabilityChecker.Result<S> l4;
             while (solver.findItSatisfiable()) {
                 boolean contradiction = false;
-                final FSA<S> invCand = inv.resolve();
-                final FSA<Twin<S>> ordCand = ord.resolve();
+                final FSA<S> invCand = invEnc.resolve();
+                final FSA<Twin<S>> ordCand = ordEnc.resolve();
+
+                LOGGER.debug("Invariant candidate: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", invCand);
+                LOGGER.debug("Order candidate (>): " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", ordCand);
 
                 if ((l1 = checkInitConfigsEnclosure(initialConfigs, invCand)).rejected()) {
-                    refineInitConfigsEncloser(inv, l1.counterexample());
+                    LOGGER.debug("Initial configurations enclosed: {}", l1);
+                    refineInitConfigsEncloser(invEnc, l1.counterexample());
                 }
                 if (invEnclosesAll && (l2 = checkBehaviorEnclosure(allBehavior, invCand)).rejected()) {
-                    refineBehaviorEncloser(solver, inv, l2.counterexample());
+                    LOGGER.debug("Transition behavior enclosed: {}", l2);
+                    refineBehaviorEncloser(solver, invEnc, l2.counterexample());
                 }
                 if ((l3 = checkTransitivity(ordCand)).rejected()) {
-                    refineTransitivity(solver, ord, l3.counterexample());
+                    LOGGER.debug("Strict pre-order relation: {}", l3);
+                    refineTransitivity(solver, ordEnc, l3.counterexample());
                 }
-                if ((l4 = checkProgressability(nfScheduler, process, nonfinalConfigs, invCand, ordCand)).rejected()) {
+                if (!loosenInvariant && (l4Precheck = schedulerOperatesOnAllNonfinalInvariants(invCand)).rejected()) {
+                    final ImmutableList<S> violation = l4Precheck.counterexample().get();
+                    final ImmutableList<Twin<S>> v = violation.collect(ch -> Tuples.twin(ch, null));
+                    l4PrecheckViolation = new BasicAnySchedulerProgressabilityChecker.Counterexample<>(v);
+                    l4 = new BasicAnySchedulerProgressabilityChecker.Result<>(false, l4PrecheckViolation);
+                } else {
+                    l4 = checkProgressability(nfScheduler, process, invCand, ordCand);
+                }
+                if (l4.rejected()) {
+                    LOGGER.debug("Progressability: {}", l4);
                     try {
-                        refineProgressability(solver, inv, ord, process, steadyAlphabet, l4.counterexample());
+                        refineProgressability(solver, invEnc, ordEnc, process, roundAlphabet, l4.counterexample());
                     } catch (ContradictionException e) {
                         contradiction = true;
                     }
                 }
 
-                LOGGER.info("Having counterexamples: {} {} {} {}", //
+                LOGGER.info("Rules checked: {} {} {} {}", //
                             l1.passed(), invEnclosesAll ? l2.passed() : "--", l3.passed(), l4.passed());
                 if (l1.passed() && (!invEnclosesAll || l2.passed()) && l3.passed() && l4.passed()) {
                     return Tuples.pair(invCand, ordCand);
-                } else {
-                    LOGGER.debug("Invariant candidate: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", invCand);
-                    LOGGER.debug("Order candidate (>): " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", ordCand);
-                    LOGGER.debug("Initial configurations enclosed: {}", l1);
-                    LOGGER.debug("Transition behavior enclosed: {}", invEnclosesAll ? l2 : "--");
-                    LOGGER.debug("Strict pre-order relation: {}", l3);
-                    LOGGER.debug("Progressability: {}", l4);
                 }
                 if (contradiction) {
                     break;
@@ -222,7 +238,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         final String l1 = checkInitConfigsEnclosure(initialConfigs, invCand).toString();
         final String l2 = invEnclosesAll ? checkBehaviorEnclosure(allBehavior, invCand).toString() : "--";
         final String l3 = checkTransitivity(ordCand).toString();
-        final String l4 = checkProgressability(nfScheduler, process, nonfinalConfigs, invCand, ordCand).toString();
+        final String l4 = checkProgressability(nfScheduler, process, invCand, ordCand).toString();
 
         LOGGER.debug("Invariant candidate: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", invCand);
         LOGGER.debug("Order candidate (>): " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", ordCand);

@@ -7,7 +7,7 @@ import org.eclipse.collections.api.tuple.Twin;
 
 public interface FairnessProgressabilityChecker
 {
-    <S> Result<S> test(FSA<Twin<S>> behavior, FSA<S> nonfinalConfigs, FSA<S> invariant, FSA<Twin<S>> order);
+    <S> Result<S> test(FSA<Twin<S>> behavior, FSA<S> matteringConfigs, FSA<S> invariant, FSA<Twin<S>> order);
 
     interface Result<S>
     {

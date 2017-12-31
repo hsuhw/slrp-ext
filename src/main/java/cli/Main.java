@@ -84,12 +84,15 @@ public final class Main
         // process the input problem
         final Prover prover;
         final String mode = cli.invokedCmd().hasOption("mode") ? cli.invokedCmd().getOptionValue("mode") : "exp";
+        final boolean shapeInvariant = cli.invokedCmd().hasOption("shape-invariant");
+        final boolean shapeOrder = cli.invokedCmd().hasOption("shape-order");
+        final boolean loosenInvariant = cli.invokedCmd().hasOption("loose-invariant");
         switch (mode) {
             case "cav16mono":
-                prover = new CAV16MonoProver<>(problem, cli.invokedCmd().hasOption("shaped"));
+                prover = new CAV16MonoProver<>(problem, shapeInvariant, shapeOrder, loosenInvariant);
                 break;
             default: // should be 'exp'
-                prover = new ExperimentalProver<>(problem, cli.invokedCmd().hasOption("shaped"));
+                prover = new ExperimentalProver<>(problem, shapeInvariant, shapeOrder, loosenInvariant);
         }
         if (problem.invariant() != null && problem.order() != null) {
             LOGGER.debug("Invoke a verification on input.");

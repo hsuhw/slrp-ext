@@ -16,7 +16,9 @@ public final class CommandLineInterface
         cmdSyntax = "slrp-ext [OPTIONS] FILE" + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "options:" + DISPLAY_NEWLINE;
         String helpDesc = "print this message and exit";
         String versionDesc = "print the version information and exit";
-        String shapedDesc = "use the shape constraint when searching automata";
+        String shapeInvariantDesc = "use the shape constraint when searching invariant";
+        String shapeOrderDesc = "use the shape constraint when searching order";
+        String looseInvariantDesc = "allow loose invariant";
         String logLevelDesc = "set the logging level (\"debug\"|\"info\"|\"warn\"|\"error\"|\"fatal\") " //
             + "(default \"warn\")";
         String modeDesc = "set the mode (\"exp\"|\"cav16mono\") (default \"exp\")";
@@ -24,7 +26,9 @@ public final class CommandLineInterface
         options = new Options();
         options.addOption("h", "help", false, helpDesc);
         options.addOption("v", "version", false, versionDesc);
-        options.addOption("s", "shaped", false, shapedDesc);
+        options.addOption("si", "shape-invariant", false, shapeInvariantDesc);
+        options.addOption("so", "shape-order", false, shapeOrderDesc);
+        options.addOption("li", "loose-invariant", false, looseInvariantDesc);
         options.addOption(Option.builder("l").longOpt("log-level") //
                                 .desc(logLevelDesc).hasArg().argName("LEVEL").build());
         options.addOption(Option.builder("m").longOpt("mode") //

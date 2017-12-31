@@ -26,23 +26,27 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
     private static final FairnessProgressabilityChecker FAIRNESS_PROGRESSABILITY_CHECKER;
 
     private final FSA<Twin<S>> allBehavior;
+    private final FSA<S> matteringConfigs;
 
     static {
         FAIRNESS_PROGRESSABILITY_CHECKER = new BasicFairnessProgressabilityChecker();
     }
 
-    public ExperimentalProver(Problem<S> problem, boolean shapesAutomata)
+    public ExperimentalProver(Problem<S> problem, boolean shapeInvariant, boolean shapeOrder, boolean loosenInvariant)
     {
-        super(problem, shapesAutomata);
+        super(problem, shapeInvariant, shapeOrder, loosenInvariant);
 
         allBehavior = Transducers.compose(scheduler, process, scheduler.alphabet());
+        final FSA<S> allBehaviorDomain = FSAs.project(allBehavior, wholeAlphabet, Twin::getOne);
+        matteringConfigs = FSAs.minimize(FSAs.determinize(FSAs.intersect(nonfinalConfigs, allBehaviorDomain)));
+        LOGGER.debug("All behaviour computed: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", allBehavior);
     }
 
     static <S> FairnessProgressabilityChecker.Result<S> checkProgressability(FSA<Twin<S>> behavior,
-                                                                             FSA<S> nonfinalConfigs, FSA<S> invariant,
+                                                                             FSA<S> matteringConfigs, FSA<S> invariant,
                                                                              FSA<Twin<S>> order)
     {
-        return FAIRNESS_PROGRESSABILITY_CHECKER.test(behavior, nonfinalConfigs, invariant, order);
+        return FAIRNESS_PROGRESSABILITY_CHECKER.test(behavior, matteringConfigs, invariant, order);
     }
 
     static <S> void refineProgressability(SatSolver solver, FSAEncoding<S> invariantEncoding,
@@ -64,9 +68,8 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
     @Override
     public void prove()
     {
-        final AlphabetIntEncoder<S> invSymbolEncoding = AlphabetIntEncoders.create(allAlphabet);
+        final AlphabetIntEncoder<S> invSymbolEncoding = AlphabetIntEncoders.create(wholeAlphabet);
         final AlphabetIntEncoder<Twin<S>> ordSymbolEncoding = AlphabetIntEncoders.create(orderAlphabet);
-        final ImmutableSet<Twin<S>> ordReflexiveSymbols = steadyAlphabet.asSet().collect(s -> Tuples.twin(s, s));
 
         // having empty string excluded makes searching from 0 or 1 meaningless
         invariantSizeBegin = invariantSizeBegin < 1 ? 1 : invariantSizeBegin;
@@ -75,47 +78,55 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
         search((invSize, ordSize) -> {
             LOGGER.info("Searching in state spaces {} & {} ..", invSize, ordSize);
 
-            final FSAEncoding<S> invGuessing = newFSAEncoding(solver, invSize, invSymbolEncoding, automataShaped);
-            final FSAEncoding<Twin<S>> ordGuessing = newFSAEncoding(solver, ordSize, ordSymbolEncoding, automataShaped);
-            ordGuessing.ensureNoWordPurelyMadeOf(ordReflexiveSymbols);
+            final FSAEncoding<S> invEnc = newFSAEncoding(solver, invSize, invSymbolEncoding, shapeInvariant);
+            final FSAEncoding<Twin<S>> ordEnc = newFSAEncoding(solver, ordSize, ordSymbolEncoding, shapeOrder);
+            ordEnc.ensureNoWordPurelyMadeOf(orderReflexiveSymbols);
 
             LanguageSubsetChecker.Result<S> l1;
             BehaviorEnclosureChecker.Result<S> l2;
             TransitivityChecker.Result<S> l3;
+            LanguageSubsetChecker.Result<S> l4Precheck;
+            FairnessProgressabilityChecker.Counterexample<S> l4PrecheckViolation;
             FairnessProgressabilityChecker.Result<S> l4;
             while (solver.findItSatisfiable()) {
                 boolean contradiction = false;
-                final FSA<S> invCand = invGuessing.resolve();
-                final FSA<Twin<S>> ordCand = ordGuessing.resolve();
+                final FSA<S> invCand = invEnc.resolve();
+                final FSA<Twin<S>> ordCand = ordEnc.resolve();
+
+                LOGGER.debug("Invariant candidate: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", invCand);
+                LOGGER.debug("Order candidate (>): " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", ordCand);
 
                 if ((l1 = checkInitConfigsEnclosure(initialConfigs, invCand)).rejected()) {
-                    refineInitConfigsEncloser(invGuessing, l1.counterexample());
+                    LOGGER.debug("Initial configurations enclosed: {}", l1);
+                    refineInitConfigsEncloser(invEnc, l1.counterexample());
                 }
                 if ((l2 = checkBehaviorEnclosure(allBehavior, invCand)).rejected()) {
-                    refineBehaviorEncloser(solver, invGuessing, l2.counterexample());
+                    LOGGER.debug("Transition behavior enclosed: {}", l2);
+                    refineBehaviorEncloser(solver, invEnc, l2.counterexample());
                 }
                 if ((l3 = checkTransitivity(ordCand)).rejected()) {
-                    refineTransitivity(solver, ordGuessing, l3.counterexample());
+                    LOGGER.debug("Strict pre-order relation: {}", l3);
+                    refineTransitivity(solver, ordEnc, l3.counterexample());
                 }
-                if ((l4 = checkProgressability(allBehavior, nonfinalConfigs, invCand, ordCand)).rejected()) {
+                if (!loosenInvariant && (l4Precheck = schedulerOperatesOnAllNonfinalInvariants(invCand)).rejected()) {
+                    final ImmutableList<S> v = l4Precheck.counterexample().get();
+                    l4PrecheckViolation = new BasicFairnessProgressabilityChecker.Counterexample<>(allBehavior, v);
+                    l4 = new BasicFairnessProgressabilityChecker.Result<>(false, l4PrecheckViolation);
+                } else {
+                    l4 = checkProgressability(allBehavior, matteringConfigs, invCand, ordCand);
+                }
+                if (l4.rejected()) {
+                    LOGGER.debug("Progressability: {}", l4);
                     try {
-                        refineProgressability(solver, invGuessing, ordGuessing, l4.counterexample());
+                        refineProgressability(solver, invEnc, ordEnc, l4.counterexample());
                     } catch (ContradictionException e) {
                         contradiction = true;
                     }
                 }
 
-                LOGGER.info("Having counterexamples: {} {} {} {}", //
-                            l1.passed(), l2.passed(), l3.passed(), l4.passed());
+                LOGGER.info("Rules checked: {} {} {} {}", l1.passed(), l2.passed(), l3.passed(), l4.passed());
                 if (l1.passed() && l2.passed() && l3.passed() && l4.passed()) {
                     return Tuples.pair(invCand, ordCand);
-                } else {
-                    LOGGER.debug("Invariant candidate: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", invCand);
-                    LOGGER.debug("Order candidate (>): " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", ordCand);
-                    LOGGER.debug("Initial configurations enclosed: {}", l1);
-                    LOGGER.debug("Transition behavior enclosed: {}", l2);
-                    LOGGER.debug("Strict pre-order relation: {}", l3);
-                    LOGGER.debug("Progressability: {}", l4);
                 }
                 if (contradiction) {
                     break;

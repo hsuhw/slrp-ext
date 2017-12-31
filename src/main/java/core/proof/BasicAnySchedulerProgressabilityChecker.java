@@ -24,7 +24,7 @@ import static api.util.Values.DISPLAY_NEWLINE;
 public class BasicAnySchedulerProgressabilityChecker implements AnySchedulerProgressabilityChecker
 {
     @Override
-    public <S> Result<S> test(FSA<Twin<S>> nfSched, FSA<Twin<S>> proc, FSA<S> nfConfigs, FSA<S> inv, FSA<Twin<S>> order)
+    public <S> Result<S> test(FSA<Twin<S>> nfSched, FSA<Twin<S>> proc, FSA<S> inv, FSA<Twin<S>> order)
     {
         final FSA<Twin<S>> procInInv = Transducers.filterByOutput(proc, inv);
         final FSA<Twin<S>> progressAvailSchedMoves = FSAs.product(procInInv, order, proc.alphabet(), (trans, ord) -> {
@@ -40,12 +40,12 @@ public class BasicAnySchedulerProgressabilityChecker implements AnySchedulerProg
         return new Result<>(false, new Counterexample<>(counterexampleImage.enumerateOneShortest()));
     }
 
-    private class Result<S> implements AnySchedulerProgressabilityChecker.Result<S>
+    public static class Result<S> implements AnySchedulerProgressabilityChecker.Result<S>
     {
         private final boolean passed;
-        private final Counterexample<S> counterexample;
+        private final AnySchedulerProgressabilityChecker.Counterexample<S> counterexample;
 
-        private Result(boolean passed, Counterexample<S> counterexample)
+        public Result(boolean passed, AnySchedulerProgressabilityChecker.Counterexample<S> counterexample)
         {
             this.passed = passed;
             this.counterexample = counterexample;
@@ -58,7 +58,7 @@ public class BasicAnySchedulerProgressabilityChecker implements AnySchedulerProg
         }
 
         @Override
-        public Counterexample<S> counterexample()
+        public AnySchedulerProgressabilityChecker.Counterexample<S> counterexample()
         {
             return counterexample;
         }
@@ -70,11 +70,11 @@ public class BasicAnySchedulerProgressabilityChecker implements AnySchedulerProg
         }
     }
 
-    private class Counterexample<S> implements AnySchedulerProgressabilityChecker.Counterexample<S>
+    public static class Counterexample<S> implements AnySchedulerProgressabilityChecker.Counterexample<S>
     {
         private ImmutableList<Twin<S>> instance;
 
-        private Counterexample(ImmutableList<Twin<S>> instance)
+        public Counterexample(ImmutableList<Twin<S>> instance)
         {
             this.instance = instance;
         }
