@@ -85,15 +85,14 @@ public interface FSAManipulator extends AutomatonManipulator
         MutableSet<State> currStateSet;
         while ((currStateSet = pendingStateSets.poll()) != null) {
             final State newDept = stateMapping.get(currStateSet);
+            if (currStateSet.anySatisfy(target::isAcceptState)) {
+                builder.addAcceptState(newDept);
+            }
             for (S symbol : noEpsilonSymbolSet) {
                 final MutableSet<State> destStates = delta.epsilonClosureOf(currStateSet, symbol).toSet();
                 final State newDest = stateMapping.computeIfAbsent(destStates, __ -> {
                     pendingStateSets.add(destStates);
-                    final State s = States.generate();
-                    if (destStates.anySatisfy(target::isAcceptState)) {
-                        builder.addAcceptState(s);
-                    }
-                    return s;
+                    return States.generate();
                 });
                 builder.addTransition(newDept, newDest, symbol);
             }
