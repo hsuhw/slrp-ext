@@ -4,26 +4,27 @@
 // in "Proving termination in B" by McIver et al. 2003 and also in
 // Esparza et al. 2012.
 //
-// -1: k = 0
-//  0: while (k < 100) {
-//  1:   old_x = x;
-//  2:   x = coin(p);
-//  3:   if (x != old_x) k++
-//  4: }
+//  0: k = 0
+//  1: while (k < 100) {
+//  2:   old_x = x;
+//  3:   x = coin(p);
+//  4:   if (x != old_x) k++
+//  5: }
 //
 // Here, we give a transducer representation of this as an example of a token
 // passing in a linear array with one token, where the token can
 // probabilistically stay or move to the right.
 //
-// top - token
-// bot - no token
+// T  - token
+// T_ - token selected
+// B  - no token
 //
 
 I0 {
     init: s0;
 
-    s0 -> s1 top;
-    s1 -> s1 bot;
+    s0 -> s1 T;
+    s1 -> s1 B;
 
     accepting: s1;
 }
@@ -33,8 +34,8 @@ closedUnderTransitions;
 F {
     init: s0;
 
-    s0 -> s0 bot;
-    s0 -> s1 top;
+    s0 -> s0 B;
+    s0 -> s1 T;
 
     accepting: s1;
 }
@@ -42,27 +43,38 @@ F {
 P1 {
     init: s0;
 
-    s0 -> s0 bot/bot;
-    s0 -> s1 top/top_;
+    s0 -> s0 B/B;
+    s0 -> s1 T/T_;
+    s0 -> ss T_/nil;
+    s0 -> ss1 B/nil;
+    s0 -> ss nil/nil;
 
-    s1 -> s1 bot/bot;
+    s1 -> s1 B/B;
+    s1 -> ss T/nil;
+    s1 -> ss T_/nil;
+    s1 -> ss nil/nil;
 
-    accepting: s1;
+    ss -> ss B/nil;
+    ss -> ss T/nil;
+    ss -> ss T_/nil;
+    ss -> ss nil/nil;
+
+    accepting: s1, ss, ss1;
 }
 
 P2 {
     init: s0;
 
-    s0 -> s0 bot/bot;
+    s0 -> s0 B/B;
 
-    s0 -> s1 top_/bot;
-    s1 -> s2 bot/top;
-    s2 -> s2 bot/bot;
+    s0 -> s1 T_/B;
+    s1 -> s2 B/T;
+    s2 -> s2 B/B;
 
-    s0 -> p1 top_/top;
+    s0 -> p1 T_/T;
 
     accepting: s2, p1;
 }
 
 transducerStateGuessing: 1 .. 10;
-automatonStateGuessing: 0 .. 4;
+automatonStateGuessing: 1 .. 4;

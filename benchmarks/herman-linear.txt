@@ -5,11 +5,12 @@
 //
 // Liveness holds under arbitrary schedulers here (unlike the ring case).
 //
-// T - token
-// N - no token
+// T  - token
+// T_ - token selected
+// N  - no token
 //
 
-// Configurations with at least one token
+// At least one token
 I0 {
     init: s0;
 
@@ -26,14 +27,12 @@ I0 {
 
 closedUnderTransitions;
 
-// Configurations with precisely one token
+// Precisely one token
 F {
     init: s0;
 
     s0 -> s0 N;
-
     s0 -> s1 T;
-
     s1 -> s1 N;
 
     accepting: s1;
@@ -43,24 +42,34 @@ P1 {
     init: sinit;
 
     sinit -> s0;
-    sinit -> sN;
+    sinit -> ssN N/nil;
 
     s0 -> s0 N/N;
     s0 -> s0 T/T;
+    s0 -> ss T_/nil;
+    s0 -> ss nil/nil;
 
     s0 -> s1 T/T_;
 
     // To make sure the chosen process is not last
-    s1 -> s2 T/T;
     s1 -> s2 N/N;
+    s1 -> s2 T/T;
+    s1 -> ss T_/nil;
+    s1 -> ss nil/nil;
 
     s2 -> s2 N/N;
     s2 -> s2 T/T;
+    s2 -> ss T_/nil;
+    s2 -> ss nil/nil;
 
-    // Player 1 always needs to be able to make a move
-    //sN -> sN N/N;
+    ss -> ss T/nil;
+    ss -> ss T_/nil;
+    ss -> ss N/nil;
+    ss -> ss nil/nil;
 
-    accepting: s2, sN;
+    ssN -> ssN N/nil;
+
+    accepting: s2, ss, ssN;
 }
 
 P2 {
@@ -86,4 +95,4 @@ P2 {
 }
 
 transducerStateGuessing: 1 .. 10;
-automatonStateGuessing: 0 .. 4;
+automatonStateGuessing: 1 .. 4;

@@ -1,7 +1,9 @@
+// israeli-jalfon.txt
+//
 // Israeli-Jalfon self-stabilising protocol (see IJ'90 in our CAV'16 paper for
 // more detail)
 //
-// In a nutshell, this is a routing protocol in a ring-shaped topology, where
+// In a nutshell, this is a routing protocol in a ring-shaped Tology, where
 // a process may hold a token. When a process holding a token is chosen by the
 // scheduler, it will toss a coin and pass the token to the left/right each with
 // probability 1/2. When two tokens are held by the same process, they will be
@@ -10,22 +12,27 @@
 // where precisely one process is holding a token. The liveness property to
 // prove, hence, is that the probability of reaching a stable configuration
 // from any initial configuration is 1.
+//
+// T  - token
+// T_ - token selected
+// B  - no token
+//
 
 I0 {
     init : s0;
 
-    s0 -> s0 bot;
-    s0 -> s0 top;
+    s0 -> s0 B;
+    s0 -> s0 T;
 
-    s0 -> s1 top;
+    s0 -> s1 T;
 
-    s1 -> s1 bot;
-    s1 -> s1 top;
+    s1 -> s1 B;
+    s1 -> s1 T;
 
-    s1 -> s2 top;
+    s1 -> s2 T;
 
-    s2 -> s2 bot;
-    s2 -> s2 top;
+    s2 -> s2 B;
+    s2 -> s2 T;
 
     accepting: s2;
 }
@@ -35,23 +42,38 @@ closedUnderTransitions;
 F {
     init : s0;
 
-    s0 -> s0 bot;
-    s0 -> s1 top;
-    s1 -> s1 bot;
+    s0 -> s0 B;
+    s0 -> s1 T;
+    s1 -> s1 B;
 
     accepting: s1;
 }
 
 P1 {
-    init : s0;
+    init : sinit;
 
-    s0 -> s0 bot/bot;
-    s0 -> s0 top/top;
-    s0 -> s1 top/toph;
-    s1 -> s1 bot/bot;
-    s1 -> s1 top/top;
+    sinit -> s0;
+    sinit -> ssB B/nil;
 
-    accepting: s1;
+    s0 -> s0 B/B;
+    s0 -> s0 T/T;
+
+    s0 -> s1 T/T_;
+    s0 -> ss T_/nil;
+    s0 -> ss nil/nil;
+
+    s1 -> s1 B/B;
+    s1 -> s1 T/T;
+    s1 -> ss nil/nil;
+
+    ss -> ss B/nil;
+    ss -> ss T/nil;
+    ss -> ss T_/nil;
+    ss -> ss nil/nil;
+
+    ssB -> ssB B/nil;
+
+    accepting: s1, ss, ssB;
 }
 
 P2 {
@@ -62,33 +84,33 @@ P2 {
     s0 -> s7;
     s0 -> s10;
 
-    s1 -> s1 bot/bot;
-    s1 -> s1 top/top;
-    s1 -> s2 toph/bot;
-    s2 -> s3 bot/top;
-    s2 -> s3 top/top;
-    s3 -> s3 bot/bot;
-    s3 -> s3 top/top;
+    s1 -> s1 B/B;
+    s1 -> s1 T/T;
+    s1 -> s2 T_/B;
+    s2 -> s3 B/T;
+    s2 -> s3 T/T;
+    s3 -> s3 B/B;
+    s3 -> s3 T/T;
 
-    s4 -> s4 bot/bot;
-    s4 -> s4 top/top;
-    s4 -> s5 bot/top;
-    s4 -> s5 top/top;
-    s5 -> s6 toph/bot;
-    s6 -> s6 bot/bot;
-    s6 -> s6 top/top;
+    s4 -> s4 B/B;
+    s4 -> s4 T/T;
+    s4 -> s5 B/T;
+    s4 -> s5 T/T;
+    s5 -> s6 T_/B;
+    s6 -> s6 B/B;
+    s6 -> s6 T/T;
 
-    s7 -> s8 bot/top;
-    s7 -> s8 top/top;
-    s8 -> s8 bot/bot;
-    s8 -> s8 top/top;
-    s8 -> s9 toph/bot;
+    s7 -> s8 B/T;
+    s7 -> s8 T/T;
+    s8 -> s8 B/B;
+    s8 -> s8 T/T;
+    s8 -> s9 T_/B;
 
-    s10 -> s11 toph/bot;
-    s11 -> s11 bot/bot;
-    s11 -> s11 top/top;
-    s11 -> s12 bot/top;
-    s11 -> s12 top/top;
+    s10 -> s11 T_/B;
+    s11 -> s11 B/B;
+    s11 -> s11 T/T;
+    s11 -> s12 B/T;
+    s11 -> s12 T/T;
 
     accepting: s3, s6, s9, s12;
 }

@@ -1,16 +1,18 @@
-// LR-philo.txt
+// lr-philo.txt
+//
 // Left-Right (deterministic) Dining Philosopher Protocol
-// Leters:
-// T - Thinking
-// L - Left fork, no right fork
-// R - no left fork, Right fork
-// E - both forks held
 //
 // Leftmost philosopher (in a linearisation of the circular order) picks
 // right first, and then left. The other philosophers pick up the left fork
 // first.
+//
+// T - Thinking
+// L - Having only left fork
+// R - Having only right fork
+// E - Both forks held
+//
 
-// Assumption: at least three philosophers.
+// At least three philosophers
 I0 {
     init: s0;
 
@@ -42,7 +44,20 @@ F {
 }
 
 P1 {
-    init: s0;
+    init: sinit;
+
+    sinit -> s0;
+    sinit -> ssE T/nil;
+    sinit -> ssE L/nil;
+    sinit -> ssE R/nil;
+    sinit -> ssE nil/nil;
+
+    s0 -> ss T_/nil;
+    s0 -> ss L/nil;
+    s0 -> ss L_/nil;
+    s0 -> ss R_/nil;
+    s0 -> ss E/nil;
+    s0 -> ss nil/nil;
 
     // Choose first philo
 
@@ -51,18 +66,44 @@ P1 {
 
             // The second guy should not have a fork
     t1 -> t12 T/T;
+    t1 -> ss T_/nil;
+    t1 -> ss L_/nil;
+    t1 -> ss R/nil;
+    t1 -> ss R_/nil;
+    t1 -> ss E/nil;
+    t1 -> ss nil/nil;
 
     t12 -> t12 T/T;
     t12 -> t12 L/L;
+    t12 -> ss T_/nil;
+    t12 -> ss L_/nil;
+    t12 -> ss R/nil;
+    t12 -> ss R_/nil;
+    t12 -> ss E/nil;
+    t12 -> ss nil/nil;
 
         // r1 - leftmost philo (already with a right fork) is picked
     s0 -> r1 R/R_;
 
             // The second guy should not have a fork
     r1 -> r12 T/T;
+    r1 -> ss T_/nil;
+    r1 -> ss L/nil;
+    r1 -> ss L_/nil;
+    r1 -> ss R/nil;
+    r1 -> ss R_/nil;
+    r1 -> ss E/nil;
+    r1 -> ss nil/nil;
+
 
     r12 -> r12 T/T;
     r12 -> r12 L/L;
+    r12 -> ss T_/nil;
+    r12 -> ss L_/nil;
+    r12 -> ss R/nil;
+    r12 -> ss R_/nil;
+    r12 -> ss E/nil;
+    r12 -> ss nil/nil;
 
     // Choose something other than the first philo
 
@@ -71,29 +112,72 @@ P1 {
 
     t2 -> t2 T/T;
     t2 -> t2 L/L;
+    t2 -> ss T_/nil;
+    t2 -> ss L_/nil;
+    t2 -> ss R/nil;
+    t2 -> ss R_/nil;
+    t2 -> ss E/nil;
+    t2 -> ss nil/nil;
 
         // the guy picked is thinking
     t2 -> tt2 T/T_;
         // the guy picked is holding a left fork
     t2 -> tl2 L/L_;
+    t2 -> ss T_/nil;
+    t2 -> ss L_/nil;
+    t2 -> ss R/nil;
+    t2 -> ss R_/nil;
+    t2 -> ss E/nil;
+    t2 -> ss nil/nil;
 
     tt2 -> tt2 T/T;
     tt2 -> tt2 L/L;
+    tt2 -> ss T_/nil;
+    tt2 -> ss L_/nil;
+    tt2 -> ss R/nil;
+    tt2 -> ss R_/nil;
+    tt2 -> ss E/nil;
+    tt2 -> ss nil/nil;
 
         // next to the guy P picked must not hold a left fork (or if P is the
         // rightmost guy, then don't care, i.e., add tl2 as a final state)
     tl2 -> tl3 T/T;
+    tl2 -> ss T_/nil;
+    tl2 -> ss L_/nil;
+    tl2 -> ss R/nil;
+    tl2 -> ss R_/nil;
+    tl2 -> ss E/nil;
+    tl2 -> ss nil/nil;
 
     tl3 -> tl3 T/T;
     tl3 -> tl3 L/L;
+    tl3 -> ss T_/nil;
+    tl3 -> ss L_/nil;
+    tl3 -> ss R/nil;
+    tl3 -> ss R_/nil;
+    tl3 -> ss E/nil;
+    tl3 -> ss nil/nil;
 
         // r2 - leftmost philo with a right fork but not picked
     s0 -> ri2 R/R;
 
     ri2 -> r2 T/T;
+    ri2 -> ss T_/nil;
+    ri2 -> ss L/nil;
+    ri2 -> ss L_/nil;
+    ri2 -> ss R/nil;
+    ri2 -> ss R_/nil;
+    ri2 -> ss E/nil;
+    ri2 -> ss nil/nil;
 
     r2 -> r2 T/T;
     r2 -> r2 L/L;
+    r2 -> ss T_/nil;
+    r2 -> ss L_/nil;
+    r2 -> ss R/nil;
+    r2 -> ss R_/nil;
+    r2 -> ss E/nil;
+    r2 -> ss nil/nil;
 
         // the guy picked is thinking
     r2 -> rt2 T/T_;
@@ -102,14 +186,43 @@ P1 {
 
     rt2 -> rt2 T/T;
     rt2 -> rt2 L/L;
+    rt2 -> ss T_/nil;
+    rt2 -> ss L_/nil;
+    rt2 -> ss R/nil;
+    rt2 -> ss R_/nil;
+    rt2 -> ss E/nil;
+    rt2 -> ss nil/nil;
 
         // here rl2 is not a final state unlike in the case of tl2
     rl2 -> rl3 T/T;
+    rl2 -> ss T_/nil;
+    rl2 -> ss L_/nil;
+    rl2 -> ss R/nil;
+    rl2 -> ss R_/nil;
+    rl2 -> ss E/nil;
+    rl2 -> ss nil/nil;
 
     rl3 -> rl3 T/T;
     rl3 -> rl3 L/L;
+    rl3 -> ss T_/nil;
+    rl3 -> ss L_/nil;
+    rl3 -> ss R/nil;
+    rl3 -> ss R_/nil;
+    rl3 -> ss E/nil;
+    rl3 -> ss nil/nil;
 
-    accepting: t12, r12, tt2, tl2, tl3, rt2, rl3;
+    ss ->  ss T/nil;
+    ss ->  ss T_/nil;
+    ss ->  ss R/nil;
+    ss ->  ss R_/nil;
+    ss ->  ss L/nil;
+    ss ->  ss L_/nil;
+    ss ->  ss E/nil;
+    ss ->  ss nil/nil;
+
+    ssE ->  ssE E/nil;
+
+    accepting: t12, r12, tt2, tl2, tl3, rt2, rl3, ss, ssE;
 }
 
 P2 {
@@ -136,5 +249,4 @@ P2 {
 }
 
 transducerStateGuessing: 1 .. 10;
-automatonStateGuessing: 0 .. 4;
-
+automatonStateGuessing: 1 .. 5;
