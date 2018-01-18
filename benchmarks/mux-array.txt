@@ -1,0 +1,132 @@
+// mux-array.txt
+//
+// We model this protocol as described in "Reachability Sets of Parametrized
+// Rings As Regular Languages" by Laurent Fribourg and Hans Olsen.
+//
+// qXY is a process state that:
+// X can be 0-2 (0, 1, and 2 stand for 'idle', 'waiting', 'critical', respectively)
+// Y can be 0-1 (0 and 1 stand for 'empty' and 'with token', respectively)
+//
+
+// at least two processes
+I0 {
+    init: s0;
+
+    s0 -> s1 q01;
+    s1 -> s2 q00;
+    s2 -> s2 q00;
+
+    accepting: s2;
+}
+
+closedUnderTransitions;
+
+// some process can enter the critical section
+F {
+    init: s0;
+
+    s0 -> s0 q00;
+    s0 -> s0 q01;
+    s0 -> s0 q10;
+    s0 -> s0 q11;
+
+    s0 -> s1 q20;
+    s0 -> s1 q21;
+
+    s1 -> s1 q00;
+    s1 -> s1 q01;
+    s1 -> s1 q10;
+    s1 -> s1 q11;
+
+    accepting: s1;
+}
+
+P1 {
+    init: s0;
+
+    s0 -> r1; // r1,r2: change from idle to waiting
+
+    r1 -> r1 q00/q00;
+    r1 -> r1 q01/q01;
+    r1 -> r1 q10/q10;
+    r1 -> r1 q11/q11;
+    r1 -> r1 q20/q20;
+    r1 -> r1 q21/q21;
+
+    r1 -> t1 q00/q10_;
+    r1 -> t1 q01/q11_;
+
+    t1 -> t1 q00/q00;
+    t1 -> t1 q01/q01;
+    t1 -> t1 q10/q10;
+    t1 -> t1 q11/q11;
+    t1 -> t1 q20/q20;
+    t1 -> t1 q21/q21;
+
+    s0 -> r3; // r3,r4: change from CS to idle
+
+    r3 -> r3 q00/q00;
+    r3 -> r3 q01/q01;
+    r3 -> r3 q10/q10;
+    r3 -> r3 q11/q11;
+    r3 -> r3 q20/q20;
+    r3 -> r3 q21/q21;
+
+    r3 -> t1 q20/q00_;
+    r3 -> t1 q21/q01_;
+
+    s0 -> r5; // r5: change from waiting to CS
+
+    r5 -> r5 q00/q00;
+    r5 -> r5 q01/q01;
+    r5 -> r5 q10/q10;
+    r5 -> r5 q11/q11;
+    r5 -> r5 q20/q20;
+    r5 -> r5 q21/q21;
+
+    r5 -> t1 q11/q21_;
+
+    s0 -> r6; // pass token from an idle process to a waiting process
+
+    r6 -> r6 q00/q00;
+    r6 -> r6 q01/q01;
+    r6 -> r6 q10/q10;
+    r6 -> r6 q11/q11;
+    r6 -> r6 q20/q20;
+    r6 -> r6 q21/q21;
+
+    r6 -> s1 q21/q00;
+    s1 -> t1 q10/q11_;
+
+    accepting: t1;
+}
+
+P2 {
+    init: s0;
+
+    s0 -> s0 q00/q00;
+    s0 -> s0 q01/q01;
+    s0 -> s0 q10/q10;
+    s0 -> s0 q11/q11;
+    s0 -> s0 q20/q20;
+    s0 -> s0 q21/q21;
+
+    s0 -> s1 q00_/q00;
+    s0 -> s1 q01_/q01;
+    s0 -> s1 q10_/q10;
+    s0 -> s1 q11_/q11;
+    s0 -> s1 q20_/q20;
+    s0 -> s1 q21_/q21;
+
+    s1 -> s1 q00/q00;
+    s1 -> s1 q01/q01;
+    s1 -> s1 q10/q10;
+    s1 -> s1 q11/q11;
+    s1 -> s1 q20/q20;
+    s1 -> s1 q21/q21;
+
+    accepting: s1;
+}
+
+transducerStateGuessing: 1 .. 10;
+automatonStateGuessing: 1 .. 4;

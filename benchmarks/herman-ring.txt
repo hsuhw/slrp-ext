@@ -1,15 +1,16 @@
 // herman-ring.txt
+//
 // This an adaptation of Herman's protocol in a ring.
 //
-// Liveness holds under (weakly) fair schedulers, but *not* under
-// some unfair schedulers. For this reason, SLRP will exit with
-// an error message for this model.
+// Liveness holds under (weakly) fair schedulers, but *not* under some unfair
+// schedulers.  For this reason, SLRP will exit with an error message for
+// this model.
 //
-// Letters used:
-// N - no token
 // T - token
+// N - no token
+//
 
-// Configurations with at least one token
+// at least one token
 I0 {
     init: s0;
 
@@ -26,7 +27,7 @@ I0 {
 
 closedUnderTransitions;
 
-// Configurations with precisely one token
+// precisely one token
 F {
     init: s0;
 
@@ -40,10 +41,7 @@ F {
 }
 
 P1 {
-    init: sinit;
-
-    sinit -> s0;
-    sinit -> sN;
+    init: s0;
 
     s0 -> s0 N/N;
     s0 -> s0 T/T;
@@ -53,10 +51,7 @@ P1 {
     s1 -> s1 N/N;
     s1 -> s1 T/T;
 
-    // Player 1 always needs to be able to make a move
-    sN -> sN N/N;
-
-    accepting: s1, sN;
+    accepting: s1;
 }
 
 P2 {
@@ -75,9 +70,9 @@ P2 {
     // pass to right
     s0 -> s2 T_/N;
 
-    // Merge tokens
+    // merge tokens
     s2 -> s1 T/T;
-    // Pass token to right from s2
+    // token passed to right from s2
     s2 -> s1 N/T;
 
     s1 -> s1 N/N;
@@ -95,8 +90,4 @@ P2 {
 }
 
 transducerStateGuessing: 1 .. 10;
-automatonStateGuessing: 0 .. 4;
-
-monolithicWitness;
-
-explicitChecksUntilLength: 6;
+automatonStateGuessing: 1 .. 4;

@@ -1,0 +1,698 @@
+// dijkstra-ring.txt
+//
+// We model this protocol as described in "Reachability Sets of Parametrized
+// Rings As Regular Languages" by Laurent Fribourg and Hans Olsen.
+//
+// qXYZ is a process state that:
+// X can be 0-2 (0, 1, and 2 stand for 'waiting', 'idle', and 'critical', respectively)
+// Y can be 0-1 (0 and 1 stand for 'empty' and 'with token', respectively)
+// Z can be 0-1 (0 and 1 stand for 'white' and 'black')
+//
+
+// at least two processes; one marked
+I0 {
+    init: s0;
+
+    s0 -> s1 q110;
+    s1 -> s2 q100m;
+    s2 -> s2 q100;
+
+    accepting: s2;
+}
+
+closedUnderTransitions;
+
+// the marked process can enter CS
+F {
+    init: s0;
+
+    s0 -> s0 q000;
+    s0 -> s0 q001;
+    s0 -> s0 q010;
+    s0 -> s0 q011;
+
+    s0 -> s0 q100;
+    s0 -> s0 q101;
+    s0 -> s0 q110;
+    s0 -> s0 q111;
+
+    s0 -> s1 q200m;
+    s0 -> s1 q201m;
+    s0 -> s1 q210m;
+    s0 -> s1 q211m;
+
+    s1 -> s1 q000;
+    s1 -> s1 q001;
+    s1 -> s1 q010;
+    s1 -> s1 q011;
+
+    s1 -> s1 q100;
+    s1 -> s1 q101;
+    s1 -> s1 q110;
+    s1 -> s1 q111;
+
+    accepting: s1;
+}
+
+P1 {
+    init: s0;
+
+    s0 -> r1;
+
+    // change from idle in black to waiting in black
+    r1 -> r1 q000/q000;
+    r1 -> r1 q001/q001;
+    r1 -> r1 q010/q010;
+    r1 -> r1 q011/q011;
+
+    r1 -> r1 q100/q100;
+    r1 -> r1 q101/q101;
+    r1 -> r1 q110/q110;
+    r1 -> r1 q111/q111;
+
+    r1 -> r1 q200/q200;
+    r1 -> r1 q201/q201;
+    r1 -> r1 q210/q210;
+    r1 -> r1 q211/q211;
+
+    r1 -> r1 q000m/q000m;
+    r1 -> r1 q001m/q001m;
+    r1 -> r1 q010m/q010m;
+    r1 -> r1 q011m/q011m;
+
+    r1 -> r1 q100m/q100m;
+    r1 -> r1 q101m/q101m;
+    r1 -> r1 q110m/q110m;
+    r1 -> r1 q111m/q111m;
+
+    r1 -> r1 q200m/q200m;
+    r1 -> r1 q201m/q201m;
+    r1 -> r1 q210m/q210m;
+    r1 -> r1 q211m/q211m;
+
+    r1 -> t1 q101/q001_;
+    r1 -> t1 q101m/q001m_;
+
+    t1 -> t1 q000/q000;
+    t1 -> t1 q001/q001;
+    t1 -> t1 q010/q010;
+    t1 -> t1 q011/q011;
+
+    t1 -> t1 q100/q100;
+    t1 -> t1 q101/q101;
+    t1 -> t1 q110/q110;
+    t1 -> t1 q111/q111;
+
+    t1 -> t1 q200/q200;
+    t1 -> t1 q201/q201;
+    t1 -> t1 q210/q210;
+    t1 -> t1 q211/q211;
+
+    t1 -> t1 q000m/q000m;
+    t1 -> t1 q001m/q001m;
+    t1 -> t1 q010m/q010m;
+    t1 -> t1 q011m/q011m;
+
+    t1 -> t1 q100m/q100m;
+    t1 -> t1 q101m/q101m;
+    t1 -> t1 q110m/q110m;
+    t1 -> t1 q111m/q111m;
+
+    t1 -> t1 q200m/q200m;
+    t1 -> t1 q201m/q201m;
+    t1 -> t1 q210m/q210m;
+    t1 -> t1 q211m/q211m;
+
+    s0 -> r2;
+
+    // change from waiting with token to CS
+    r2 -> r2 q000/q000;
+    r2 -> r2 q001/q001;
+    r2 -> r2 q010/q010;
+    r2 -> r2 q011/q011;
+
+    r2 -> r2 q100/q100;
+    r2 -> r2 q101/q101;
+    r2 -> r2 q110/q110;
+    r2 -> r2 q111/q111;
+
+    r2 -> r2 q200/q200;
+    r2 -> r2 q201/q201;
+    r2 -> r2 q210/q210;
+    r2 -> r2 q211/q211;
+
+    r2 -> r2 q000m/q000m;
+    r2 -> r2 q001m/q001m;
+    r2 -> r2 q010m/q010m;
+    r2 -> r2 q011m/q011m;
+
+    r2 -> r2 q100m/q100m;
+    r2 -> r2 q101m/q101m;
+    r2 -> r2 q110m/q110m;
+    r2 -> r2 q111m/q111m;
+
+    r2 -> r2 q200m/q200m;
+    r2 -> r2 q201m/q201m;
+    r2 -> r2 q210m/q210m;
+    r2 -> r2 q211m/q211m;
+
+    r2 -> t1 q010/q210_;
+    r2 -> t1 q011/q211_;
+    r2 -> t1 q010m/q210m_;
+    r2 -> t1 q011m/q211m_;
+
+    s0 -> r3;
+
+    // change from CS to idle
+    r3 -> r3 q000/q000;
+    r3 -> r3 q001/q001;
+    r3 -> r3 q010/q010;
+    r3 -> r3 q011/q011;
+
+    r3 -> r3 q100/q100;
+    r3 -> r3 q101/q101;
+    r3 -> r3 q110/q110;
+    r3 -> r3 q111/q111;
+
+    r3 -> r3 q200/q200;
+    r3 -> r3 q201/q201;
+    r3 -> r3 q210/q210;
+    r3 -> r3 q211/q211;
+
+    r3 -> r3 q000m/q000m;
+    r3 -> r3 q001m/q001m;
+    r3 -> r3 q010m/q010m;
+    r3 -> r3 q011m/q011m;
+
+    r3 -> r3 q100m/q100m;
+    r3 -> r3 q101m/q101m;
+    r3 -> r3 q110m/q110m;
+    r3 -> r3 q111m/q111m;
+
+    r3 -> r3 q200m/q200m;
+    r3 -> r3 q201m/q201m;
+    r3 -> r3 q210m/q210m;
+    r3 -> r3 q211m/q211m;
+
+    r3 -> t1 q200/q100_;
+    r3 -> t1 q201/q101_;
+    r3 -> t1 q210/q110_;
+    r3 -> t1 q211/q111_;
+    r3 -> t1 q200m/q100_m;
+    r3 -> t1 q201m/q101_m;
+    r3 -> t1 q210m/q110_m;
+    r3 -> t1 q211m/q111_m;
+
+    s0 -> r4;
+
+    r4 -> r4 q000/q000;
+    r4 -> r4 q001/q001;
+    r4 -> r4 q010/q010;
+    r4 -> r4 q011/q011;
+
+    r4 -> r4 q100/q100;
+    r4 -> r4 q101/q101;
+    r4 -> r4 q110/q110;
+    r4 -> r4 q111/q111;
+
+    r4 -> r4 q200/q200;
+    r4 -> r4 q201/q201;
+    r4 -> r4 q210/q210;
+    r4 -> r4 q211/q211;
+
+    r4 -> r4 q000m/q000m;
+    r4 -> r4 q001m/q001m;
+    r4 -> r4 q010m/q010m;
+    r4 -> r4 q011m/q011m;
+
+    r4 -> r4 q100m/q100m;
+    r4 -> r4 q101m/q101m;
+    r4 -> r4 q110m/q110m;
+    r4 -> r4 q111m/q111m;
+
+    r4 -> r4 q200m/q200m;
+    r4 -> r4 q201m/q201m;
+    r4 -> r4 q210m/q210m;
+    r4 -> r4 q211m/q211m;
+
+    r4 -> s1 q000/q001;
+    r4 -> s1 q010/q011;
+    r4 -> s1 q100/q101;
+    r4 -> s1 q110/q111;
+    r4 -> s1 q000m/q001m;
+    r4 -> s1 q010m/q011m;
+    r4 -> s1 q100m/q101m;
+    r4 -> s1 q110m/q111m;
+
+    s1 -> t1 q100/q000_;
+    s1 -> t1 q100m/q000m_;
+
+    s0 -> r41;
+
+    r41 -> s2 q100/q000;
+    r41 -> s2 q100m/q000m;
+
+    s2 -> s2 q000/q000;
+    s2 -> s2 q001/q001;
+    s2 -> s2 q010/q010;
+    s2 -> s2 q011/q011;
+
+    s2 -> s2 q100/q100;
+    s2 -> s2 q101/q101;
+    s2 -> s2 q110/q110;
+    s2 -> s2 q111/q111;
+
+    s2 -> s2 q200/q200;
+    s2 -> s2 q201/q201;
+    s2 -> s2 q210/q210;
+    s2 -> s2 q211/q211;
+
+    s2 -> s2 q000m/q000m;
+    s2 -> s2 q001m/q001m;
+    s2 -> s2 q010m/q010m;
+    s2 -> s2 q011m/q011m;
+
+    s2 -> s2 q100m/q100m;
+    s2 -> s2 q101m/q101m;
+    s2 -> s2 q110m/q110m;
+    s2 -> s2 q111m/q111m;
+
+    s2 -> s2 q200m/q200m;
+    s2 -> s2 q201m/q201m;
+    s2 -> s2 q210m/q210m;
+    s2 -> s2 q211m/q211m;
+
+    s2 -> t2 q000/q001_;
+    s2 -> t2 q010/q011_;
+    s2 -> t2 q100/q101_;
+    s2 -> t2 q110/q111_;
+    s2 -> t2 q000m/q001m_;
+    s2 -> t2 q010m/q011m_;
+    s2 -> t2 q100m/q101m_;
+    s2 -> t2 q110m/q111m_;
+
+    s0 -> r5;
+
+    r5 -> r5 q000/q000;
+    r5 -> r5 q001/q001;
+    r5 -> r5 q010/q010;
+    r5 -> r5 q011/q011;
+
+    r5 -> r5 q100/q100;
+    r5 -> r5 q101/q101;
+    r5 -> r5 q110/q110;
+    r5 -> r5 q111/q111;
+
+    r5 -> r5 q200/q200;
+    r5 -> r5 q201/q201;
+    r5 -> r5 q210/q210;
+    r5 -> r5 q211/q211;
+
+    r5 -> r5 q000m/q000m;
+    r5 -> r5 q001m/q001m;
+    r5 -> r5 q010m/q010m;
+    r5 -> r5 q011m/q011m;
+
+    r5 -> r5 q100m/q100m;
+    r5 -> r5 q101m/q101m;
+    r5 -> r5 q110m/q110m;
+    r5 -> r5 q111m/q111m;
+
+    r5 -> r5 q200m/q200m;
+    r5 -> r5 q201m/q201m;
+    r5 -> r5 q210m/q210m;
+    r5 -> r5 q211m/q211m;
+
+    r5 -> s3 q111/q100;
+    r5 -> s3 q111m/q100m;
+
+    s3 -> t1 q000/q010_;
+    s3 -> t1 q001/q011_;
+    s3 -> t1 q100/q110_;
+    s3 -> t1 q101/q111_;
+    s3 -> t1 q000m/q010m_;
+    s3 -> t1 q001m/q011m_;
+    s3 -> t1 q100m/q110m_;
+    s3 -> t1 q101m/q111m_;
+
+    s0 -> r51;
+
+    r51 -> s4 q000/q010;
+    r51 -> s4 q001/q011;
+    r51 -> s4 q100/q110;
+    r51 -> s4 q101/q111;
+    r51 -> s4 q000m/q010m;
+    r51 -> s4 q001m/q011m;
+    r51 -> s4 q100m/q110m;
+    r51 -> s4 q101m/q111m;
+
+    s4 -> s4 q000/q000;
+    s4 -> s4 q001/q001;
+    s4 -> s4 q010/q010;
+    s4 -> s4 q011/q011;
+
+    s4 -> s4 q100/q100;
+    s4 -> s4 q101/q101;
+    s4 -> s4 q110/q110;
+    s4 -> s4 q111/q111;
+
+    s4 -> s4 q200/q200;
+    s4 -> s4 q201/q201;
+    s4 -> s4 q210/q210;
+    s4 -> s4 q211/q211;
+
+    s4 -> s4 q000m/q000m;
+    s4 -> s4 q001m/q001m;
+    s4 -> s4 q010m/q010m;
+    s4 -> s4 q011m/q011m;
+
+    s4 -> s4 q100m/q100m;
+    s4 -> s4 q101m/q101m;
+    s4 -> s4 q110m/q110m;
+    s4 -> s4 q111m/q111m;
+
+    s4 -> s4 q200m/q200m;
+    s4 -> s4 q201m/q201m;
+    s4 -> s4 q210m/q210m;
+    s4 -> s4 q211m/q211m;
+
+    s4 -> t2 q111/q100_;
+    s4 -> t2 q111m/q100m_;
+
+    s0 -> r6;
+
+    r6 -> r6 q000/q000;
+    r6 -> r6 q001/q001;
+    r6 -> r6 q010/q010;
+    r6 -> r6 q011/q011;
+
+    r6 -> r6 q100/q100;
+    r6 -> r6 q101/q101;
+    r6 -> r6 q110/q110;
+    r6 -> r6 q111/q111;
+
+    r6 -> r6 q200/q200;
+    r6 -> r6 q201/q201;
+    r6 -> r6 q210/q210;
+    r6 -> r6 q211/q211;
+
+    r6 -> s5 q000/q001;
+    r6 -> s5 q010/q011;
+    r6 -> s5 q100/q101;
+    r6 -> s5 q110/q111;
+
+    r6 -> r6 q000m/q000m;
+    r6 -> r6 q001m/q001m;
+    r6 -> r6 q010m/q010m;
+    r6 -> r6 q011m/q011m;
+
+    r6 -> r6 q100m/q100m;
+    r6 -> r6 q101m/q101m;
+    r6 -> r6 q110m/q110m;
+    r6 -> r6 q111m/q111m;
+
+    r6 -> r6 q200m/q200m;
+    r6 -> r6 q201m/q201m;
+    r6 -> r6 q210m/q210m;
+    r6 -> r6 q211m/q211m;
+
+    r6 -> s5 q000m/q001m;
+    r6 -> s5 q010m/q011m;
+    r6 -> s5 q100m/q101m;
+    r6 -> s5 q110m/q111m;
+
+    s5 -> t1 q001/q001_;
+    s5 -> t1 q101/q101_;
+    s5 -> t1 q001m/q001m_;
+    s5 -> t1 q101m/q101m_;
+
+    s0 -> r61;
+
+    r61 -> s6 q001/q001;
+    r61 -> s6 q101/q101;
+    r61 -> s6 q001m/q001m;
+    r61 -> s6 q101m/q101m;
+
+    s6 -> s6 q000/q000;
+    s6 -> s6 q001/q001;
+    s6 -> s6 q010/q010;
+    s6 -> s6 q011/q011;
+
+    s6 -> s6 q100/q100;
+    s6 -> s6 q101/q101;
+    s6 -> s6 q110/q110;
+    s6 -> s6 q111/q111;
+
+    s6 -> s6 q200/q200;
+    s6 -> s6 q201/q201;
+    s6 -> s6 q210/q210;
+    s6 -> s6 q211/q211;
+
+    s6 -> s6 q000m/q000m;
+    s6 -> s6 q001m/q001m;
+    s6 -> s6 q010m/q010m;
+    s6 -> s6 q011m/q011m;
+
+    s6 -> s6 q100m/q100m;
+    s6 -> s6 q101m/q101m;
+    s6 -> s6 q110m/q110m;
+    s6 -> s6 q111m/q111m;
+
+    s6 -> s6 q200m/q200m;
+    s6 -> s6 q201m/q201m;
+    s6 -> s6 q210m/q210m;
+    s6 -> s6 q211m/q211m;
+
+    s6 -> t2 q000/q001_;
+    s6 -> t2 q010/q011_;
+    s6 -> t2 q100/q101_;
+    s6 -> t2 q110/q111_;
+    s6 -> t2 q000m/q001m_;
+    s6 -> t2 q010m/q011m_;
+    s6 -> t2 q100m/q101m_;
+    s6 -> t2 q110m/q111m_;
+
+    s0 -> r7;
+
+    // change from idle with token to CS
+    r7 -> r7 q000/q000;
+    r7 -> r7 q001/q001;
+    r7 -> r7 q010/q010;
+    r7 -> r7 q011/q011;
+
+    r7 -> r7 q100/q100;
+    r7 -> r7 q101/q101;
+    r7 -> r7 q110/q110;
+    r7 -> r7 q111/q111;
+
+    r7 -> r7 q200/q200;
+    r7 -> r7 q201/q201;
+    r7 -> r7 q210/q210;
+    r7 -> r7 q211/q211;
+
+    r7 -> r7 q000m/q000m;
+    r7 -> r7 q001m/q001m;
+    r7 -> r7 q010m/q010m;
+    r7 -> r7 q011m/q011m;
+
+    r7 -> r7 q100m/q100m;
+    r7 -> r7 q101m/q101m;
+    r7 -> r7 q110m/q110m;
+    r7 -> r7 q111m/q111m;
+
+    r7 -> r7 q200m/q200m;
+    r7 -> r7 q201m/q201m;
+    r7 -> r7 q210m/q210m;
+    r7 -> r7 q211m/q211m;
+
+    r7 -> t1 q110/q210_;
+    r7 -> t1 q110m/q210m_;
+
+    s0 -> r8;
+
+    r8 -> r8 q000/q000;
+    r8 -> r8 q001/q001;
+    r8 -> r8 q010/q010;
+    r8 -> r8 q011/q011;
+
+    r8 -> r8 q100/q100;
+    r8 -> r8 q101/q101;
+    r8 -> r8 q110/q110;
+    r8 -> r8 q111/q111;
+
+    r8 -> r8 q200/q200;
+    r8 -> r8 q201/q201;
+    r8 -> r8 q210/q210;
+    r8 -> r8 q211/q211;
+
+    r8 -> r8 q000m/q000m;
+    r8 -> r8 q001m/q001m;
+    r8 -> r8 q010m/q010m;
+    r8 -> r8 q011m/q011m;
+
+    r8 -> r8 q100m/q100m;
+    r8 -> r8 q101m/q101m;
+    r8 -> r8 q110m/q110m;
+    r8 -> r8 q111m/q111m;
+
+    r8 -> r8 q200m/q200m;
+    r8 -> r8 q201m/q201m;
+    r8 -> r8 q210m/q210m;
+    r8 -> r8 q211m/q211m;
+
+    r8 -> s7 q001/q001;
+    r8 -> s7 q011/q011;
+    r8 -> s7 q101/q101;
+    r8 -> s7 q111/q111;
+    r8 -> s7 q001m/q001m;
+    r8 -> s7 q011m/q011m;
+    r8 -> s7 q101m/q101m;
+    r8 -> s7 q111m/q111m;
+
+    s7 -> t1 q100m/q000m_;
+
+    s0 -> r81;
+
+    r81 -> s8 q100/q000;
+    r81 -> s8 q100m/q000m;
+
+    s8 -> s8 q000/q000;
+    s8 -> s8 q001/q001;
+    s8 -> s8 q010/q010;
+    s8 -> s8 q011/q011;
+
+    s8 -> s8 q100/q100;
+    s8 -> s8 q101/q101;
+    s8 -> s8 q110/q110;
+    s8 -> s8 q111/q111;
+
+    s8 -> s8 q200/q200;
+    s8 -> s8 q201/q201;
+    s8 -> s8 q210/q210;
+    s8 -> s8 q211/q211;
+
+    s8 -> s8 q000m/q000m;
+    s8 -> s8 q001m/q001m;
+    s8 -> s8 q010m/q010m;
+    s8 -> s8 q011m/q011m;
+
+    s8 -> s8 q100m/q100m;
+    s8 -> s8 q101m/q101m;
+    s8 -> s8 q110m/q110m;
+    s8 -> s8 q111m/q111m;
+
+    s8 -> s8 q200m/q200m;
+    s8 -> s8 q201m/q201m;
+    s8 -> s8 q210m/q210m;
+    s8 -> s8 q211m/q211m;
+
+    s8 -> t2 q001/q001_;
+    s8 -> t2 q011/q011_;
+    s8 -> t2 q101/q101_;
+    s8 -> t2 q111/q111_;
+    s8 -> t2 q001m/q001m_;
+    s8 -> t2 q011m/q011m_;
+    s8 -> t2 q101m/q101m_;
+    s8 -> t2 q111m/q111m_;
+
+    accepting: t1, t2;
+}
+
+P2 {
+    init: s0;
+
+    s0 -> s0 q000/q000;
+    s0 -> s0 q001/q001;
+    s0 -> s0 q010/q010;
+    s0 -> s0 q011/q011;
+
+    s0 -> s0 q100/q100;
+    s0 -> s0 q101/q101;
+    s0 -> s0 q110/q110;
+    s0 -> s0 q111/q111;
+
+    s0 -> s0 q200/q200;
+    s0 -> s0 q201/q201;
+    s0 -> s0 q210/q210;
+    s0 -> s0 q211/q211;
+
+    s0 -> s0 q000m/q000m;
+    s0 -> s0 q001m/q001m;
+    s0 -> s0 q010m/q010m;
+    s0 -> s0 q011m/q011m;
+
+    s0 -> s0 q100m/q100m;
+    s0 -> s0 q101m/q101m;
+    s0 -> s0 q110m/q110m;
+    s0 -> s0 q111m/q111m;
+
+    s0 -> s0 q200m/q200m;
+    s0 -> s0 q201m/q201m;
+    s0 -> s0 q210m/q210m;
+    s0 -> s0 q211m/q211m;
+
+    s0 -> s1 q000_/q000;
+    s0 -> s1 q001_/q001;
+    s0 -> s1 q010_/q010;
+    s0 -> s1 q011_/q011;
+
+    s0 -> s1 q100_/q100;
+    s0 -> s1 q101_/q101;
+    s0 -> s1 q110_/q110;
+    s0 -> s1 q111_/q111;
+
+    s0 -> s1 q200_/q200;
+    s0 -> s1 q201_/q201;
+    s0 -> s1 q210_/q210;
+    s0 -> s1 q211_/q211;
+
+    s0 -> s1 q000m_/q000m;
+    s0 -> s1 q001m_/q001m;
+    s0 -> s1 q010m_/q010m;
+    s0 -> s1 q011m_/q011m;
+
+    s0 -> s1 q100m_/q100m;
+    s0 -> s1 q101m_/q101m;
+    s0 -> s1 q110m_/q110m;
+    s0 -> s1 q111m_/q111m;
+
+    s0 -> s1 q200m_/q200m;
+    s0 -> s1 q201m_/q201m;
+    s0 -> s1 q210m_/q210m;
+    s0 -> s1 q211m_/q211m;
+
+    s1 -> s1 q000/q000;
+    s1 -> s1 q001/q001;
+    s1 -> s1 q010/q010;
+    s1 -> s1 q011/q011;
+
+    s1 -> s1 q100/q100;
+    s1 -> s1 q101/q101;
+    s1 -> s1 q110/q110;
+    s1 -> s1 q111/q111;
+
+    s1 -> s1 q200/q200;
+    s1 -> s1 q201/q201;
+    s1 -> s1 q210/q210;
+    s1 -> s1 q211/q211;
+
+    s1 -> s1 q000m/q000m;
+    s1 -> s1 q001m/q001m;
+    s1 -> s1 q010m/q010m;
+    s1 -> s1 q011m/q011m;
+
+    s1 -> s1 q100m/q100m;
+    s1 -> s1 q101m/q101m;
+    s1 -> s1 q110m/q110m;
+    s1 -> s1 q111m/q111m;
+
+    s1 -> s1 q200m/q200m;
+    s1 -> s1 q201m/q201m;
+    s1 -> s1 q210m/q210m;
+    s1 -> s1 q211m/q211m;
+
+    accepting: s1;
+}
+
+transducerStateGuessing: 1 .. 10;
+automatonStateGuessing: 1 .. 4;

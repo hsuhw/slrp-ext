@@ -1,16 +1,18 @@
 // bakery.txt
 //
 // This is the model of bakery protocol from Abdulla's "Regular Model
-// Checking without Transducers"
+// Checking without Transducers".
 //
-// Please see the paper for a detailed description (it can be found
-// in the appendix of the paper).
+// This encoding of the protocol can not be adapted to apply process marking
+// due to its process order assumption.  Please see the paper's appendix for
+// a detailed description.
 //
-// I = Idle
-// W = Wait
-// C = Critical
+// I - idle
+// W - wait
+// C - critical
 //
 
+// at least two processes
 I0 {
     init: s0;
 
@@ -23,6 +25,7 @@ I0 {
 
 closedUnderTransitions;
 
+// some process can enter the critical section
 F {
     init: s0;
 
@@ -41,7 +44,7 @@ F {
 P1 {
     init: s0;
 
-    // t1 of the paper
+    // t1 described in the paper
     s0 -> p0;
 
     p0 -> p0 I/I;
@@ -50,7 +53,7 @@ P1 {
     p0 -> p1 I/W_;
     p1 -> p1 I/I;
 
-    // t2
+    // t2 described in the paper
     s0 -> q0;
 
     q0 -> q0 I/I;
@@ -80,4 +83,4 @@ P2 {
 }
 
 transducerStateGuessing: 1 .. 10;
-automatonStateGuessing: 0 .. 4;
+automatonStateGuessing: 1 .. 4;

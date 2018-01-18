@@ -11,12 +11,12 @@
 // C - critical
 //
 
-// any positive number of clients
+// any positive number of clients; one marked
 I0 {
     init: s0;
 
     s0 -> s1 I;
-    s1 -> s2 I;
+    s1 -> s2 Im;
     s2 -> s2 I;
 
     accepting: s2;
@@ -24,7 +24,7 @@ I0 {
 
 closedUnderTransitions;
 
-// some client can access the resource
+// the marked client can access the resource
 F {
     init: s0;
 
@@ -36,12 +36,11 @@ F {
     s1 -> s1 R;
 
     // one process in the critical section
-    s1 -> s2 C;
+    s1 -> s2 Cm;
 
-    // followed by any I/R/C
+    // followed by any I/R
     s2 -> s2 I;
     s2 -> s2 R;
-    s2 -> s2 C;
 
     accepting: s2;
 }
@@ -58,12 +57,19 @@ P1 {
     r1 -> r1 I/I;
     r1 -> r1 R/R;
     r1 -> r1 C/C;
+    r1 -> r1 Im/Im;
+    r1 -> r1 Rm/Rm;
+    r1 -> r1 Cm/Cm;
 
     r1 -> r2 I/I_;
+    r1 -> r2 Im/Im_;
 
     r2 -> r2 I/I;
     r2 -> r2 R/R;
     r2 -> r2 C/C;
+    r2 -> r2 Im/Im;
+    r2 -> r2 Rm/Rm;
+    r2 -> r2 Cm/Cm;
 
     // allocate the resource
     s0 -> p0;
@@ -73,12 +79,19 @@ P1 {
     p1 -> p1 I/I;
     p1 -> p1 R/R;
     p1 -> p1 C/C;
+    p1 -> p1 Im/Im;
+    p1 -> p1 Rm/Rm;
+    p1 -> p1 Cm/Cm;
 
     p1 -> p2 R/R_;
+    p1 -> p2 Rm/Rm_;
 
     p2 -> p2 I/I;
     p2 -> p2 R/R;
     p2 -> p2 C/C;
+    p2 -> p2 Im/Im;
+    p2 -> p2 Rm/Rm;
+    p2 -> p2 Cm/Cm;
 
     // release the resource
     s0 -> q0;
@@ -88,12 +101,19 @@ P1 {
     q1 -> q1 I/I;
     q1 -> q1 R/R;
     q1 -> q1 C/C;
+    q1 -> q1 Im/Im;
+    q1 -> q1 Rm/Rm;
+    q1 -> q1 Cm/Cm;
 
     q1 -> q2 C/C_;
+    q1 -> q2 Cm/Cm_;
 
     q2 -> q2 I/I;
     q2 -> q2 R/R;
     q2 -> q2 C/C;
+    q2 -> q2 Im/Im;
+    q2 -> q2 Rm/Rm;
+    q2 -> q2 Cm/Cm;
 
 
     accepting: r2, p2, q2;
@@ -109,13 +129,21 @@ P2 {
     r1 -> r1 I/I;
     r1 -> r1 R/R;
     r1 -> r1 C/C;
+    r1 -> r1 Im/Im;
+    r1 -> r1 Rm/Rm;
+    r1 -> r1 Cm/Cm;
 
     r1 -> r2 I_/R;
     r1 -> r2 I_/I;
+    r1 -> r2 Im_/Rm;
+    r1 -> r2 Im_/Im;
 
     r2 -> r2 I/I;
     r2 -> r2 R/R;
     r2 -> r2 C/C;
+    r2 -> r2 Im/Im;
+    r2 -> r2 Rm/Rm;
+    r2 -> r2 Cm/Cm;
 
     // the client uses the resource
     s0 -> p1 I_/C;
@@ -123,12 +151,19 @@ P2 {
     p1 -> p1 I/I;
     p1 -> p1 R/R;
     p1 -> p1 C/C;
+    p1 -> p1 Im/Im;
+    p1 -> p1 Rm/Rm;
+    p1 -> p1 Cm/Cm;
 
     p1 -> p2 R_/C;
+    p1 -> p2 Rm_/Cm;
 
     p2 -> p2 I/I;
     p2 -> p2 R/R;
     p2 -> p2 C/C;
+    p2 -> p2 Im/Im;
+    p2 -> p2 Rm/Rm;
+    p2 -> p2 Cm/Cm;
 
     // the client returns the resource
     s0 -> q1 C_/I;
@@ -136,12 +171,19 @@ P2 {
     q1 -> q1 I/I;
     q1 -> q1 R/R;
     q1 -> q1 C/C;
+    q1 -> q1 Im/Im;
+    q1 -> q1 Rm/Rm;
+    q1 -> q1 Cm/Cm;
 
     q1 -> q2 C_/I;
+    q1 -> q2 Cm_/Im;
 
     q2 -> q2 I/I;
     q2 -> q2 R/R;
     q2 -> q2 C/C;
+    q2 -> q2 Im/Im;
+    q2 -> q2 Rm/Rm;
+    q2 -> q2 Cm/Cm;
 
     accepting: r2, p2, q2;
 }

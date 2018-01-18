@@ -4,37 +4,31 @@
 // in "Proving termination in B" by McIver et al. 2003 and also in
 // Esparza et al. 2012.
 //
-//  0: k = 0
-//  1: while (k < 100) {
-//  2:   old_x = x;
-//  3:   x = coin(p);
-//  4:   if (x != old_x) k++
-//  5: }
-//
-// Here, we give a transducer representation of this as an example of a token
+// Here, we give a transducer representation of it as an example of a token
 // passing in a linear array with one token, where the token can
 // probabilistically stay or move to the right.
 //
-// T  - token
-// T_ - token selected
-// B  - no token
+// T - token
+// N - no token
 //
 
+// the token is on the left end
 I0 {
     init: s0;
 
     s0 -> s1 T;
-    s1 -> s1 B;
+    s1 -> s1 N;
 
     accepting: s1;
 }
 
 closedUnderTransitions;
 
+// the token is on the right end
 F {
     init: s0;
 
-    s0 -> s0 B;
+    s0 -> s0 N;
     s0 -> s1 T;
 
     accepting: s1;
@@ -43,33 +37,22 @@ F {
 P1 {
     init: s0;
 
-    s0 -> s0 B/B;
+    s0 -> s0 N/N;
     s0 -> s1 T/T_;
-    s0 -> ss T_/nil;
-    s0 -> ss1 B/nil;
-    s0 -> ss nil/nil;
 
-    s1 -> s1 B/B;
-    s1 -> ss T/nil;
-    s1 -> ss T_/nil;
-    s1 -> ss nil/nil;
+    s1 -> s1 N/N;
 
-    ss -> ss B/nil;
-    ss -> ss T/nil;
-    ss -> ss T_/nil;
-    ss -> ss nil/nil;
-
-    accepting: s1, ss, ss1;
+    accepting: s1;
 }
 
 P2 {
     init: s0;
 
-    s0 -> s0 B/B;
+    s0 -> s0 N/N;
 
-    s0 -> s1 T_/B;
-    s1 -> s2 B/T;
-    s2 -> s2 B/B;
+    s0 -> s1 T_/N;
+    s1 -> s2 N/T;
+    s2 -> s2 N/N;
 
     s0 -> p1 T_/T;
 

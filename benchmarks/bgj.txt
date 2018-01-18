@@ -1,9 +1,10 @@
-// Letters:
-// 00, 01, 10, 11
+// bgj.txt
 //
-// Beauquier, Gradinariu, and Johnen randomized token circulation algorithm.
-// The first bit in the letter is the deterministic state while the second bit
-// denotes the probabilistic state.
+// Beauquier, Gradinariu, and Johnen Randomized Token Circulation Algorithm
+//
+// The first bit in the letter is the deterministic state while the second
+// bit denotes the probabilistic state.
+//
 
 I0 {
     init: s0;

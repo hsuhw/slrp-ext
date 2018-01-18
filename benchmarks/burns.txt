@@ -1,8 +1,16 @@
 // burns.txt
-// This is the transducer model given in Nilsson's thesis and
-// Abdulla's Regular Model Checking without Transducers
+//
+// This is the protocol mentioned in Nilsson's thesis and Abdulla's
+// "Regular Model Checking without Transducers".
+//
+// FQ is a process state that:
+// F (flag) can be T/F
+// Q (program counter) can be 1-7 (6 is being in the critical section)
+//
+// Note that T2, T3, F4, F5, F6, T7 are, in general, unreachable states.
+//
 
-// At least two processes
+// at least two processes
 I0 {
     init: s0;
 
@@ -15,6 +23,7 @@ I0 {
 
 closedUnderTransitions;
 
+// some process can enter the critical section
 F {
     init: s0;
 
@@ -49,10 +58,8 @@ F {
 P1 {
     init: s0;
 
-    s0 -> t1;
-
     // t1 of monotonic paper
-    t1 -> t1;
+    s0 -> t1;
 
     t1 -> t1 F1/F1;
     t1 -> t1 F2/F2;
@@ -341,6 +348,4 @@ P2 {
 }
 
 transducerStateGuessing: 1 .. 10;
-automatonStateGuessing: 0 .. 4;
-
-explicitChecksUntilLength: 4;
+automatonStateGuessing: 1 .. 4;

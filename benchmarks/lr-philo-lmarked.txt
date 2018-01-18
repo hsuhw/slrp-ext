@@ -12,13 +12,13 @@
 // E - both forks in hand
 //
 
-// at least three philosophers
+// at least three philosophers; one left-handed is marked
 I0 {
     init: s0;
 
     s0 -> s1 T;
     s1 -> s2 T;
-    s2 -> s3 T;
+    s2 -> s3 Tm;
     s3 -> s3 T;
 
     accepting: s3;
@@ -34,7 +34,7 @@ F {
     s0 -> s0 L;
     s0 -> s0 R;
 
-    s0 -> s1 E;
+    s0 -> s1 Em;
 
     s1 -> s1 T;
     s1 -> s1 L;
@@ -56,6 +56,8 @@ P1 {
 
     t12 -> t12 T/T;
     t12 -> t12 L/L;
+    t12 -> t12 Tm/Tm;
+    t12 -> t12 Lm/Lm;
 
         // r1 - leftmost philo (already with a right fork) is picked
     s0 -> r1 R/R_;
@@ -65,6 +67,8 @@ P1 {
 
     r12 -> r12 T/T;
     r12 -> r12 L/L;
+    r12 -> r12 Tm/Tm;
+    r12 -> r12 Lm/Lm;
 
     // Choose something other than the first philo
 
@@ -73,45 +77,87 @@ P1 {
 
     t2 -> t2 T/T;
     t2 -> t2 L/L;
+    t2 -> t2 Tm/Tm;
+    t2 -> t2 Lm/Lm;
 
         // the guy picked is thinking
     t2 -> tt2 T/T_;
+    t2 -> tt2 Tm/Tm_;
         // the guy picked is holding a left fork
     t2 -> tl2 L/L_;
+    t2 -> tl2 Lm/Lm_;
 
     tt2 -> tt2 T/T;
     tt2 -> tt2 L/L;
+    tt2 -> tt2 Tm/Tm;
+    tt2 -> tt2 Lm/Lm;
 
         // next to the guy P picked must not hold a left fork (or if P is the
         // rightmost guy, then don't care, i.e., add tl2 as a final state)
     tl2 -> tl3 T/T;
+    tl2 -> tl3 Tm/Tm;
 
     tl3 -> tl3 T/T;
     tl3 -> tl3 L/L;
+    tl3 -> tl3 Tm/Tm;
+    tl3 -> tl3 Lm/Lm;
 
         // r2 - leftmost philo with a right fork but not picked
     s0 -> ri2 R/R;
+    s0 -> ri2 Rm/Rm;
 
     ri2 -> r2 T/T;
+    ri2 -> r2 Tm/Tm;
 
     r2 -> r2 T/T;
     r2 -> r2 L/L;
+    r2 -> r2 Tm/Tm;
+    r2 -> r2 Lm/Lm;
 
         // the guy picked is thinking
     r2 -> rt2 T/T_;
+    r2 -> rt2 Tm/Tm_;
         // the guy picked is holding a left fork
     r2 -> rl2 L/L_;
+    r2 -> rl2 Lm/Lm_;
 
     rt2 -> rt2 T/T;
     rt2 -> rt2 L/L;
+    rt2 -> rt2 Tm/Tm;
+    rt2 -> rt2 Lm/Lm;
 
         // here rl2 is not a final state unlike in the case of tl2
     rl2 -> rl3 T/T;
+    rl2 -> rl3 Tm/Tm;
 
     rl3 -> rl3 T/T;
     rl3 -> rl3 L/L;
+    rl3 -> rl3 Tm/Tm;
+    rl3 -> rl3 Lm/Lm;
 
-    accepting: t12, r12, tt2, tl2, tl3, rt2, rl3;
+    s0 -> s1;
+
+    s1 -> s1 T/T;
+    s1 -> s1 L/L;
+    s1 -> s1 R/R;
+    s1 -> s1 E/E;
+    s1 -> s1 Tm/Tm;
+    s1 -> s1 Lm/Lm;
+    s1 -> s1 Rm/Rm;
+    s1 -> s1 Em/Em;
+
+    s1 -> s2 E/T_;
+
+    s2 -> s2 T/T;
+    s2 -> s2 L/L;
+    s2 -> s2 R/R;
+    s2 -> s2 E/E;
+    s2 -> s2 Tm/Tm;
+    s2 -> s2 Lm/Lm;
+    s2 -> s2 Rm/Rm;
+    s2 -> s2 Em/Em;
+
+    accepting: t12, r12, tt2, tl2, tl3, rt2, rl3, s2;
 }
 
 P2 {
@@ -120,19 +166,29 @@ P2 {
     // Not the first process
     s0 -> p0 T/T;
     s0 -> p0 R/R;
+    s0 -> p0 Tm/Tm;
+    s0 -> p0 Rm/Rm;
 
     p0 -> p0 T/T;
     p0 -> p0 L/L;
+    p0 -> p0 Tm/Tm;
+    p0 -> p0 Lm/Lm;
 
     p0 -> p1 T_/L;
     p0 -> p1 L_/E;
+    p0 -> p1 Tm_/Lm;
+    p0 -> p1 Lm_/Em;
 
     p1 -> p1 T/T;
     p1 -> p1 L/L;
+    p1 -> p1 Tm/Tm;
+    p1 -> p1 Lm/Lm;
 
     // The first process
     s0 -> p1 T_/R;
     s0 -> p1 R_/E;
+    s0 -> p1 Tm_/Rm;
+    s0 -> p1 Rm_/Em;
 
     accepting: p1;
 }

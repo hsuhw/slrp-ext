@@ -1,36 +1,32 @@
 // take-away.txt
 //
-// A very basic example of a take-away game discussed in "Game Theory"
-// by Thomas S. Ferguson.
+// A very basic example of a take-away game discussed in the online book
+// "Combinatorial Game Theory" by Thomas S. Ferguson.
 //
-// Available at:
-// https://www.math.ucla.edu/~tom/Game_Theory/comb.pdf
-//
-// i - a chip
-// o - no chip
-// x - p1 winning move
+// C - a chip
+// N - no chip
 //
 
-// the number of `i` is 4k
+// the number of chips is 4k
 I0 {
     init: s0;
 
-    s0 -> s1 i;
-    s1 -> s2 i;
-    s2 -> s3 i;
-    s3 -> s4 i;
-    s4 -> s1 i;
-    s0 -> sf o;
-    sf -> sf o;
+    s0 -> s1 C;
+    s1 -> s2 C;
+    s2 -> s3 C;
+    s3 -> s4 C;
+    s4 -> s1 C;
+    s0 -> sf N;
+    sf -> sf N;
 
     accepting: s4;
 }
 
-// no `i` any more
+// no chip any more
 F {
     init: s0;
 
-    s0 -> s0 o;
+    s0 -> s0 N;
 
     accepting: s0;
 }
@@ -38,20 +34,20 @@ F {
 P1 {
     init: s0;
 
-    s0 -> sk i/i; // normal rounds
-    sk -> sk i/i;
+    s0 -> sk C/C; // normal rounds
+    sk -> sk C/C;
 
-    s0 -> sf i/x; // final rounds
-    s0 -> s1 i/x;
-    s0 -> s2 i/x;
+    s0 -> sf C/win1; // final rounds
+    s0 -> s1 C/win1;
+    s0 -> s2 C/win1;
 
-    sk -> sf i/o; // takes one `i`
-    sk -> s1 i/o;
-    s1 -> sf i/o; // takes two `i`
-    sk -> s2 i/o;
-    s2 -> s1 i/o; // takes three `i`
+    sk -> sf C/N; // takes one `i`
+    sk -> s1 C/N;
+    s1 -> sf C/N; // takes two `i`
+    sk -> s2 C/N;
+    s2 -> s1 C/N; // takes three `i`
 
-    sf -> sf o/o;
+    sf -> sf N/N;
 
     accepting: sf;
 }
@@ -59,15 +55,15 @@ P1 {
 P2 {
     init: s0;
 
-    s0 -> s0 i/i;
+    s0 -> s0 C/C;
 
-    s0 -> sf i/o; // takes one `i`
-    s0 -> s1 i/o;
-    s1 -> sf i/o; // takes two `i`
-    s0 -> s2 i/o;
-    s2 -> s1 i/o; // takes three `i`
+    s0 -> sf C/N; // takes one `i`
+    s0 -> s1 C/N;
+    s1 -> sf C/N; // takes two `i`
+    s0 -> s2 C/N;
+    s2 -> s1 C/N; // takes three `i`
 
-    sf -> sf o/o;
+    sf -> sf N/N;
 
     accepting: sf;
 }

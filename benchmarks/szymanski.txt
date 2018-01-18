@@ -1,12 +1,15 @@
 // szymanski.txt
-// The protocol as described by Abdulla's Regular Model Checking without
-// Transducers (same as Nilsson's thesis)
 //
-// Q1--Q7 denotes the local states (Q7 is the critical section)
-// S0,S1  denotes the value of s
-// W0,W1  denotes the value of w
+// The protocol as described by Abdulla's "Regular Model Checking without
+// Transducers" (same as in Nilsson's thesis)
+//
+// A substring QSW is a process state that:
+// Q (program counter) can be Q1-Q7 (Q7 is being in the critical section)
+// S (flag s) can be S0, S1
+// W (flag w) can W0, W1
+//
 
-// At least two processes
+// at least two processes
 I0 {
     init: s0;
 
@@ -418,6 +421,4 @@ P2 {
 }
 
 transducerStateGuessing: 1 .. 10;
-automatonStateGuessing: 0 .. 4;
-
-monolithicWitness;
+automatonStateGuessing: 1 .. 4;
