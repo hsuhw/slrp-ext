@@ -9,6 +9,9 @@ language:
 jdk:
   - oraclejdk9
 
+before_install:
+  - gradle wrapper
+
 script:
   - gradle build jacocoTestReport
 
