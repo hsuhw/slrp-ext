@@ -46,9 +46,10 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         super(problem, shapeInvariant, shapeOrder, loosenInvariant);
 
         nfScheduler = makeNonfinalScheduler(scheduler, nonfinalConfigs);
-        allBehavior = loosenInvariant
-                      ? FSAs.union(scheduler, process)
-                      : Transducers.compose(scheduler, process, scheduler.alphabet());
+//        allBehavior = loosenInvariant
+//                      ? FSAs.union(scheduler, process)
+//                      : Transducers.compose(scheduler, process, scheduler.alphabet());
+        allBehavior = Transducers.compose(scheduler, process, scheduler.alphabet());
         invEnclosesAll = problem.invariantEnclosesAllBehavior();
     }
 

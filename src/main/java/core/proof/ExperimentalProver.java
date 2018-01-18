@@ -38,7 +38,7 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
 
         allBehavior = Transducers.compose(scheduler, process, scheduler.alphabet());
         final FSA<S> allBehaviorDomain = FSAs.project(allBehavior, wholeAlphabet, Twin::getOne);
-        matteringConfigs = FSAs.minimize(FSAs.determinize(FSAs.intersect(nonfinalConfigs, allBehaviorDomain)));
+        matteringConfigs = FSAs.intersect(nonfinalConfigs, allBehaviorDomain);
         LOGGER.debug("All behaviour computed: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", allBehavior);
     }
 
@@ -129,6 +129,7 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
                     return Tuples.pair(invCand, ordCand);
                 }
                 if (contradiction) {
+                    LOGGER.info("Trivial contradiction found");
                     break;
                 }
             }

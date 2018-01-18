@@ -76,7 +76,7 @@ public abstract class AbstractProver<S> implements Prover
 
         solver = new Sat4jSolverAdapter();
 
-        schedulerDomain = FSAs.minimize(FSAs.determinize(FSAs.project(scheduler, wholeAlphabet, Twin::getOne)));
+        schedulerDomain = FSAs.project(scheduler, wholeAlphabet, Twin::getOne);
         processRange = FSAs.minimize(FSAs.determinize(FSAs.project(process, wholeAlphabet, Twin::getTwo)));
     }
 
@@ -90,7 +90,7 @@ public abstract class AbstractProver<S> implements Prover
 
     private LanguageSubsetChecker.Result<S> schedulerRespondsToAllProcesses()
     {
-        return FSAs.checkSubset(processRange, schedulerDomain);
+        return FSAs.checkSubset(FSAs.intersect(processRange, nonfinalConfigs), schedulerDomain);
     }
 
     protected LanguageSubsetChecker.Result<S> schedulerOperatesOnAllNonfinalInvariants(FSA<S> invariant)
@@ -101,7 +101,7 @@ public abstract class AbstractProver<S> implements Prover
     protected void search(IntIntToObjectFunction<Pair<FSA<S>, FSA<Twin<S>>>> resultSupplier)
     {
         LOGGER.info("Scheduler operates on all nonfinals: {}", this::schedulerOperatesOnAllNonfinals);
-        LOGGER.info("Scheduler responds to all process outputs: {}", this::schedulerRespondsToAllProcesses);
+        LOGGER.info("Scheduler responds to all process nonfinals: {}", this::schedulerRespondsToAllProcesses);
 
         Pair<FSA<S>, FSA<Twin<S>>> result;
         final int stabilizerBound = invariantSizeEnd * invariantSizeEnd + orderSizeEnd * orderSizeEnd;
