@@ -26,13 +26,18 @@ public class Sat4jSolverAdapter implements SatSolver
     private static final Logger LOGGER = LogManager.getLogger();
     private static final ImmutableIntSet NONSOLUTION = IntSets.immutable.empty();
 
-    private final ISolver solver;
+    private ISolver solver;
     private int nextFreeVariableId = 1;
     private ImmutableIntSet model;
 
+    private static ISolver newSolverInstance()
+    {
+        return SolverFactory.newDefault(); // TODO: [tuning] see if there's any effects of modifying this
+    }
+
     public Sat4jSolverAdapter()
     {
-        solver = SolverFactory.newDefault(); // TODO: [tuning] see if there's any effects of modifying this
+        solver = newSolverInstance();
         solver.newVar(SAT_SOLVER_MAX_VARIABLE_NUMBER);
         solver.setExpectedNumberOfClauses(SAT_SOLVER_MAX_CLAUSE_NUMBER);
     }
@@ -211,7 +216,7 @@ public class Sat4jSolverAdapter implements SatSolver
     @Override
     public void reset()
     {
-        solver.reset();
+        solver = newSolverInstance();
         solver.newVar(SAT_SOLVER_MAX_VARIABLE_NUMBER);
         nextFreeVariableId = 1;
         model = null;
