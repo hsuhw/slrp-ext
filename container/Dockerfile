@@ -1,5 +1,5 @@
-ARG JAVA_IMG_VERSION
-FROM java:${JAVA_IMG_VERSION}
+ARG JDK_IMG_VERSION
+FROM openjdk:${JDK_IMG_VERSION}
 
 # Add basic packages
 RUN apk add --no-cache curl libstdc++
@@ -22,7 +22,7 @@ ENV PATH ${PATH}:${GRADLE_HOME}/bin
 # Set volumes for caches and workspace
 VOLUME ["/root/.gradle/caches", "/usr/src/app"]
 
-# Default command is '/usr/bin/gradle --version' in dir '/usr/share/app'
+# Default command is '/usr/bin/gradle -version' in dir '/usr/share/app'
 WORKDIR /usr/share/app
 ENTRYPOINT ["gradle"]
-CMD ["--version"]
+CMD ["-version"]

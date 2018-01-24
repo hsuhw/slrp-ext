@@ -5,7 +5,7 @@ services:
     build:
       context: .
       args:
-        - JAVA_IMG_VERSION=${JAVA_IMG_VERSION}
+        - JDK_IMG_VERSION=${JDK_IMG_VERSION}
         - GRADLE_VERSION=${GRADLE_VERSION}
         - GRADLE_SHA=${GRADLE_SHA}
     volumes:
