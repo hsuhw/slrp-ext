@@ -9,11 +9,8 @@ language:
 jdk:
   - oraclejdk9
 
-before_install:
-  - gradle wrapper
-
 script:
-  - gradle build jacocoTestReport
+  - ./gradlew check jacocoTestReport
 
 before_cache:
   - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
