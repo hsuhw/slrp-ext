@@ -1,7 +1,6 @@
 package api.automata.fsa;
 
 import api.automata.Alphabet;
-import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Pair;

@@ -1,8 +1,6 @@
 package core.common.sat;
 
 import com.mscharhag.oleaster.runner.OleasterRunner;
-import core.common.sat.AbstractSatSolverTest;
-import core.common.sat.Sat4jSolverAdapter;
 import org.junit.runner.RunWith;
 
 import static com.mscharhag.oleaster.matcher.Matchers.expect;

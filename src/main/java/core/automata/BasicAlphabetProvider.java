@@ -2,7 +2,6 @@ package core.automata;
 
 import api.automata.Alphabet;
 import org.eclipse.collections.api.set.ImmutableSet;
-import org.eclipse.collections.api.set.MutableSet;
 
 import static api.automata.Alphabet.Builder;
 

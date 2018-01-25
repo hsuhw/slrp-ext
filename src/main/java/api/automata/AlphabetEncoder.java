@@ -3,7 +3,6 @@ package api.automata;
 import core.util.Assertions;
 import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.list.ImmutableList;
-import org.eclipse.collections.api.list.ListIterable;
 
 /**
  * The alphabet mapping class that uses {@link T} symbols to represent
