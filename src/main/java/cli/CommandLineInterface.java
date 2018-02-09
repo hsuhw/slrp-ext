@@ -16,6 +16,7 @@ public final class CommandLineInterface
         cmdSyntax = "slrp-ext [OPTIONS] FILE" + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "options:" + DISPLAY_NEWLINE;
         String helpDesc = "print this message and exit";
         String versionDesc = "print the version information and exit";
+        String waitDesc = "wait before run for a manual profiler setup";
         String shapeInvariantDesc = "use the shape constraint when searching invariant";
         String shapeOrderDesc = "use the shape constraint when searching order";
         String looseInvariantDesc = "allow loose invariant";
@@ -26,6 +27,7 @@ public final class CommandLineInterface
         options = new Options();
         options.addOption("h", "help", false, helpDesc);
         options.addOption("v", "version", false, versionDesc);
+        options.addOption("w", "wait-for-profiler", false, waitDesc);
         options.addOption("si", "shape-invariant", false, shapeInvariantDesc);
         options.addOption("so", "shape-order", false, shapeOrderDesc);
         options.addOption("li", "loose-invariant", false, looseInvariantDesc);

@@ -14,6 +14,7 @@ import org.apache.logging.log4j.core.config.Configuration;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Scanner;
 
 import static api.util.Values.DISPLAY_NEWLINE;
 
@@ -64,6 +65,10 @@ public final class Main
             System.out.println("Input file is not provided correctly." + DISPLAY_NEWLINE);
             cli.printHelpMessage();
             return;
+        }
+        if (cli.invokedCmd().hasOption("wait-for-profiler")) {
+            System.out.print("Press the enter key to continue ...");
+            System.out.println(System.in.read() == 10 ? "" : "");
         }
 
         // parse the input file
