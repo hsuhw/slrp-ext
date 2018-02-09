@@ -16,6 +16,9 @@ import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.tuple.Tuples;
 
+import java.util.LinkedList;
+import java.util.List;
+
 import static api.proof.FSAEncoding.CertainWord;
 import static api.util.Values.DISPLAY_NEWLINE;
 
@@ -155,6 +158,20 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         solver.addImplication(takenX, shouldBeCertainZ);
     }
 
+    private void addLearnedConstraints(FSAEncoding<S> invEnc, FSAEncoding<Twin<S>> ordEnc,
+                                       List<LanguageSubsetChecker.Counterexample<S>> l1KnownViolations,
+                                       List<BehaviorEnclosureChecker.Counterexample<S>> l2KnownViolations,
+                                       List<TransitivityChecker.Counterexample<S>> l3KnownViolations,
+                                       List<AnySchedulerProgressabilityChecker.Counterexample<S>> l4KnownViolations)
+    {
+        l1KnownViolations.forEach(violation -> refineInitConfigsEncloser(invEnc, violation));
+        l2KnownViolations.forEach(violation -> refineBehaviorEncloser(solver, invEnc, violation));
+        l3KnownViolations.forEach(violation -> refineTransitivity(solver, ordEnc, violation));
+        l4KnownViolations.forEach(violation -> {
+            refineProgressability(solver, invEnc, ordEnc, process, roundAlphabet, violation);
+        });
+    }
+
     @Override
     public void prove()
     {
@@ -165,6 +182,11 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         invariantSizeBegin = invariantSizeBegin < 1 ? 1 : invariantSizeBegin;
         orderSizeBegin = orderSizeBegin < 2 ? 2 : orderSizeBegin;
 
+        final List<LanguageSubsetChecker.Counterexample<S>> l1KnownViolations = new LinkedList<>();
+        final List<BehaviorEnclosureChecker.Counterexample<S>> l2KnownViolations = new LinkedList<>();
+        final List<TransitivityChecker.Counterexample<S>> l3KnownViolations = new LinkedList<>();
+        final List<AnySchedulerProgressabilityChecker.Counterexample<S>> l4KnownViolations = new LinkedList<>();
+
         search((invSize, ordSize) -> {
             LOGGER.info("Searching in state spaces {} & {} ..", invSize, ordSize);
 
@@ -172,14 +194,23 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
             final FSAEncoding<Twin<S>> ordEnc = newFSAEncoding(solver, ordSize, ordSymbolEncoding, shapeOrder);
             ordEnc.ensureNoWordPurelyMadeOf(orderReflexiveSymbols);
 
+            boolean contradiction = false;
+            try {
+                addLearnedConstraints(invEnc, ordEnc, l1KnownViolations, l2KnownViolations, l3KnownViolations,
+                                      l4KnownViolations);
+            } catch (ContradictionException e) {
+                LOGGER.info("Trivial contradiction found");
+                contradiction = true;
+            }
+
             LanguageSubsetChecker.Result<S> l1;
             BehaviorEnclosureChecker.Result<S> l2 = null;
             TransitivityChecker.Result<S> l3;
             LanguageSubsetChecker.Result<S> l4Precheck;
             AnySchedulerProgressabilityChecker.Counterexample<S> l4PrecheckViolation;
             AnySchedulerProgressabilityChecker.Result<S> l4;
-            while (solver.findItSatisfiable()) {
-                boolean contradiction = false;
+            while (!contradiction && solver.findItSatisfiable()) {
+                contradiction = false;
                 final FSA<S> invCand = invEnc.resolve();
                 final FSA<Twin<S>> ordCand = ordEnc.resolve();
 
@@ -188,14 +219,17 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
 
                 if ((l1 = checkInitConfigsEnclosure(initialConfigs, invCand)).rejected()) {
                     LOGGER.debug("Initial configurations enclosed: {}", l1);
+                    l1KnownViolations.add(l1.counterexample());
                     refineInitConfigsEncloser(invEnc, l1.counterexample());
                 }
                 if (invEnclosesAll && (l2 = checkBehaviorEnclosure(allBehavior, invCand)).rejected()) {
                     LOGGER.debug("Transition behavior enclosed: {}", l2);
+                    l2KnownViolations.add(l2.counterexample());
                     refineBehaviorEncloser(solver, invEnc, l2.counterexample());
                 }
                 if ((l3 = checkTransitivity(ordCand)).rejected()) {
                     LOGGER.debug("Strict pre-order relation: {}", l3);
+                    l3KnownViolations.add(l3.counterexample());
                     refineTransitivity(solver, ordEnc, l3.counterexample());
                 }
                 if (!loosenInvariant && (l4Precheck = schedulerOperatesOnAllNonfinalInvariants(invCand)).rejected()) {
@@ -208,9 +242,11 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
                 }
                 if (l4.rejected()) {
                     LOGGER.debug("Progressability: {}", l4);
+                    l4KnownViolations.add(l4.counterexample());
                     try {
                         refineProgressability(solver, invEnc, ordEnc, process, roundAlphabet, l4.counterexample());
                     } catch (ContradictionException e) {
+                        LOGGER.info("Trivial contradiction found");
                         contradiction = true;
                     }
                 }
@@ -219,9 +255,6 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
                             l1.passed(), invEnclosesAll ? l2.passed() : "--", l3.passed(), l4.passed());
                 if (l1.passed() && (!invEnclosesAll || l2.passed()) && l3.passed() && l4.passed()) {
                     return Tuples.pair(invCand, ordCand);
-                }
-                if (contradiction) {
-                    break;
                 }
             }
 
