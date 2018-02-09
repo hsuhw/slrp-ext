@@ -1,6 +1,6 @@
 package api.automata;
 
-import core.util.Assertions;
+import common.util.Assert;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
@@ -37,7 +37,7 @@ public interface AlphabetIntEncoder<S>
 
     default ImmutableIntList encode(ImmutableList<S> word)
     {
-        word.forEach(Assertions::argumentNotNull);
+        word.forEach(Assert::argumentNotNull);
 
         return word.collectInt(this::encode);
     }

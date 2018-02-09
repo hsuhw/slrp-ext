@@ -1,4 +1,4 @@
-package api.common;
+package common;
 
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;

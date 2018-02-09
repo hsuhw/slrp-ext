@@ -1,6 +1,6 @@
 package api.automata;
 
-import core.util.Assertions;
+import common.util.Assert;
 import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.list.ImmutableList;
 
@@ -27,7 +27,7 @@ public interface AlphabetEncoder<S, T>
 
     default ImmutableList<T> encode(ImmutableList<S> word)
     {
-        word.forEach(Assertions::argumentNotNull);
+        word.forEach(Assert::argumentNotNull);
 
         return word.collect(this::encode);
     }
@@ -36,7 +36,7 @@ public interface AlphabetEncoder<S, T>
 
     default ImmutableList<S> decode(ImmutableList<T> word)
     {
-        word.forEach(Assertions::argumentNotNull);
+        word.forEach(Assert::argumentNotNull);
 
         return word.collect(this::decode);
     }

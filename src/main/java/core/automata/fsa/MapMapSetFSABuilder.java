@@ -5,16 +5,16 @@ import api.automata.Alphabets;
 import api.automata.State;
 import api.automata.TransitionGraph;
 import api.automata.fsa.FSA;
+import common.util.Assert;
 import core.automata.MapMapSetGraph;
 import core.automata.MapMapSetGraphBuilder;
-import core.util.Assertions;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.block.factory.Predicates;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
 import static api.automata.fsa.FSA.Builder;
-import static core.util.Parameters.estimateExtendedSize;
+import static core.Parameters.estimateExtendedSize;
 
 public class MapMapSetFSABuilder<S> implements FSA.Builder<S>
 {
@@ -98,7 +98,7 @@ public class MapMapSetFSABuilder<S> implements FSA.Builder<S>
     @Override
     public Builder<S> addSymbol(S symbol)
     {
-        Assertions.argumentNotNull(symbol);
+        Assert.argumentNotNull(symbol);
 
         alphabetBuilder.add(symbol);
 
@@ -108,7 +108,7 @@ public class MapMapSetFSABuilder<S> implements FSA.Builder<S>
     @Override
     public Builder<S> addState(State state)
     {
-        Assertions.argumentNotNull(state);
+        Assert.argumentNotNull(state);
 
         states.add(state);
 
@@ -118,7 +118,7 @@ public class MapMapSetFSABuilder<S> implements FSA.Builder<S>
     @Override
     public Builder<S> removeState(State state)
     {
-        Assertions.argumentNotNull(state);
+        Assert.argumentNotNull(state);
 
         states.remove(state);
         startStates.remove(state);
@@ -131,7 +131,7 @@ public class MapMapSetFSABuilder<S> implements FSA.Builder<S>
     @Override
     public Builder<S> addStartState(State state)
     {
-        Assertions.argumentNotNull(state);
+        Assert.argumentNotNull(state);
 
         addState(state);
         startStates.add(state);
@@ -163,7 +163,7 @@ public class MapMapSetFSABuilder<S> implements FSA.Builder<S>
     @Override
     public Builder<S> addAcceptState(State state)
     {
-        Assertions.argumentNotNull(state);
+        Assert.argumentNotNull(state);
 
         addState(state);
         acceptStates.add(state);

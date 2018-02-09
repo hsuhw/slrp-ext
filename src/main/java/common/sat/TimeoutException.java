@@ -1,4 +1,4 @@
-package api.common.sat;
+package common.sat;
 
 public class TimeoutException extends RuntimeException
 {

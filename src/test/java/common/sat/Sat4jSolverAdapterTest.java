@@ -1,4 +1,4 @@
-package core.common.sat;
+package common.sat;
 
 import com.mscharhag.oleaster.runner.OleasterRunner;
 import org.junit.runner.RunWith;

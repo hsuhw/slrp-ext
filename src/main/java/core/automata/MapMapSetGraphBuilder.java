@@ -1,9 +1,9 @@
 package core.automata;
 
 import api.automata.TransitionGraph;
-import api.common.Digraph;
 import api.util.Values;
-import core.util.Assertions;
+import common.Digraph;
+import common.util.Assert;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.ImmutableSet;
@@ -18,8 +18,8 @@ import org.eclipse.collections.impl.tuple.Tuples;
 import static api.automata.TransitionGraph.Builder;
 import static api.util.Values.Direction.BACKWARD;
 import static api.util.Values.Direction.FORWARD;
-import static core.util.Parameters.NONDETERMINISTIC_TRANSITION_CAPACITY;
-import static core.util.Parameters.estimateExtendedSize;
+import static core.Parameters.NONDETERMINISTIC_TRANSITION_CAPACITY;
+import static core.Parameters.estimateExtendedSize;
 
 public class MapMapSetGraphBuilder<N, A> implements TransitionGraph.Builder<N, A>, Digraph<N, A>
 {
@@ -30,7 +30,7 @@ public class MapMapSetGraphBuilder<N, A> implements TransitionGraph.Builder<N, A
 
     public MapMapSetGraphBuilder(int nodeCapacity, int arcCapacity, A epsilonLabel)
     {
-        Assertions.argumentNotNull(epsilonLabel);
+        Assert.argumentNotNull(epsilonLabel);
         if (arcCapacity < 0) {
             throw new IllegalArgumentException("capacity cannot be less than 0");
         }
@@ -103,7 +103,7 @@ public class MapMapSetGraphBuilder<N, A> implements TransitionGraph.Builder<N, A
     @Override
     public Builder<N, A> addArc(N from, N to, A arcLabel)
     {
-        Assertions.argumentNotNull(from, to, arcLabel);
+        Assert.argumentNotNull(from, to, arcLabel);
         if (from.equals(to) && arcLabel.equals(epsilonLabel)) {
             return this;
         }
@@ -134,7 +134,7 @@ public class MapMapSetGraphBuilder<N, A> implements TransitionGraph.Builder<N, A
     @Override
     public Builder<N, A> removeArc(N from, N to, A arcLabel)
     {
-        Assertions.argumentNotNull(from, to, arcLabel);
+        Assert.argumentNotNull(from, to, arcLabel);
 
         removeArcFrom(forwardGraph, from, to, arcLabel);
         removeArcFrom(backwardGraph, to, from, arcLabel);
@@ -145,7 +145,7 @@ public class MapMapSetGraphBuilder<N, A> implements TransitionGraph.Builder<N, A
     @Override
     public Builder<N, A> removeNode(N node)
     {
-        Assertions.argumentNotNull(node);
+        Assert.argumentNotNull(node);
 
         if (forwardGraph.containsKey(node)) {
             forwardGraph.get(node).forEach((arc, dests) -> {

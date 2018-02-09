@@ -12,7 +12,7 @@ import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 
 import static api.util.Values.DISPLAY_INDENT;
 import static api.util.Values.DISPLAY_NEWLINE;
-import static core.util.Parameters.IMPLICIT_PRECONDITION_RESPECTED;
+import static core.Parameters.IMPLICIT_PRECONDITION_RESPECTED;
 
 public abstract class AbstractAutomaton<S> implements Automaton<S>
 {

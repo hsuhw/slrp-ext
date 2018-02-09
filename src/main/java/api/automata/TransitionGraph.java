@@ -1,6 +1,6 @@
 package api.automata;
 
-import api.common.Digraph;
+import common.Digraph;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;

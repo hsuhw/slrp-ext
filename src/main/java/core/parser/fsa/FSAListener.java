@@ -6,7 +6,7 @@ import api.automata.State;
 import api.automata.States;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
-import core.util.Assertions;
+import common.util.Assert;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
@@ -19,7 +19,7 @@ import java.util.List;
 
 import static api.parser.Parser.SymbolPolicy;
 import static api.parser.Parser.SymbolPolicy.*;
-import static core.util.Parameters.PARSER_COMMON_CAPACITY;
+import static core.Parameters.PARSER_COMMON_CAPACITY;
 
 public class FSAListener<S>
 {
@@ -34,7 +34,7 @@ public class FSAListener<S>
 
     public FSAListener(Alphabet<S> alphabet, SymbolPolicy policy)
     {
-        Assertions.argumentNotNull(alphabet);
+        Assert.argumentNotNull(alphabet);
 
         symbolPolicy = policy;
         this.epsilonSymbol = alphabet.epsilon();
@@ -70,7 +70,7 @@ public class FSAListener<S>
 
     public FSAListener(Alphabet.Builder<S> alphabetBuilder)
     {
-        Assertions.argumentNotNull(alphabetBuilder);
+        Assert.argumentNotNull(alphabetBuilder);
 
         symbolPolicy = AGGREGATE;
         epsilonSymbol = alphabetBuilder.epsilon();

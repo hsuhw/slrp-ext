@@ -1,7 +1,7 @@
 package core.automata;
 
 import api.automata.Alphabet;
-import core.util.Assertions;
+import common.util.Assert;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
 
@@ -13,7 +13,7 @@ public class SetAlphabet<S> implements Alphabet<S>
 
     public SetAlphabet(ImmutableSet<S> definition, S epsilon)
     {
-        Assertions.argumentNotNull(epsilon);
+        Assert.argumentNotNull(epsilon);
         if (!definition.contains(epsilon)) {
             throw new IllegalArgumentException("epsilon symbol not found in the definition");
         }

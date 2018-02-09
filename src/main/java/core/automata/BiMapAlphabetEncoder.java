@@ -3,7 +3,7 @@ package core.automata;
 import api.automata.Alphabet;
 import api.automata.AlphabetEncoder;
 import api.automata.Alphabets;
-import core.util.Assertions;
+import common.util.Assert;
 import org.eclipse.collections.api.bimap.ImmutableBiMap;
 import org.eclipse.collections.api.bimap.MutableBiMap;
 
@@ -18,7 +18,7 @@ public class BiMapAlphabetEncoder<S, T> implements AlphabetEncoder<S, T>
 
     public BiMapAlphabetEncoder(MutableBiMap<S, T> definition, S originEpsilon)
     {
-        Assertions.argumentNotNull(originEpsilon);
+        Assert.argumentNotNull(originEpsilon);
         if (!definition.containsKey(originEpsilon)) {
             throw new IllegalArgumentException("epsilon symbol not found in the definition");
         }

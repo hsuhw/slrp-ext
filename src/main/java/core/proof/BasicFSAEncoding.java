@@ -3,9 +3,9 @@ package core.proof;
 import api.automata.*;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
-import api.common.sat.SatSolver;
 import api.proof.FSAEncoding;
-import core.util.Assertions;
+import common.sat.SatSolver;
+import common.util.Assert;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
@@ -102,7 +102,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     public BasicFSAEncoding(SatSolver solver, int stateNumber, AlphabetIntEncoder<S> intAlphabet,
                             boolean restrictsShape)
     {
-        Assertions.argumentNotNull(solver, intAlphabet);
+        Assert.argumentNotNull(solver, intAlphabet);
 
         this.solver = solver;
         this.stateNumber = stateNumber;

@@ -1,4 +1,4 @@
-package core.util;
+package core;
 
 public final class Parameters
 {

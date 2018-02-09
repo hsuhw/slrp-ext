@@ -3,7 +3,7 @@ package core.automata;
 import api.automata.Alphabet;
 import api.automata.AlphabetIntEncoder;
 import api.automata.Alphabets;
-import core.util.Assertions;
+import common.util.Assert;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.primitive.ImmutableObjectIntMap;
@@ -19,7 +19,7 @@ public class MapListAlphabetIntEncoder<S> implements AlphabetIntEncoder<S>
 
     public MapListAlphabetIntEncoder(MutableList<S> definition, S epsilon)
     {
-        Assertions.argumentNotNull(epsilon);
+        Assert.argumentNotNull(epsilon);
         if (!definition.contains(epsilon)) {
             throw new IllegalArgumentException("epsilon symbol not found in the definition");
         }

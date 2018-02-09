@@ -19,7 +19,7 @@ import org.eclipse.collections.impl.stack.mutable.ArrayStack;
 import static api.automata.AutomatonManipulator.makeStartAndAcceptStates;
 import static api.util.Connectives.AND;
 import static api.util.Connectives.Labels;
-import static core.util.Parameters.estimateExtendedSize;
+import static core.Parameters.estimateExtendedSize;
 
 public final class Transducers
 {

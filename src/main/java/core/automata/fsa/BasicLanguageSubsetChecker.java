@@ -3,7 +3,7 @@ package core.automata.fsa;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.automata.fsa.LanguageSubsetChecker;
-import core.util.Assertions;
+import common.util.Assert;
 import org.eclipse.collections.api.list.ImmutableList;
 
 import static api.util.Values.DISPLAY_INDENT;
@@ -83,7 +83,7 @@ public class BasicLanguageSubsetChecker implements LanguageSubsetChecker
         {
             if (instance == null) {
                 instance = LanguageSubsetChecker.Counterexample.super.get();
-                Assertions.referenceNotNull(instance); // a counterexample will always have a witness
+                Assert.referenceNotNull(instance); // a counterexample will always have a witness
             }
 
             return instance;

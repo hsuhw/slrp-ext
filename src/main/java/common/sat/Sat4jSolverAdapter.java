@@ -1,8 +1,5 @@
-package core.common.sat;
+package common.sat;
 
-import api.common.sat.ContradictionException;
-import api.common.sat.SatSolver;
-import api.common.sat.TimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
@@ -18,8 +15,8 @@ import org.sat4j.specs.ISolver;
 
 import java.util.Arrays;
 
-import static core.util.Parameters.SAT_SOLVER_MAX_CLAUSE_NUMBER;
-import static core.util.Parameters.SAT_SOLVER_MAX_VARIABLE_NUMBER;
+import static core.Parameters.SAT_SOLVER_MAX_CLAUSE_NUMBER;
+import static core.Parameters.SAT_SOLVER_MAX_VARIABLE_NUMBER;
 
 public class Sat4jSolverAdapter implements SatSolver
 {

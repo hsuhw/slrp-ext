@@ -1,14 +1,12 @@
-package core.common.sat;
+package common.sat;
 
-import api.common.sat.ContradictionException;
-import api.common.sat.SatSolver;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
 
 import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
-import static core.util.Parameters.SAT_SOLVER_MAX_CLAUSE_NUMBER;
+import static core.Parameters.SAT_SOLVER_MAX_CLAUSE_NUMBER;
 
 public abstract class AbstractSatSolverTest
 {

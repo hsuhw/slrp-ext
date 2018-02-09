@@ -1,8 +1,8 @@
-package core.util;
+package common.util;
 
-public final class Assertions
+public final class Assert
 {
-    private Assertions()
+    private Assert()
     {
     }
 

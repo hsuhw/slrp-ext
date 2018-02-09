@@ -6,7 +6,7 @@ import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
 import static api.automata.Alphabet.Builder;
-import static core.util.Parameters.estimateExtendedSize;
+import static core.Parameters.estimateExtendedSize;
 
 public class SetAlphabetBuilder<S> implements Alphabet.Builder<S>
 {

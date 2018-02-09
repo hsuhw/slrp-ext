@@ -14,7 +14,6 @@ import org.apache.logging.log4j.core.config.Configuration;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.util.Scanner;
 
 import static api.util.Values.DISPLAY_NEWLINE;
 

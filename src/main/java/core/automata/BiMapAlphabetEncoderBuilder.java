@@ -5,7 +5,7 @@ import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.impl.bimap.mutable.HashBiMap;
 
 import static api.automata.AlphabetEncoder.Builder;
-import static core.util.Parameters.estimateExtendedSize;
+import static core.Parameters.estimateExtendedSize;
 
 public class BiMapAlphabetEncoderBuilder<S, T> implements AlphabetEncoder.Builder<S, T>
 {
