@@ -7,11 +7,13 @@ plugins {
 
 repositories {
     jcenter()
+    mavenCentral()
 }
 
 dependencies {
     antlr 'org.antlr:antlr4:4.7'
     compile 'org.ow2.sat4j:org.ow2.sat4j.core:2.3.5'
+    compile 'dk.brics.automaton:automaton:1.11-8'
     compile 'org.apache.logging.log4j:log4j-api:2.9.1'
     compile 'org.apache.logging.log4j:log4j-core:2.9.1'
     compile 'org.eclipse.collections:eclipse-collections-api:9.0.0'

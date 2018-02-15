@@ -1,6 +1,7 @@
 ### Project Specific Rules
-container/volumes/*
 *.tokens
+container/volumes/*
+!lib/jalf.jar
 
 
 ### IntelliJ Project Files

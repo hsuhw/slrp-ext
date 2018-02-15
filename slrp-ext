@@ -1,3 +1,6 @@
 #!/bin/bash
 
-java -Xss20000k -Xmx2000m -cp 'slrp-ext.jar:.' cli.Main "$@"
+TOP="$(dirname "${BASH_SOURCE[0]}")"
+
+LD_LIBRARY_PATH=${TOP}/lib \
+  java -Xss20000k -Xmx2000m --class-path "${TOP}/slrp-ext.jar:${TOP}/lib/jalf.jar" cli.Main "$@"
