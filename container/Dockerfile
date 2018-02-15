@@ -2,7 +2,9 @@ ARG JDK_IMG_VERSION
 FROM openjdk:${JDK_IMG_VERSION}
 
 # Add basic packages
-RUN apk add --no-cache curl libstdc++
+RUN apt update && apt install -y \
+    make g++ \
+ && rm -rf /var/lib/apt/lists/*
 
 # Install gradle
 ARG GRADLE_VERSION
