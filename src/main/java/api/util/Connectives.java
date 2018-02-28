@@ -1,11 +1,12 @@
 package api.util;
 
+import api.automata.State;
 import org.eclipse.collections.api.block.predicate.primitive.BooleanBooleanPredicate;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.tuple.Tuples;
 
-import static api.automata.AutomatonManipulator.SymbolDecider;
+import static api.automata.Automaton.StepMaker;
 
 public interface Connectives
 {
@@ -14,9 +15,9 @@ public interface Connectives
 
     interface Labels
     {
-        static <S> SymbolDecider<S, S, S> matched()
+        static <S extends State<T>, T> StepMaker<S, T, S, T, T> matched()
         {
-            return (s1, s2) -> s1.equals(s2) ? s1 : null;
+            return (statePair, s1, s2) -> s1.equals(s2) ? s1 : null;
         }
 
         static <S, T, U extends Pair<S, T>> SymbolDecider<U, S, U> whoseInputMatched()

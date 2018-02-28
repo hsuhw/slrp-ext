@@ -1,37 +1,71 @@
 package api.automata.fsa;
 
 import api.automata.*;
-import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.RichIterable;
+import org.eclipse.collections.api.block.predicate.Predicate;
+import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
-import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.SetIterable;
+import org.eclipse.collections.api.set.sorted.MutableSortedSet;
 import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.api.tuple.Twin;
+import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
+import org.eclipse.collections.impl.set.sorted.mutable.TreeSortedSet;
 import org.eclipse.collections.impl.tuple.Tuples;
 
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.function.Function;
 
-public interface FSA<S> extends Automaton<S>
+import static common.util.Constants.NOT_IMPLEMENTED_YET;
+
+public interface FSA<S extends State<T>, T> extends Automaton<S, T>
 {
+    @Override
+    FSA<? extends State<T>, T> trimUnreachableStates();
+
+    @Override
+    <R> FSA<? extends State<R>, R> project(Alphabet<R> alphabet, Function<T, R> projector);
+
+    @Override
+    <U extends State<V>, V, R> FSA<? extends MutableState<R>, R> product(Automaton<U, V> target, Alphabet<R> alphabet,
+        StepMaker<S, T, U, V, R> stepMaker, Finalizer<S, U, MutableState<R>, R> finalizer);
+
     default boolean isDeterministic()
     {
-        return transitionGraph().arcDeterministic() && startStates().size() == 1;
+        final Predicate<? super S> noEpsilonTransAndOnlyOneSucc = state -> {
+            final boolean noEpsilonTrans = !state.transitionExists(alphabet().epsilon());
+            final boolean onlyOneSucc = state.enabledSymbols()
+                                             .allSatisfy(symbol -> state.successors(symbol).size() == 1);
+            return noEpsilonTrans && onlyOneSucc;
+        };
+
+        return states().allSatisfy(noEpsilonTransAndOnlyOneSucc);
     }
 
-    default ImmutableSet<State> incompleteStates()
+    @Override
+    MutableFSA<? extends MutableState<T>, T> toMutable();
+
+    @Override
+    default ImmutableFSA<? extends ImmutableState<T>, T> toImmutable()
+    {
+        throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
+    }
+
+    default SetIterable<S> incompleteStates()
     {
         if (!isDeterministic()) {
             throw new UnsupportedOperationException("only available on deterministic instances");
         }
 
-        final TransitionGraph<State, S> delta = transitionGraph();
-        final ImmutableSet<S> complete = alphabet().noEpsilonSet();
+        final SetIterable<T> complete = alphabet().noEpsilonSet();
 
-        return states().select(state -> !delta.arcLabelsFrom(state).containsAllIterable(complete));
+        return states().reject(which -> which.enabledSymbols().containsAllIterable(complete));
     }
 
     default boolean isComplete()
@@ -39,20 +73,19 @@ public interface FSA<S> extends Automaton<S>
         return incompleteStates().size() == 0;
     }
 
-    private boolean acceptsDeterminedly(ImmutableList<S> word)
+    private boolean acceptsDeterminedly(ListIterable<T> word)
     {
-        final TransitionGraph<State, S> delta = transitionGraph();
-        final S epsilon = delta.epsilonLabel();
+        final T epsilon = alphabet().epsilon();
 
-        State currState = startState();
-        ImmutableSet<State> nextState;
-        S symbol;
+        State<T> currState = startState();
+        SetIterable<? extends State<T>> nextState;
+        T symbol;
         for (int readHead = 0; readHead < word.size(); readHead++) {
             symbol = word.get(readHead);
             if (symbol.equals(epsilon)) {
                 continue;
             }
-            if ((nextState = delta.directSuccessorsOf(currState, symbol)).isEmpty()) {
+            if ((nextState = currState.successors(symbol)).isEmpty()) {
                 return false;
             }
             currState = nextState.getOnly();
@@ -61,13 +94,13 @@ public interface FSA<S> extends Automaton<S>
         return isAcceptState(currState);
     }
 
-    private boolean acceptsNondeterminedly(ImmutableList<S> word)
+    private boolean acceptsNondeterminedly(ListIterable<T> word)
     {
-        final TransitionGraph<State, S> delta = transitionGraph();
-        final S epsilon = delta.epsilonLabel();
+        final T epsilon = alphabet().epsilon();
+        final api.automata.Automaton.TransitionGraph<S, T> delta = transitionGraph();
 
-        SetIterable<State> currStates = startStates(), nextStates;
-        S symbol;
+        SetIterable<S> currStates = Sets.immutable.of(startState()), nextStates;
+        T symbol;
         for (int readHead = 0; readHead < word.size(); readHead++) {
             symbol = word.get(readHead);
             if (symbol.equals(epsilon)) {
@@ -82,7 +115,7 @@ public interface FSA<S> extends Automaton<S>
         return currStates.anySatisfy(this::isAcceptState);
     }
 
-    default boolean accepts(ImmutableList<S> word)
+    default boolean accepts(ListIterable<T> word)
     {
         return alphabet().asSet().containsAllIterable(word) && // valid word given
             (isDeterministic() ? acceptsDeterminedly(word) : acceptsNondeterminedly(word));
@@ -90,34 +123,33 @@ public interface FSA<S> extends Automaton<S>
 
     default boolean acceptsNone()
     {
-        return FSAs.trimUnreachableStates(this).acceptStates().size() == 0;
+        return !liveStates().anySatisfy(this::isAcceptState);
     }
 
-    private ImmutableList<S> getOneShortestWordDeterminedly()
+    private ListIterable<T> getOneShortestWordDeterminedly()
     {
-        final TransitionGraph<State, S> delta = transitionGraph();
         final int stateNumber = states().size();
-        final MutableMap<State, Pair<State, S>> touchedBy = UnifiedMap.newMap(stateNumber); // upper bound
-        final Queue<State> pendingChecks = new LinkedList<>();
+        final MutableMap<State<T>, Pair<State<T>, T>> visitRecord = UnifiedMap.newMap(stateNumber); // upper bound
+        final Queue<State<T>> pendingChecks = new LinkedList<>();
 
-        final State startState = startState();
+        final S startState = startState();
         pendingChecks.add(startState);
-        State currState;
+        State<T> currState;
         while ((currState = pendingChecks.poll()) != null) {
             if (isAcceptState(currState)) {
-                final MutableList<S> word = FastList.newList(stateNumber); // upper bound
+                final MutableList<T> word = FastList.newList(stateNumber); // upper bound
                 while (currState != startState) {
-                    final Pair<State, S> touch = touchedBy.get(currState);
-                    word.add(touch.getTwo());
-                    currState = touch.getOne();
+                    final Pair<State<T>, T> visitorAndSymbol = visitRecord.get(currState);
+                    word.add(visitorAndSymbol.getTwo());
+                    currState = visitorAndSymbol.getOne();
                 }
-                return word.reverseThis().toImmutable();
+                return word.reverseThis();
             }
-            final State state = currState; // effectively finalized for the lambda expression
-            for (S symbol : delta.arcLabelsFrom(currState)) {
-                touchedBy.computeIfAbsent(delta.directSuccessorOf(state, symbol), touchedState -> {
-                    pendingChecks.add(touchedState);
-                    return Tuples.pair(state, symbol);
+            final State<T> visitor = currState; // effectively finalized for the lambda expression
+            for (T symbol : currState.enabledSymbols()) {
+                visitRecord.computeIfAbsent(visitor.successor(symbol), visited -> {
+                    pendingChecks.add(visited);
+                    return Tuples.pair(visitor, symbol);
                 });
             }
         }
@@ -125,32 +157,32 @@ public interface FSA<S> extends Automaton<S>
         return null;
     }
 
-    private ImmutableList<S> getOneShortestWordNondeterminedly()
+    private ListIterable<T> getOneShortestWordNondeterminedly()
     {
-        final ImmutableSet<S> noEpsilonAlphabet = alphabet().noEpsilonSet();
-        final TransitionGraph<State, S> delta = transitionGraph();
+        final SetIterable<T> noEpsilonAlphabet = alphabet().noEpsilonSet();
+        final api.automata.Automaton.TransitionGraph<S, T> delta = transitionGraph();
         final int stateNumber = states().size(); // upper bound
-        final MutableMap<SetIterable<State>, Pair<SetIterable<State>, S>> touchedBy = UnifiedMap.newMap(stateNumber);
-        final Queue<SetIterable<State>> pendingChecks = new LinkedList<>();
+        final MutableMap<SetIterable<S>, Pair<SetIterable<S>, T>> visitRecord = UnifiedMap.newMap(stateNumber);
+        final Queue<SetIterable<S>> pendingChecks = new LinkedList<>();
 
-        final SetIterable<State> startStates = delta.epsilonClosureOf(startStates());
+        final SetIterable<S> startStates = transitionGraph().epsilonClosureOf(startState());
         pendingChecks.add(startStates);
-        SetIterable<State> currStates;
+        SetIterable<S> currStates;
         while ((currStates = pendingChecks.poll()) != null) {
             if (currStates.anySatisfy(this::isAcceptState)) {
-                final MutableList<S> word = FastList.newList(stateNumber);
+                final MutableList<T> word = FastList.newList(stateNumber);
                 while (currStates != startStates) {
-                    final Pair<SetIterable<State>, S> touch = touchedBy.get(currStates);
-                    word.add(touch.getTwo());
-                    currStates = touch.getOne();
+                    final Pair<SetIterable<S>, T> visitorAndSymbol = visitRecord.get(currStates);
+                    word.add(visitorAndSymbol.getTwo());
+                    currStates = visitorAndSymbol.getOne();
                 }
-                return word.reverseThis().toImmutable();
+                return word.reverseThis();
             }
-            final SetIterable<State> states = currStates; // effectively finalized for the lambda expression
-            for (S symbol : noEpsilonAlphabet) {
-                touchedBy.computeIfAbsent(delta.epsilonClosureOf(states, symbol), touchedStates -> {
+            final SetIterable<S> visitor = currStates; // effectively finalized for the lambda expression
+            for (T symbol : noEpsilonAlphabet) {
+                visitRecord.computeIfAbsent(delta.epsilonClosureOf(visitor, symbol), touchedStates -> {
                     pendingChecks.add(touchedStates);
-                    return Tuples.pair(states, symbol);
+                    return Tuples.pair(visitor, symbol);
                 });
             }
         }
@@ -158,133 +190,79 @@ public interface FSA<S> extends Automaton<S>
         return null;
     }
 
-    default ImmutableList<S> enumerateOneShortest()
+    default ListIterable<T> enumerateOneShortest()
     {
         return isDeterministic() ? getOneShortestWordDeterminedly() : getOneShortestWordNondeterminedly();
     }
 
+    static <S extends State<T>, T> Twin<ListIterable<S>> splitPartition(ListIterable<S> toBeSplit,
+        RichIterable<S> checkSet, T symbol)
+    {
+        final ListIterable<S> inSet = toBeSplit.select(eachState -> checkSet.contains(eachState.successor(symbol)));
+        final ListIterable<S> outSet = toBeSplit.reject(inSet::contains);
+
+        return inSet.size() < outSet.size() ? Tuples.twin(inSet, outSet) : Tuples.twin(outSet, inSet);
+    }
+
+    default RichIterable<ListIterable<S>> refinePartition(RichIterable<ListIterable<S>> initialPartition,
+        ListIterable<S> initialCheckSet)
+    {
+        final MutableSortedSet<Pair<ListIterable<S>, T>> pendingChecks = TreeSortedSet
+            .newSet(Comparator.comparingInt(Object::hashCode));
+        final SetIterable<T> symbols = alphabet().noEpsilonSet();
+        symbols.forEach(symbol -> pendingChecks.add(Tuples.pair(initialCheckSet, symbol)));
+
+        RichIterable<ListIterable<S>> currPartition = initialPartition;
+        while (pendingChecks.notEmpty()) {
+            final Pair<ListIterable<S>, T> currCheck = pendingChecks.getFirst();
+            pendingChecks.remove(currCheck);
+            currPartition = currPartition.flatCollect(part -> {
+                final Twin<ListIterable<S>> splitPart = splitPartition(part, currCheck.getOne(), currCheck.getTwo());
+                if (splitPart.getOne().notEmpty()) {
+                    symbols.forEach(symbol -> {
+                        final Pair<ListIterable<S>, T> splitCheck = Tuples.pair(part, symbol);
+                        if (pendingChecks.contains(splitCheck)) {
+                            pendingChecks.remove(splitCheck);
+                            pendingChecks.add(Tuples.pair(splitPart.getOne(), symbol));
+                            pendingChecks.add(Tuples.pair(splitPart.getTwo(), symbol));
+                        } else {
+                            pendingChecks.add(Tuples.pair(splitPart.getOne(), symbol));
+                        }
+                    });
+                    return Lists.immutable.of(splitPart.getOne(), splitPart.getTwo());
+                }
+                return Lists.immutable.of(part);
+            });
+        }
+
+        return currPartition;
+    }
+
+    FSA<? extends State<T>, T> determinize();
+
+    FSA<? extends State<T>, T> complete();
+
+    FSA<? extends State<T>, T> minimize();
+
+    FSA<? extends State<T>, T> complement();
+
+    FSA<? extends State<T>, T> intersect(FSA<? extends State<T>, T> target);
+
+    FSA<? extends State<T>, T> union(FSA<? extends State<T>, T> target);
+
+    LanguageSubsetChecker.Result<T> checkContaining(FSA<? extends State<T>, T> target);
+
+    /**
+     * This method only make sense when there is no possible contravariance
+     * introduced in this interface.
+     */
+    static <S extends State<T>, T> FSA<State<T>, T> upcast(FSA<S, T> derivative)
+    {
+        @SuppressWarnings("unchecked")
+        final FSA<State<T>, T> generalized = (FSA<State<T>, T>) derivative;
+        return generalized;
+    }
+
     @Override
     String toString();
-
-    interface Builder<S> extends Automaton.Builder<S>
-    {
-        Alphabet<S> currentAlphabet();
-
-        int currentStateNumber();
-
-        int currentStartStateNumber();
-
-        int currentAcceptStateNumber();
-
-        int currentTransitionNumber();
-
-        @Override
-        Builder<S> addSymbol(S symbol);
-
-        @Override
-        Builder<S> addState(State state);
-
-        @Override
-        Builder<S> removeState(State state);
-
-        @Override
-        Builder<S> addStartState(State state);
-
-        @Override
-        Builder<S> addStartStates(ImmutableSet<State> states);
-
-        @Override
-        Builder<S> resetStartStates();
-
-        @Override
-        Builder<S> addAcceptState(State state);
-
-        @Override
-        Builder<S> addAcceptStates(ImmutableSet<State> states);
-
-        @Override
-        Builder<S> resetAcceptStates();
-
-        @Override
-        Builder<S> addTransition(State dept, State dest, S symbol);
-
-        @Override
-        Builder<S> addEpsilonTransition(State dept, State dest);
-
-        Builder<S> addTransitions(TransitionGraph<State, S> graph);
-
-        @Override
-        FSA<S> build();
-
-        FSA<S> buildWith(Alphabet<S> override);
-    }
-
-    interface Provider
-    {
-        <S> Builder<S> builder(int stateCapacity, int symbolCapacity, S epsilonSymbol);
-
-        <S> Builder<S> builder(FSA<S> base, int stateCapacity, int transitionCapacity);
-
-        <S> Builder<S> builder(FSA<S> base);
-
-        default <S> FSA<S> thatAcceptsNone(Alphabet<S> alphabet)
-        {
-            final Builder<S> builder = builder(1, alphabet.size(), alphabet.epsilon());
-
-            final State state = States.generate();
-            builder.addStartState(state);
-            alphabet.noEpsilonSet().forEach(symbol -> builder.addTransition(state, state, symbol));
-
-            return builder.buildWith(alphabet);
-        }
-
-        default <S> FSA<S> thatAcceptsAll(Alphabet<S> alphabet)
-        {
-            final Builder<S> builder = builder(1, alphabet.size(), alphabet.epsilon());
-
-            final State state = States.generate();
-            builder.addStartState(state).addAcceptState(state);
-            alphabet.noEpsilonSet().forEach(symbol -> builder.addTransition(state, state, symbol));
-
-            return builder.buildWith(alphabet);
-        }
-
-        default <S> FSA<S> thatAcceptsOnly(Alphabet<S> alphabet, ImmutableList<S> word)
-        {
-            return thatAcceptsOnly(alphabet, Sets.immutable.of(word));
-        }
-
-        default <S> FSA<S> thatAcceptsOnly(Alphabet<S> alphabet, SetIterable<ImmutableList<S>> words)
-        {
-            final int stateCapacity = (int) words.collectInt(ImmutableList::size).sum(); // upper bound
-            final Builder<S> builder = builder(stateCapacity, alphabet.size(), alphabet.epsilon());
-
-            final State startState = States.generate();
-            final State acceptState = States.generate();
-            builder.addAcceptState(acceptState);
-            State currState = startState, nextState;
-            int lastSymbolPos;
-            S symbol;
-            builder.addStartState(startState);
-            for (ImmutableList<S> word : words) {
-                if (word.isEmpty()) {
-                    builder.addEpsilonTransition(currState, acceptState);
-                    continue;
-                }
-                for (int i = 0; i < (lastSymbolPos = word.size() - 1); i++) {
-                    if (!(symbol = word.get(i)).equals(alphabet.epsilon())) {
-                        nextState = States.generate();
-                        builder.addTransition(currState, nextState, symbol);
-                        currState = nextState;
-                    }
-                }
-                builder.addTransition(currState, acceptState, word.get(lastSymbolPos));
-                currState = startState;
-            }
-
-            return builder.buildWith(alphabet);
-        }
-
-        FSAManipulator manipulator();
-    }
 }

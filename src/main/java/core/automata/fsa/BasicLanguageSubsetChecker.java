@@ -1,43 +1,47 @@
 package core.automata.fsa;
 
+import api.automata.State;
 import api.automata.fsa.FSA;
-import api.automata.fsa.FSAs;
 import api.automata.fsa.LanguageSubsetChecker;
 import common.util.Assert;
-import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.list.ListIterable;
 
-import static api.util.Values.DISPLAY_INDENT;
-import static api.util.Values.DISPLAY_NEWLINE;
+import static common.util.Constants.DISPLAY_INDENT;
+import static common.util.Constants.DISPLAY_NEWLINE;
 
-public class BasicLanguageSubsetChecker implements LanguageSubsetChecker
+public class BasicLanguageSubsetChecker<T> implements LanguageSubsetChecker<T>
 {
     @Override
-    public <S> Result<S> test(FSA<S> subsumer, FSA<S> includer)
+    public Result test(FSA<State<T>, T> subsumer, FSA<State<T>, T> includer)
     {
-        if (subsumer.acceptsNone()) {
-            return new Result<>(true, null); // anyone includes empty
-        }
-        if (includer.acceptsNone()) {
-            return new Result<>(false, new Counterexample<>(subsumer)); // empty includes nobody
-        }
-        final FSA<S> includerBar = FSAs.complement(includer);
-        if (includerBar.acceptsNone()) {
-            return new Result<>(true, null); // universe includes anyone
+        if (!subsumer.alphabet().epsilon().equals(includer.alphabet().epsilon())) {
+            throw new IllegalArgumentException("incompatible two alphabet given");
         }
 
-        final FSA<S> observingImage = FSAs.intersect(includerBar, subsumer);
+        if (subsumer.acceptsNone()) { // anyone includes empty
+            return new Result(true, null);
+        }
+        if (includer.acceptsNone()) { // empty includes nobody
+            return new Result(false, new Counterexample(subsumer));
+        }
+        final FSA<? extends State<T>, T> includerBar = includer.complement();
+        if (includerBar.acceptsNone()) { // universe includes anyone
+            return new Result(true, null);
+        }
 
-        return observingImage.acceptsNone()
-               ? new Result<>(true, null)
-               : new Result<>(false, new Counterexample<>(observingImage));
+        final FSA<? extends State<T>, T> divergentImage = includerBar.intersect(subsumer);
+
+        return divergentImage.acceptsNone()
+               ? new Result(true, null)
+               : new Result(false, new Counterexample(FSA.upcast(divergentImage)));
     }
 
-    private class Result<S> implements LanguageSubsetChecker.Result<S>
+    private class Result implements LanguageSubsetChecker.Result<T>
     {
         private final boolean passed;
-        private final Counterexample<S> counterexample;
+        private final Counterexample counterexample;
 
-        private Result(boolean passed, Counterexample<S> counterexample)
+        private Result(boolean passed, Counterexample counterexample)
         {
             this.passed = passed;
             this.counterexample = counterexample;
@@ -50,7 +54,7 @@ public class BasicLanguageSubsetChecker implements LanguageSubsetChecker
         }
 
         @Override
-        public Counterexample<S> counterexample()
+        public Counterexample counterexample()
         {
             return counterexample;
         }
@@ -62,24 +66,24 @@ public class BasicLanguageSubsetChecker implements LanguageSubsetChecker
         }
     }
 
-    private class Counterexample<S> implements LanguageSubsetChecker.Counterexample<S>
+    private class Counterexample implements LanguageSubsetChecker.Counterexample<T>
     {
-        private final FSA<S> sourceImage;
-        private ImmutableList<S> instance;
+        private final FSA<State<T>, T> sourceImage;
+        private ListIterable<T> instance;
 
-        private Counterexample(FSA<S> source)
+        private Counterexample(FSA<State<T>, T> source)
         {
             sourceImage = source;
         }
 
         @Override
-        public FSA<S> sourceImage()
+        public FSA<State<T>, T> sourceImage()
         {
             return sourceImage;
         }
 
         @Override
-        public ImmutableList<S> get()
+        public ListIterable<T> get()
         {
             if (instance == null) {
                 instance = LanguageSubsetChecker.Counterexample.super.get();
