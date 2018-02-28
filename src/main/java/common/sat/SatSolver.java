@@ -88,7 +88,7 @@ public interface SatSolver
 
     /**
      * Makes the first given array of literals, if taken as a bit vector (zero
-     * cell as the highiest digit), have binary value greater equal than the
+     * cell as the highest digit), have binary value greater equal than the
      * second given array.
      */
     default void markAsGreaterEqualInBinary(int[] bitArray1, int[] bitArray2)
