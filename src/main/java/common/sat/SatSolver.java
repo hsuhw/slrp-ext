@@ -57,7 +57,7 @@ public interface SatSolver
         addClause(literal1, -literal2);
     }
 
-    default void markEachAsEquivalent(int... literals)
+    default void markAllAsEquivalent(int... literals)
     {
         for (int i = 0; i < literals.length - 1; i++) {
             addClause(-literals[i], literals[i + 1]);
@@ -66,11 +66,11 @@ public interface SatSolver
     }
 
     /**
-     * Behaves the same as {@link #markEachAsEquivalent(int...)}.
+     * Behaves the same as {@link #markAllAsEquivalent(int...)}.
      */
     default void syncLiterals(int... literals)
     {
-        markEachAsEquivalent(literals);
+        markAllAsEquivalent(literals);
     }
 
     private void encodeGreaterEqualAt(int alreadyGreater, int greaterHere, int digit1, int digit2)
