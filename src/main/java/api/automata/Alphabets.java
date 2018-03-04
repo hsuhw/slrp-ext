@@ -1,14 +1,20 @@
 package api.automata;
 
+import core.automata.SetAlphabet;
+import core.automata.SetAlphabetBuilder;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.api.set.SetIterable;
+import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.Twin;
+import org.eclipse.collections.impl.factory.Sets;
+import org.eclipse.collections.impl.tuple.Tuples;
 
-import java.util.ServiceLoader;
+import java.util.Set;
 
 import static api.automata.Alphabet.Builder;
-import static api.automata.Alphabet.Provider;
+import static common.util.Constants.NO_IMPLEMENTATION_FOUND;
 
 public final class Alphabets
 {
@@ -16,44 +22,49 @@ public final class Alphabets
     {
     }
 
-    public static <S> Builder<S> builder(int sizeEstimate, S epsilon)
+    public static <S> Builder<S> builder(int capacity, S epsilon)
     {
-        return Singleton.INSTANCE.builder(sizeEstimate, epsilon);
+        return new SetAlphabetBuilder<>(capacity, epsilon);
     }
 
     public static <S> Builder<S> builder(Alphabet<S> base)
     {
-        return Singleton.INSTANCE.builder(base);
+        if (base instanceof SetAlphabet<?>) {
+            return new SetAlphabetBuilder<>((SetAlphabet<S>) base);
+        }
+
+        throw new UnsupportedOperationException(NO_IMPLEMENTATION_FOUND);
     }
 
     public static <S> Alphabet<S> create(ImmutableSet<S> definition, S epsilon)
     {
-        return Singleton.INSTANCE.create(definition, epsilon);
+        return new SetAlphabet<>(definition, epsilon);
     }
 
     public static <S> Alphabet<S> create(MutableSet<S> definition, S epsilon)
     {
-        return Singleton.INSTANCE.create(definition, epsilon);
+        return new SetAlphabet<>(definition, epsilon);
     }
 
-    public static <S> Alphabet<Twin<S>> product(Alphabet<S> alphabet)
+    public static <S> Alphabet<Pair<S, S>> product(Alphabet<S> alphabet)
     {
-        return Singleton.INSTANCE.product(alphabet);
+        final SetIterable<S> symbols = alphabet.noEpsilonSet();
+        final Set<S> symbolSet = symbols instanceof ImmutableSet<?>
+                                 ? ((ImmutableSet<S>) symbols).castToSet()
+                                 : (MutableSet<S>) symbols;
+        final Twin<S> epsilon = Tuples.twin(alphabet.epsilon(), alphabet.epsilon());
+        final MutableSet<Pair<S, S>> product = Sets.cartesianProduct(symbolSet, symbolSet, Tuples::pair).toSet();
+        product.add(epsilon);
+
+        return create(product, epsilon);
     }
 
-    public static <S> ImmutableList<Twin<S>> twinWord(ImmutableList<S> one, ImmutableList<S> two)
+    public static <S, T> ImmutableList<Pair<S, T>> pairWord(ImmutableList<S> one, ImmutableList<T> two)
     {
-        return Singleton.INSTANCE.twinWord(one, two);
-    }
-
-    private static final class Singleton
-    {
-        private static final Provider INSTANCE;
-
-        static {
-            ServiceLoader<Provider> loader = ServiceLoader.load(Provider.class);
-            INSTANCE = loader.stream().reduce((__, latter) -> latter) // get the last provider in classpath
-                             .orElseThrow(IllegalStateException::new).get();
+        if (one.size() != two.size()) {
+            throw new IllegalArgumentException("size-unmatched word pair given");
         }
+
+        return one.collectWithIndex((symbol, index) -> Tuples.pair(symbol, two.get(index)));
     }
 }

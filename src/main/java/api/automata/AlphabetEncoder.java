@@ -1,7 +1,6 @@
 package api.automata;
 
 import common.util.Assert;
-import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.list.ImmutableList;
 
 /**
@@ -15,7 +14,10 @@ public interface AlphabetEncoder<S, T>
 {
     int size();
 
-    T encodedEpsilon();
+    default T encodedEpsilon()
+    {
+        return encode(originEpsilon());
+    }
 
     Alphabet<T> encodedAlphabet();
 
@@ -46,22 +48,4 @@ public interface AlphabetEncoder<S, T>
 
     @Override
     boolean equals(Object obj);
-
-    interface Builder<S, T>
-    {
-        T encodedEpsilon();
-
-        S originEpsilon();
-
-        Builder<S, T> define(S origin, T target);
-
-        AlphabetEncoder<S, T> build();
-    }
-
-    interface Provider
-    {
-        <S, T> Builder<S, T> builder(int sizeEstimate, S originEpsilon, T targetEpsilon);
-
-        <S, T> AlphabetEncoder<S, T> create(MutableBiMap<S, T> definition, S originEpsilon);
-    }
 }

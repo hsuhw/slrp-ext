@@ -8,12 +8,15 @@ import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.primitive.ImmutableObjectIntMap;
 import org.eclipse.collections.api.set.primitive.IntSet;
+import org.eclipse.collections.impl.factory.primitive.IntSets;
+import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 
 public class MapListAlphabetIntEncoder<S> implements AlphabetIntEncoder<S>
 {
     private final ImmutableObjectIntMap<S> encoder;
     private final ImmutableList<S> decoder;
+    private IntSet encodedAlphabet;
     private Alphabet<S> originAlphabet;
     private int hashCode = -1;
 
@@ -31,21 +34,25 @@ public class MapListAlphabetIntEncoder<S> implements AlphabetIntEncoder<S>
         }
 
         decoder = definition.toImmutable();
-        final ObjectIntHashMap<S> definitionInversed = new ObjectIntHashMap<>(definition.size());
-        definition.forEachWithIndex(definitionInversed::put);
-        encoder = definitionInversed.toImmutable();
+        final ObjectIntHashMap<S> definitionInverse = new ObjectIntHashMap<>(definition.size());
+        definition.forEachWithIndex(definitionInverse::put);
+        encoder = definitionInverse.toImmutable();
     }
 
     @Override
     public int size()
     {
-        return encoder.size();
+        return decoder.size();
     }
 
     @Override
     public IntSet encodedAlphabet()
     {
-        return encoder.values().toSet(); // one-off
+        if (encodedAlphabet == null) {
+            encodedAlphabet = IntSets.immutable.ofAll(IntInterval.fromTo(0, size() - 1));
+        }
+
+        return encodedAlphabet;
     }
 
     @Override
@@ -88,6 +95,10 @@ public class MapListAlphabetIntEncoder<S> implements AlphabetIntEncoder<S>
     @Override
     public boolean equals(Object obj)
     {
+        if (obj == this) {
+            return true;
+        }
+
         if (obj instanceof MapListAlphabetIntEncoder<?>) {
             try {
                 @SuppressWarnings("unchecked")
@@ -97,6 +108,7 @@ public class MapListAlphabetIntEncoder<S> implements AlphabetIntEncoder<S>
                 return false;
             }
         }
+
         return false;
     }
 }

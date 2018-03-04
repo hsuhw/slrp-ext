@@ -4,10 +4,12 @@ import api.automata.Alphabet;
 import common.util.Assert;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.api.set.SetIterable;
 
 public class SetAlphabet<S> implements Alphabet<S>
 {
     private final ImmutableSet<S> symbols;
+    private final ImmutableSet<S> noEpsilonSet;
     private final S epsilon;
     private int hashCode = -1;
 
@@ -22,6 +24,7 @@ public class SetAlphabet<S> implements Alphabet<S>
         }
 
         symbols = definition;
+        noEpsilonSet = definition.newWithout(epsilon);
         this.epsilon = epsilon;
     }
 
@@ -31,27 +34,21 @@ public class SetAlphabet<S> implements Alphabet<S>
     }
 
     @Override
-    public int size()
-    {
-        return symbols.size();
-    }
-
-    @Override
     public S epsilon()
     {
         return epsilon;
     }
 
     @Override
-    public ImmutableSet<S> asSet()
+    public SetIterable<S> asSet()
     {
         return symbols;
     }
 
     @Override
-    public ImmutableSet<S> noEpsilonSet()
+    public SetIterable<S> noEpsilonSet()
     {
-        return symbols.newWithout(epsilon);
+        return noEpsilonSet;
     }
 
     @Override
@@ -73,6 +70,10 @@ public class SetAlphabet<S> implements Alphabet<S>
     @Override
     public boolean equals(Object obj)
     {
+        if (obj == this) {
+            return true;
+        }
+
         if (obj instanceof SetAlphabet<?>) {
             try {
                 @SuppressWarnings("unchecked")
@@ -82,6 +83,7 @@ public class SetAlphabet<S> implements Alphabet<S>
                 return false;
             }
         }
+
         return false;
     }
 }

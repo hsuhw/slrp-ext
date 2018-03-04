@@ -26,7 +26,7 @@ public class BiMapAlphabetEncoder<S, T> implements AlphabetEncoder<S, T>
             throw new IllegalArgumentException("null found in the definition");
         }
 
-        final ImmutableBiMap<S, T> symbolTable = (ImmutableBiMap<S, T>) definition.toImmutable();
+        final ImmutableBiMap<S, T> symbolTable = definition.toImmutable();
         encoder = symbolTable;
         decoder = symbolTable.inverse();
         this.originEpsilon = originEpsilon;
@@ -36,12 +36,6 @@ public class BiMapAlphabetEncoder<S, T> implements AlphabetEncoder<S, T>
     public int size()
     {
         return encoder.size();
-    }
-
-    @Override
-    public T encodedEpsilon()
-    {
-        return encoder.get(originEpsilon);
     }
 
     @Override
@@ -109,6 +103,10 @@ public class BiMapAlphabetEncoder<S, T> implements AlphabetEncoder<S, T>
     @Override
     public boolean equals(Object obj)
     {
+        if (obj == this) {
+            return true;
+        }
+
         if (obj instanceof BiMapAlphabetEncoder<?, ?>) {
             try {
                 @SuppressWarnings("unchecked")
@@ -118,11 +116,7 @@ public class BiMapAlphabetEncoder<S, T> implements AlphabetEncoder<S, T>
                 return false;
             }
         }
-        return false;
-    }
 
-    final ImmutableBiMap<S, T> biMap()
-    {
-        return encoder;
+        return false;
     }
 }

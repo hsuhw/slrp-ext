@@ -1,8 +1,8 @@
 package core.automata;
 
 import api.automata.Alphabet;
-import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
 import static api.automata.Alphabet.Builder;
@@ -13,9 +13,9 @@ public class SetAlphabetBuilder<S> implements Alphabet.Builder<S>
     private final MutableSet<S> symbols;
     private final S epsilon;
 
-    public SetAlphabetBuilder(int sizeEstimate, S epsilon)
+    public SetAlphabetBuilder(int capacity, S epsilon)
     {
-        symbols = UnifiedSet.newSet(sizeEstimate);
+        symbols = UnifiedSet.newSet(capacity);
         symbols.add(epsilon);
         this.epsilon = epsilon;
     }
@@ -42,9 +42,9 @@ public class SetAlphabetBuilder<S> implements Alphabet.Builder<S>
     }
 
     @Override
-    public ImmutableSet<S> addedSymbols()
+    public SetIterable<S> addedSymbols()
     {
-        return symbols.toImmutable(); // defense required
+        return symbols.asUnmodifiable();
     }
 
     @Override
