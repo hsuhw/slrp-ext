@@ -8,7 +8,7 @@ public interface Digraph<N, A>
 {
     SetIterable<N> referredNodes();
 
-    boolean nodeExists(Object node);
+    boolean nodeExists(N node);
 
     SetIterable<A> referredArcLabels();
 

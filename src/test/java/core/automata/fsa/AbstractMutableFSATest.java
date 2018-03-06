@@ -1,6 +1,9 @@
 package core.automata.fsa;
 
-import api.automata.*;
+import api.automata.Alphabet;
+import api.automata.Alphabets;
+import api.automata.MutableState;
+import api.automata.State;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.automata.fsa.MutableFSA;
@@ -11,6 +14,7 @@ import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.tuple.Tuples;
 
+import static api.automata.Automaton.TransitionGraph;
 import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.describe;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.it;
@@ -19,7 +23,7 @@ public abstract class AbstractMutableFSATest
 {
     protected final Alphabet<Object> alphabet;
 
-    protected abstract MutableFSA<MutableState<Object>, Object> newFSA(Alphabet<Object> alphabet, int stateCapacity);
+    protected abstract MutableFSA<Object> newFSA(Alphabet<Object> alphabet, int stateCapacity);
 
     {
         final Object e = new Object();
@@ -34,10 +38,10 @@ public abstract class AbstractMutableFSATest
         describe("#nonAcceptStates", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA<State<Object>, Object> dfa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word1, word2));
+                final FSA<Object> dfa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word1, word2));
                 expect(dfa.nonAcceptStates().size()).toEqual(3); // should be cached
 
-                final FSA<State<Object>, Object> nfa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word2, word3));
+                final FSA<Object> nfa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word2, word3));
                 expect(nfa.nonAcceptStates().size()).toEqual(3); // should be cached
             });
 
@@ -46,12 +50,12 @@ public abstract class AbstractMutableFSATest
         describe("#unreachableStates", () -> {
 
             it("meets a minimum expectation", () -> {
-                final MutableFSA<MutableState<Object>, Object> fsa = newFSA(alphabet, 7);
-                final MutableState<Object> s1 = fsa.startState();
+                final MutableFSA<Object> fsa = newFSA(alphabet, 7);
+                final MutableState<Object> s1 = (MutableState<Object>) fsa.startState();
                 final MutableState<Object> s2 = fsa.newState();
                 final MutableState<Object> s3 = fsa.newState();
                 fsa.addTransition(s1, s2, a1).setAsStart(s2).addTransition(s2, s3, a1);
-                final SetIterable<MutableState<Object>> unreachable1 = fsa.unreachableStates();
+                final SetIterable<State<Object>> unreachable1 = fsa.unreachableStates();
                 expect(unreachable1.size()).toEqual(1);
                 expect(unreachable1.contains(s1)).toBeTrue();
 
@@ -60,7 +64,7 @@ public abstract class AbstractMutableFSATest
                 final MutableState<Object> s6 = fsa.newState();
                 final MutableState<Object> s7 = fsa.newState();
                 fsa.setAsStart(s4).setAsAccept(s5).addTransition(s6, s7, a1);
-                final SetIterable<MutableState<Object>> unreachable2 = fsa.unreachableStates();
+                final SetIterable<State<Object>> unreachable2 = fsa.unreachableStates();
                 expect(unreachable2.size()).toEqual(6);
                 expect(unreachable2.containsAllArguments(s1, s2, s3, s5, s6, s7)).toBeTrue();
             });
@@ -70,12 +74,12 @@ public abstract class AbstractMutableFSATest
         describe("#deadEndStates", () -> {
 
             it("meets a minimum expectation", () -> {
-                final MutableFSA<MutableState<Object>, Object> fsa = newFSA(alphabet, 7);
-                final MutableState<Object> s1 = fsa.startState();
+                final MutableFSA<Object> fsa = newFSA(alphabet, 7);
+                final MutableState<Object> s1 = (MutableState<Object>) fsa.startState();
                 final MutableState<Object> s2 = fsa.newState();
                 final MutableState<Object> s3 = fsa.newState();
                 fsa.addTransition(s1, s2, a1).setAsAccept(s2).addTransition(s2, s3, a1);
-                final SetIterable<MutableState<Object>> deadEndSet1 = fsa.deadEndStates();
+                final SetIterable<State<Object>> deadEndSet1 = fsa.deadEndStates();
                 expect(deadEndSet1.size()).toEqual(1);
                 expect(deadEndSet1.contains(s3)).toBeTrue();
 
@@ -84,7 +88,7 @@ public abstract class AbstractMutableFSATest
                 final MutableState<Object> s6 = fsa.newState();
                 final MutableState<Object> s7 = fsa.newState();
                 fsa.setAsStart(s4).setAsAccept(s5).addTransition(s6, s7, a1);
-                final SetIterable<MutableState<Object>> deadEndSet2 = fsa.deadEndStates();
+                final SetIterable<State<Object>> deadEndSet2 = fsa.deadEndStates();
                 expect(deadEndSet2.size()).toEqual(4);
                 expect(deadEndSet2.containsAllArguments(s3, s4, s6, s7)).toBeTrue();
             });
@@ -94,13 +98,13 @@ public abstract class AbstractMutableFSATest
         describe("#danglingStates", () -> {
 
             it("meets a minimum expectation", () -> {
-                final MutableFSA<MutableState<Object>, Object> fsa = newFSA(alphabet, 7);
-                final MutableState<Object> s1 = fsa.startState();
+                final MutableFSA<Object> fsa = newFSA(alphabet, 7);
+                final MutableState<Object> s1 = (MutableState<Object>) fsa.startState();
                 final MutableState<Object> s2 = fsa.newState();
                 final MutableState<Object> s3 = fsa.newState();
                 fsa.addTransition(s1, s2, a1).setAsStart(s2).addTransition(s2, s2, a1);
                 fsa.setAsAccept(s2).addTransition(s2, s3, a1);
-                final SetIterable<MutableState<Object>> danglingSet1 = fsa.danglingStates();
+                final SetIterable<State<Object>> danglingSet1 = fsa.danglingStates();
                 expect(danglingSet1.size()).toEqual(2);
                 expect(danglingSet1.containsAllArguments(s1, s3)).toBeTrue();
 
@@ -109,7 +113,7 @@ public abstract class AbstractMutableFSATest
                 final MutableState<Object> s6 = fsa.newState();
                 final MutableState<Object> s7 = fsa.newState();
                 fsa.setAsStart(s4).setAsAccept(s5).addTransition(s6, s7, a1);
-                final SetIterable<MutableState<Object>> danglingSet2 = fsa.danglingStates();
+                final SetIterable<State<Object>> danglingSet2 = fsa.danglingStates();
                 expect(danglingSet2.size()).toEqual(7);
                 expect(danglingSet2.containsAllIterable(fsa.states())).toBeTrue();
             });
@@ -119,17 +123,17 @@ public abstract class AbstractMutableFSATest
         describe("#incompleteStates", () -> {
 
             it("complains on nondeterministic instances", () -> {
-                final FSA<State<Object>, Object> fsa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word2, word3));
+                final FSA<Object> fsa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word2, word3));
                 expect(fsa::incompleteStates).toThrow(UnsupportedOperationException.class);
             });
 
             it("meets a minimum expectation", () -> {
-                final FSA<State<Object>, Object> dfa1 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word1, word2));
+                final FSA<Object> dfa1 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word1, word2));
                 expect(dfa1.states().size()).toEqual(4);
                 expect(dfa1.incompleteStates().contains(dfa1.startState())).toBeFalse();
                 expect(dfa1.incompleteStates().size()).toEqual(3); // should be cached
 
-                final FSA<State<Object>, Object> dfa2 = FSAs.acceptingOnly(alphabet, word4);
+                final FSA<Object> dfa2 = FSAs.acceptingOnly(alphabet, word4);
                 expect(dfa2.incompleteStates().containsAllIterable(dfa2.states())).toBeTrue();
                 expect(dfa2.incompleteStates().size()).toEqual(5); // should be cached
             });
@@ -139,20 +143,20 @@ public abstract class AbstractMutableFSATest
         describe("#accepts", () -> {
 
             it("returns false on invalid words", () -> {
-                final FSA<State<Object>, Object> instance = FSAs.acceptingOnly(alphabet, word1);
+                final FSA<Object> instance = FSAs.acceptingOnly(alphabet, word1);
                 expect(instance.accepts(Lists.immutable.of(new Object()))).toBeFalse();
                 expect(instance.accepts(Lists.immutable.of(new Object(), null))).toBeFalse();
             });
 
             it("meets a minimum expectation", () -> {
-                final FSA<State<Object>, Object> dfa = FSAs.acceptingOnly(alphabet, word1);
+                final FSA<Object> dfa = FSAs.acceptingOnly(alphabet, word1);
                 expect(dfa.isDeterministic()).toBeTrue();
                 expect(dfa.accepts(word1)).toBeTrue();
                 expect(dfa.accepts(word2)).toBeFalse();
                 expect(dfa.accepts(word3)).toBeFalse();
                 expect(dfa.accepts(word4)).toBeFalse();
 
-                final FSA<State<Object>, Object> nfa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word2, word3));
+                final FSA<Object> nfa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word2, word3));
                 expect(nfa.isDeterministic()).toBeFalse();
                 expect(nfa.accepts(word1)).toBeFalse();
                 expect(nfa.accepts(word2)).toBeTrue();
@@ -165,9 +169,9 @@ public abstract class AbstractMutableFSATest
         describe("#acceptsNone", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA<State<Object>, Object> fsa1 = FSAs.acceptingOnly(alphabet, word1);
-                final FSA<State<Object>, Object> fsa2 = FSAs.acceptingOnly(alphabet, word2);
-                final FSA<State<Object>, Object> none = FSAs.acceptingNone(alphabet);
+                final FSA<Object> fsa1 = FSAs.acceptingOnly(alphabet, word1);
+                final FSA<Object> fsa2 = FSAs.acceptingOnly(alphabet, word2);
+                final FSA<Object> none = FSAs.acceptingNone(alphabet);
                 expect(fsa1.acceptsNone()).toBeFalse();
                 expect(fsa2.acceptsNone()).toBeFalse();
                 expect(none.acceptsNone()).toBeTrue();
@@ -186,19 +190,19 @@ public abstract class AbstractMutableFSATest
             });
 
             it("meets a minimum expectation", () -> {
-                final FSA<State<Object>, Object> fsa1 = FSAs.acceptingOnly(alphabet, word1);
+                final FSA<Object> fsa1 = FSAs.acceptingOnly(alphabet, word1);
                 expect(fsa1.enumerateOneShortest()).toEqual(word1);
-                final FSA<State<Object>, Object> fsa2 = FSAs.acceptingOnly(alphabet, word2);
+                final FSA<Object> fsa2 = FSAs.acceptingOnly(alphabet, word2);
                 expect(fsa2.enumerateOneShortest()).toEqual(word2);
-                final FSA<State<Object>, Object> fsa3 = FSAs.acceptingOnly(alphabet, word3);
+                final FSA<Object> fsa3 = FSAs.acceptingOnly(alphabet, word3);
                 expect(fsa3.enumerateOneShortest()).toEqual(word3);
-                final FSA<State<Object>, Object> fsa4 = FSAs.acceptingOnly(alphabet, word4);
+                final FSA<Object> fsa4 = FSAs.acceptingOnly(alphabet, word4);
                 expect(fsa4.enumerateOneShortest()).toEqual(word4);
-                final FSA<State<Object>, Object> fsa5 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word1, word4));
+                final FSA<Object> fsa5 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word1, word4));
                 expect(fsa5.enumerateOneShortest()).toEqual(word1);
-                final FSA<State<Object>, Object> fsa6 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word2, word4));
+                final FSA<Object> fsa6 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word2, word4));
                 expect(fsa6.enumerateOneShortest()).toEqual(word2);
-                final FSA<State<Object>, Object> fsa7 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word3, word4));
+                final FSA<Object> fsa7 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word3, word4));
                 expect(fsa7.enumerateOneShortest()).toEqual(word3);
             });
 
@@ -207,8 +211,8 @@ public abstract class AbstractMutableFSATest
         describe("#trimUnreachableStates", () -> {
 
             it("meets a minimum expectation", () -> {
-                final MutableFSA<MutableState<Object>, Object> fsa = newFSA(alphabet, 3);
-                final MutableState<Object> s1 = fsa.startState();
+                final MutableFSA<Object> fsa = newFSA(alphabet, 3);
+                final MutableState<Object> s1 = (MutableState<Object>) fsa.startState();
                 final MutableState<Object> s2 = fsa.newState();
                 final MutableState<Object> s3 = fsa.newState();
                 fsa.addTransition(s1, s2, a1).setAsStart(s2).addTransition(s2, s3, a1);
@@ -239,9 +243,8 @@ public abstract class AbstractMutableFSATest
             it("meets a minimum expectation", () -> {
                 final ImmutableList<Twin<Object>> pInput1 = Lists.immutable.of(p1, p2);
                 final ImmutableList<Twin<Object>> pInput2 = Lists.immutable.of(p3, p2, p1);
-                final FSA<State<Twin<Object>>, Twin<Object>> fixture = FSAs
-                    .acceptingOnly(pAlphabet, Sets.immutable.of(pInput1, pInput2));
-                final FSA<? extends State<Object>, Object> fsa = fixture.project(alphabet, Twin::getTwo);
+                final FSA<Twin<Object>> fixture = FSAs.acceptingOnly(pAlphabet, Sets.immutable.of(pInput1, pInput2));
+                final FSA<Object> fsa = fixture.project(alphabet, Twin::getTwo);
                 expect(fsa.accepts(input1)).toBeTrue();
                 expect(fsa.accepts(input2)).toBeFalse();
                 expect(fsa.accepts(input3)).toBeTrue();
@@ -253,18 +256,18 @@ public abstract class AbstractMutableFSATest
         describe("#determinize", () -> {
 
             it("does nothing on deterministic instances", () -> {
-                final FSA<State<Object>, Object> fsa = FSAs.acceptingOnly(alphabet, input1);
+                final FSA<Object> fsa = FSAs.acceptingOnly(alphabet, input1);
                 expect(fsa.determinize() == fsa).toBeTrue();
             });
 
             it("meets a minimum expectation", () -> {
-                final FSA<State<Object>, Object> nfa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input1, input2));
+                final FSA<Object> nfa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input1, input2));
                 expect(nfa.accepts(input1)).toBeTrue();
                 expect(nfa.accepts(input2)).toBeTrue();
                 expect(nfa.accepts(input3)).toBeFalse();
                 expect(nfa.accepts(input4)).toBeFalse();
                 expect(nfa.isDeterministic()).toBeFalse();
-                final FSA<State<Object>, Object> dfa = nfa.determinize();
+                final FSA<Object> dfa = nfa.determinize();
                 expect(dfa.accepts(input1)).toBeTrue();
                 expect(dfa.accepts(input2)).toBeTrue();
                 expect(dfa.accepts(input3)).toBeFalse();
@@ -277,20 +280,20 @@ public abstract class AbstractMutableFSATest
         describe("#minimize", () -> {
 
             it("complains on nondeterministic instances", () -> {
-                final FSA<State<Object>, Object> fsa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input1, input2));
+                final FSA<Object> fsa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input1, input2));
                 expect(fsa::minimize).toThrow(UnsupportedOperationException.class);
             });
 
             it("meets a minimum expectation", () -> {
-                final FSA<State<Object>, Object> nfa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input5, input6));
-                final FSA<State<Object>, Object> dfa = nfa.determinize();
+                final FSA<Object> nfa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input5, input6));
+                final FSA<Object> dfa = nfa.determinize();
                 expect(dfa.accepts(input1)).toBeFalse();
                 expect(dfa.accepts(input2)).toBeFalse();
                 expect(dfa.accepts(input3)).toBeFalse();
                 expect(dfa.accepts(input4)).toBeFalse();
                 expect(dfa.accepts(input5)).toBeTrue();
                 expect(dfa.accepts(input6)).toBeTrue();
-                final FSA<? extends State<Object>, Object> min = dfa.minimize();
+                final FSA<Object> min = dfa.minimize();
                 expect(min.accepts(input1)).toBeFalse();
                 expect(min.accepts(input2)).toBeFalse();
                 expect(min.accepts(input3)).toBeFalse();
@@ -305,16 +308,16 @@ public abstract class AbstractMutableFSATest
         describe("#complete", () -> {
 
             it("complains on nondeterministic instances", () -> {
-                final FSA<State<Object>, Object> fsa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input1, input2));
+                final FSA<Object> fsa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input1, input2));
                 expect(fsa::complete).toThrow(UnsupportedOperationException.class);
             });
 
             it("meets a minimum expectation", () -> {
-                final FSA<State<Object>, Object> fsa = FSAs.acceptingOnly(alphabet, input1);
+                final FSA<Object> fsa = FSAs.acceptingOnly(alphabet, input1);
                 expect(fsa.accepts(input1)).toBeTrue();
                 expect(fsa.accepts(input2)).toBeFalse();
                 expect(fsa.isComplete()).toBeFalse();
-                final FSA<? extends State<Object>, Object> complete = fsa.complete();
+                final FSA<Object> complete = fsa.complete();
                 expect(complete.accepts(input1)).toBeTrue();
                 expect(complete.accepts(input2)).toBeFalse();
                 expect(complete.isComplete()).toBeTrue();
@@ -325,10 +328,10 @@ public abstract class AbstractMutableFSATest
         describe("#complement", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA<State<Object>, Object> fsa = FSAs.acceptingOnly(alphabet, input1);
+                final FSA<Object> fsa = FSAs.acceptingOnly(alphabet, input1);
                 expect(fsa.accepts(input1)).toBeTrue();
                 expect(fsa.accepts(input2)).toBeFalse();
-                final FSA<? extends State<Object>, Object> complement = fsa.complement();
+                final FSA<Object> complement = fsa.complement();
                 expect(complement.accepts(input1)).toBeFalse();
                 expect(complement.accepts(input2)).toBeTrue();
             });
@@ -338,9 +341,9 @@ public abstract class AbstractMutableFSATest
         describe("#intersect", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA<State<Object>, Object> fsa1 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input1, input2));
-                final FSA<State<Object>, Object> fsa2 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input2, input3));
-                final FSA<? extends State<Object>, Object> intersection = fsa1.intersect(fsa2);
+                final FSA<Object> fsa1 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input1, input2));
+                final FSA<Object> fsa2 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input2, input3));
+                final FSA<Object> intersection = fsa1.intersect(fsa2);
                 expect(intersection.accepts(input1)).toBeFalse();
                 expect(intersection.accepts(input2)).toBeTrue();
                 expect(intersection.accepts(input3)).toBeFalse();
@@ -352,9 +355,9 @@ public abstract class AbstractMutableFSATest
         describe("#union", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA<State<Object>, Object> fsa1 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input1, input2));
-                final FSA<State<Object>, Object> fsa2 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input2, input3));
-                final FSA<? extends State<Object>, Object> union = fsa1.union(fsa2);
+                final FSA<Object> fsa1 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input1, input2));
+                final FSA<Object> fsa2 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input2, input3));
+                final FSA<Object> union = fsa1.union(fsa2);
                 expect(union.accepts(input1)).toBeTrue();
                 expect(union.accepts(input2)).toBeTrue();
                 expect(union.accepts(input3)).toBeTrue();
@@ -366,11 +369,11 @@ public abstract class AbstractMutableFSATest
         describe("#checkContaining", () -> {
 
             it("meets a minimum expectation", () -> {
-                final FSA<State<Object>, Object> fsa1 = FSAs.acceptingOnly(alphabet, input1);
-                final FSA<State<Object>, Object> fsa2 = FSAs.acceptingOnly(alphabet, input2);
-                final FSA<State<Object>, Object> fsa3 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input2, input3));
-                final FSA<State<Object>, Object> none = FSAs.acceptingNone(alphabet);
-                final FSA<State<Object>, Object> all = FSAs.acceptingAll(alphabet);
+                final FSA<Object> fsa1 = FSAs.acceptingOnly(alphabet, input1);
+                final FSA<Object> fsa2 = FSAs.acceptingOnly(alphabet, input2);
+                final FSA<Object> fsa3 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input2, input3));
+                final FSA<Object> none = FSAs.acceptingNone(alphabet);
+                final FSA<Object> all = FSAs.acceptingAll(alphabet);
                 expect(fsa1.checkContaining(none).passed()).toBeTrue();
                 expect(fsa1.checkContaining(fsa1).passed()).toBeTrue();
                 expect(fsa1.checkContaining(fsa2).passed()).toBeFalse();
@@ -412,8 +415,8 @@ public abstract class AbstractMutableFSATest
 
             describe("nondeterministic", () -> {
 
-                final MutableFSA<MutableState<Object>, Object> fsa = newFSA(alphabet, 3);
-                final MutableState<Object> n0 = fsa.startState();
+                final MutableFSA<Object> fsa = newFSA(alphabet, 3);
+                final MutableState<Object> n0 = (MutableState<Object>) fsa.startState();
                 final MutableState<Object> n1 = fsa.newState();
                 final MutableState<Object> n2 = fsa.newState();
                 final MutableState<Object> n3 = fsa.newState();
@@ -422,7 +425,7 @@ public abstract class AbstractMutableFSATest
                 fsa.addTransition(n1, n2, a1);
                 fsa.addEpsilonTransition(n1, n3);
                 fsa.addEpsilonTransition(n2, n1);
-                final Automaton.TransitionGraph<State<Object>, Object> graph = FSA.upcast(fsa).transitionGraph();
+                final TransitionGraph<Object> graph = fsa.transitionGraph();
 
                 describe("#size", () -> {
 
@@ -702,13 +705,13 @@ public abstract class AbstractMutableFSATest
 
             describe("deterministic", () -> {
 
-                final MutableFSA<MutableState<Object>, Object> fsa = newFSA(alphabet, 3);
-                final MutableState<Object> n0 = fsa.startState();
+                final MutableFSA<Object> fsa = newFSA(alphabet, 3);
+                final MutableState<Object> n0 = (MutableState<Object>) fsa.startState();
                 final MutableState<Object> n1 = fsa.newState();
                 final MutableState<Object> n2 = fsa.newState();
                 fsa.addTransition(n0, n1, a1);
                 fsa.addTransition(n1, n2, a1);
-                final Automaton.TransitionGraph<State<Object>, Object> graph = FSA.upcast(fsa).transitionGraph();
+                final TransitionGraph<Object> graph = fsa.transitionGraph();
 
                 describe("#epsilonClosureOf(nodes)", () -> {
 

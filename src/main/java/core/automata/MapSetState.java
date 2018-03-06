@@ -16,17 +16,17 @@ import org.eclipse.collections.impl.tuple.Tuples;
 import static api.util.Constants.DISPLAY_DUMMY_STATE_NAME_PREFIX;
 import static core.Parameters.NONDETERMINISTIC_TRANSITION_CAPACITY;
 
-public class MapSetState<T> implements MutableState<T>
+public class MapSetState<S> implements MutableState<S>
 {
     private String name;
-    private MutableMap<T, MutableSet<MutableState<T>>> transitions;
+    private MutableMap<S, MutableSet<MutableState<S>>> transitions;
 
     public MapSetState(int transLabelCapacity)
     {
         transitions = UnifiedMap.newMap(transLabelCapacity);
     }
 
-    private MutableSet<MutableState<T>> newDestinationSet()
+    private MutableSet<MutableState<S>> newDestinationSet()
     {
         return UnifiedSet.newSet(NONDETERMINISTIC_TRANSITION_CAPACITY);
     }
@@ -38,52 +38,59 @@ public class MapSetState<T> implements MutableState<T>
     }
 
     @Override
-    public RichIterable<? extends Pair<T, ? extends MutableState<T>>> transitions()
+    public RichIterable<Pair<S, State<S>>> transitions()
     {
         return transitions.keyValuesView().flatCollect(each -> {
-            final T transLabel = each.getOne();
+            final S transLabel = each.getOne();
             return each.getTwo().collect(dest -> Tuples.pair(transLabel, dest));
         });
     }
 
     @Override
-    public SetIterable<T> enabledSymbols()
+    public SetIterable<S> enabledSymbols()
     {
         return Sets.adapt(transitions.asUnmodifiable().keySet());
     }
 
     @Override
-    public SetIterable<T> enabledSymbolsTo(State<T> state)
+    public SetIterable<S> enabledSymbolsTo(State<S> state)
     {
         return Sets.adapt(transitions.select((__, dests) -> dests.contains(state)).keySet()); // one-off
     }
 
     @Override
-    public boolean transitionExists(T transLabel)
+    public boolean transitionExists(S transLabel)
     {
         return transitions.containsKey(transLabel);
     }
 
     @Override
-    public boolean transitionExists(State<T> state)
+    public boolean transitionExists(State<S> state)
     {
         return transitions.anySatisfyWith(SetIterable::contains, state);
     }
 
     @Override
-    public SetIterable<? extends MutableState<T>> successors()
+    public SetIterable<State<S>> successors()
     {
-        return transitions.flatCollect(x -> x).toSet(); // one-off
+        @SuppressWarnings("unchecked")
+        final MutableSet<State<S>> result = (MutableSet) transitions.flatCollect(x -> x).toSet(); // one-off
+        return result;
     }
 
     @Override
-    public SetIterable<? extends MutableState<T>> successors(T transLabel)
+    public SetIterable<State<S>> successors(S transLabel)
     {
-        return transitionExists(transLabel) ? transitions.get(transLabel).asUnmodifiable() : Sets.immutable.empty();
+        if (transitionExists(transLabel)) {
+            @SuppressWarnings("unchecked")
+            final MutableSet<State<S>> result = (MutableSet) transitions.get(transLabel);
+            return result.asUnmodifiable();
+        }
+        return Sets.immutable.empty();
     }
 
     @Override
-    public MutableState<T> setName(String value)
+    public MutableState<S> setName(String value)
     {
         Assert.argumentNotNull(value);
 
@@ -93,7 +100,7 @@ public class MapSetState<T> implements MutableState<T>
     }
 
     @Override
-    public boolean addTransition(T transLabel, MutableState<T> to)
+    public boolean addTransition(S transLabel, MutableState<S> to)
     {
         Assert.argumentNotNull(transLabel, to);
 
@@ -101,7 +108,7 @@ public class MapSetState<T> implements MutableState<T>
     }
 
     @Override
-    public MutableState<T> removeTransitionsTo(MutableState<T> state)
+    public MutableState<S> removeTransitionsTo(MutableState<S> state)
     {
         transitions.forEach((transLabel, dests) -> {
             if (dests.remove(state) && dests.isEmpty()) {

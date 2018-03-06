@@ -5,58 +5,57 @@ import api.automata.MutableState;
 import api.automata.fsa.MutableFSA;
 import core.automata.AbstractMutableAutomaton;
 
-public abstract class AbstractMutableFSA<S extends MutableState<T>, T> extends AbstractMutableAutomaton<S, T>
-    implements MutableFSA<S, T>
+public abstract class AbstractMutableFSA<S> extends AbstractMutableAutomaton<S> implements MutableFSA<S>
 {
-    public AbstractMutableFSA(Alphabet<T> alphabet, int stateCapacity)
+    public AbstractMutableFSA(Alphabet<S> alphabet, int stateCapacity)
     {
         super(alphabet, stateCapacity);
     }
 
-    public AbstractMutableFSA(AbstractMutableFSA<S, T> toBeCopied, boolean deep)
+    public AbstractMutableFSA(AbstractMutableFSA<S> toCopy, boolean deep)
     {
-        super(toBeCopied, deep);
+        super(toCopy, deep);
     }
 
     @Override
-    public MutableFSA<S, T> addState(S state)
+    public MutableFSA<S> addState(MutableState<S> state)
     {
-        return (MutableFSA<S, T>) super.addState(state);
+        return (MutableFSA<S>) super.addState(state);
     }
 
     @Override
-    public MutableFSA<S, T> removeState(S state)
+    public MutableFSA<S> removeState(MutableState<S> state)
     {
-        return (MutableFSA<S, T>) super.removeState(state);
+        return (MutableFSA<S>) super.removeState(state);
     }
 
     @Override
-    public MutableFSA<S, T> setAsStart(S state)
+    public MutableFSA<S> setAsStart(MutableState<S> state)
     {
-        return (MutableFSA<S, T>) super.setAsStart(state);
+        return (MutableFSA<S>) super.setAsStart(state);
     }
 
     @Override
-    public MutableFSA<S, T> setAsAccept(S state)
+    public MutableFSA<S> setAsAccept(MutableState<S> state)
     {
-        return (MutableFSA<S, T>) super.setAsAccept(state);
+        return (MutableFSA<S>) super.setAsAccept(state);
     }
 
     @Override
-    public MutableFSA<S, T> unsetAccept(S state)
+    public MutableFSA<S> unsetAccept(MutableState<S> state)
     {
-        return (MutableFSA<S, T>) super.unsetAccept(state);
+        return (MutableFSA<S>) super.unsetAccept(state);
     }
 
     @Override
-    public MutableFSA<S, T> resetAcceptStates()
+    public MutableFSA<S> resetAcceptStates()
     {
-        return (MutableFSA<S, T>) super.resetAcceptStates();
+        return (MutableFSA<S>) super.resetAcceptStates();
     }
 
     @Override
-    public MutableFSA<S, T> addTransition(S dept, S dest, T symbol)
+    public MutableFSA<S> addTransition(MutableState<S> dept, MutableState<S> dest, S symbol)
     {
-        return (MutableFSA<S, T>) super.addTransition(dept, dest, symbol);
+        return (MutableFSA<S>) super.addTransition(dept, dest, symbol);
     }
 }

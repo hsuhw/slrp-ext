@@ -1,77 +1,76 @@
 package api.automata;
 
 import org.eclipse.collections.api.RichIterable;
-import org.eclipse.collections.api.set.SetIterable;
 
 import java.util.function.Function;
 
 import static api.util.Constants.DISPLAY_STATE_NAME_PREFIX;
 import static common.util.Constants.*;
 
-public interface MutableAutomaton<S extends MutableState<T>, T> extends Automaton<S, T>
+public interface MutableAutomaton<S> extends Automaton<S>
 {
     @Override
-    Automaton<? extends State<T>, T> trimUnreachableStates();
+    Automaton<S> trimUnreachableStates();
 
     @Override
-    <R> Automaton<? extends State<R>, R> project(Alphabet<R> alphabet, Function<T, R> projector);
+    <R> Automaton<R> project(Alphabet<R> alphabet, Function<S, R> projector);
 
     @Override
-    <U extends State<V>, V, R> MutableAutomaton<? extends MutableState<R>, R> product(Automaton<U, V> target,
-        Alphabet<R> alphabet, StepMaker<S, T, U, V, R> stepMaker, Finalizer<S, U, MutableState<R>, R> finalizer);
+    <T, R> Automaton<R> product(Automaton<T> target, Alphabet<R> alphabet, StepMaker<S, T, R> stepMaker,
+        Finalizer<S, T, R> finalizer);
 
     @Override
-    TransitionGraph<S, T> transitionGraph();
+    TransitionGraph<S> transitionGraph();
 
     @Override
-    default MutableAutomaton<S, T> toMutable()
+    default MutableAutomaton<S> toMutable()
     {
         return this;
     }
 
-    default MutableAutomaton<S, T> addSymbol(T symbol)
+    default MutableAutomaton<S> addSymbol(S symbol)
     {
         throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
     }
 
-    S newState();
+    MutableState<S> newState();
 
-    MutableAutomaton<S, T> addState(S state);
+    MutableAutomaton<S> addState(MutableState<S> state);
 
-    default MutableAutomaton<S, T> addStates(RichIterable<S> states)
+    default MutableAutomaton<S> addStates(RichIterable<MutableState<S>> states)
     {
         states.forEach(this::addState);
 
         return this;
     }
 
-    MutableAutomaton<S, T> removeState(S state);
+    MutableAutomaton<S> removeState(MutableState<S> state);
 
-    default MutableAutomaton<S, T> removeStates(RichIterable<S> states)
+    default MutableAutomaton<S> removeStates(RichIterable<MutableState<S>> states)
     {
         states.forEach(this::removeState);
 
         return this;
     }
 
-    MutableAutomaton<S, T> setAsStart(S state);
+    MutableAutomaton<S> setAsStart(MutableState<S> state);
 
-    MutableAutomaton<S, T> setAsAccept(S state);
+    MutableAutomaton<S> setAsAccept(MutableState<S> state);
 
-    MutableAutomaton<S, T> unsetAccept(S state);
+    MutableAutomaton<S> unsetAccept(MutableState<S> state);
 
-    default MutableAutomaton<S, T> setAllAsAccept(SetIterable<S> states)
+    default MutableAutomaton<S> setAllAsAccept(RichIterable<MutableState<S>> states)
     {
         states.forEach(this::setAsAccept);
 
         return this;
     }
 
-    MutableAutomaton<S, T> resetAcceptStates();
+    MutableAutomaton<S> resetAcceptStates();
 
-    MutableAutomaton<S, T> addTransition(S dept, S dest, T symbol);
+    MutableAutomaton<S> addTransition(MutableState<S> dept, MutableState<S> dest, S symbol);
 
-    default MutableAutomaton<S, T> addEpsilonTransition(S dept, S dest)
+    default MutableAutomaton<S> addEpsilonTransition(MutableState<S> dept, MutableState<S> dest)
     {
         return addTransition(dept, dest, alphabet().epsilon());
     }
@@ -84,8 +83,8 @@ public interface MutableAutomaton<S extends MutableState<T>, T> extends Automato
     {
         if (states().anySatisfy(that -> that.name() == null)) {
             int i = 0;
-            for (S state : states()) {
-                state.setName(DISPLAY_STATE_NAME_PREFIX + i);
+            for (State<S> state : states()) {
+                ((MutableState<S>) state).setName(DISPLAY_STATE_NAME_PREFIX + i);
             }
         }
 
@@ -102,7 +101,7 @@ public interface MutableAutomaton<S extends MutableState<T>, T> extends Automato
         return result.toString();
     }
 
-    interface TransitionGraph<N extends MutableState<A>, A> extends Automaton.TransitionGraph<N, A>
+    interface TransitionGraph<S> extends Automaton.TransitionGraph<S>
     {
         @Override
         String toString();

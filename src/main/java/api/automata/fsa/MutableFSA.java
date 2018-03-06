@@ -18,29 +18,30 @@ import static api.util.Connectives.Labels;
 import static api.util.Constants.NONEXISTING_STATE;
 import static common.util.Constants.NOT_IMPLEMENTED_YET;
 
-public interface MutableFSA<S extends MutableState<T>, T> extends MutableAutomaton<S, T>, FSA<S, T>
+public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
 {
     @Override
-    default FSA<? extends State<T>, T> trimUnreachableStates()
+    default FSA<S> trimUnreachableStates()
     {
-        return FSA.upcast(FSAs.deepCopy(this).removeStates(unreachableStates()));
+        @SuppressWarnings("unchecked")
+        final SetIterable<MutableState<S>> unreachableStates = (SetIterable) unreachableStates();
+        return FSAs.deepCopy(this).removeStates(unreachableStates);
     }
 
     @Override
-    default <R> FSA<? extends State<R>, R> project(Alphabet<R> alphabet, Function<T, R> projector)
+    default <R> FSA<R> project(Alphabet<R> alphabet, Function<S, R> projector)
     {
-        final MutableFSA<MutableState<R>, R> result = FSAs.create(alphabet, states().size()); // upper bound
-        final MutableMap<S, MutableState<R>> stateMapping = UnifiedMap.newMap(states().size());
-        stateMapping.put(startState(), result.startState());
+        final MutableFSA<R> result = FSAs.create(alphabet, states().size()); // upper bound
+        final MutableMap<State<S>, MutableState<R>> stateMapping = UnifiedMap.newMap(states().size());
+        stateMapping.put(startState(), (MutableState<R>) result.startState());
 
         R newSymbol;
-        for (S dept : states()) {
+        for (State<S> dept : states()) {
             final MutableState<R> newDept = stateMapping.computeIfAbsent(dept, __ -> result.newState());
-            for (T symbol : dept.enabledSymbols()) {
-                for (MutableState<T> dest : dept.successors(symbol)) {
+            for (S symbol : dept.enabledSymbols()) {
+                for (State<S> dest : dept.successors(symbol)) {
                     if ((newSymbol = projector.apply(symbol)) != null) {
-                        @SuppressWarnings("unchecked")
-                        final MutableState<R> newDest = stateMapping.computeIfAbsent((S) dest, __ -> result.newState());
+                        final MutableState<R> newDest = stateMapping.computeIfAbsent(dest, __ -> result.newState());
                         result.addTransition(newDept, newDest, newSymbol);
                     }
                 }
@@ -52,92 +53,92 @@ public interface MutableFSA<S extends MutableState<T>, T> extends MutableAutomat
     }
 
     @Override
-    <U extends State<V>, V, R> MutableFSA<? extends MutableState<R>, R> product(Automaton<U, V> target,
-        Alphabet<R> alphabet, StepMaker<S, T, U, V, R> stepMaker, Finalizer<S, U, MutableState<R>, R> finalizer);
+    <T, R> Automaton<R> product(Automaton<T> target, Alphabet<R> alphabet, StepMaker<S, T, R> stepMaker,
+        Finalizer<S, T, R> finalizer);
 
     @Override
-    default MutableFSA<S, T> toMutable()
+    default MutableFSA<S> toMutable()
     {
         return this;
     }
 
     @Override
-    default MutableFSA<S, T> addSymbol(T symbol)
+    default MutableFSA<S> addSymbol(S symbol)
     {
-        return (MutableFSA<S, T>) MutableAutomaton.super.addSymbol(symbol);
+        return (MutableFSA<S>) MutableAutomaton.super.addSymbol(symbol);
     }
 
     @Override
-    MutableFSA<S, T> addState(S state);
+    MutableFSA<S> addState(MutableState<S> state);
 
     @Override
-    default MutableFSA<S, T> addStates(RichIterable<S> states)
+    default MutableFSA<S> addStates(RichIterable<MutableState<S>> states)
     {
-        return (MutableFSA<S, T>) MutableAutomaton.super.addStates(states);
+        return (MutableFSA<S>) MutableAutomaton.super.addStates(states);
     }
 
     @Override
-    MutableFSA<S, T> removeState(S state);
+    MutableFSA<S> removeState(MutableState<S> state);
 
     @Override
-    default MutableFSA<S, T> removeStates(RichIterable<S> states)
+    default MutableFSA<S> removeStates(RichIterable<MutableState<S>> states)
     {
-        return (MutableFSA<S, T>) MutableAutomaton.super.removeStates(states);
+        return (MutableFSA<S>) MutableAutomaton.super.removeStates(states);
     }
 
     @Override
-    MutableFSA<S, T> setAsStart(S state);
+    MutableFSA<S> setAsStart(MutableState<S> state);
 
     @Override
-    MutableFSA<S, T> setAsAccept(S state);
+    MutableFSA<S> setAsAccept(MutableState<S> state);
 
     @Override
-    MutableFSA<S, T> unsetAccept(S state);
+    MutableFSA<S> unsetAccept(MutableState<S> state);
 
     @Override
-    default MutableFSA<S, T> setAllAsAccept(SetIterable<S> states)
+    default MutableFSA<S> setAllAsAccept(RichIterable<MutableState<S>> states)
     {
-        return (MutableFSA<S, T>) MutableAutomaton.super.setAllAsAccept(states);
+        return (MutableFSA<S>) MutableAutomaton.super.setAllAsAccept(states);
     }
 
     @Override
-    MutableFSA<S, T> resetAcceptStates();
+    MutableFSA<S> resetAcceptStates();
 
     @Override
-    MutableFSA<S, T> addTransition(S dept, S dest, T symbol);
+    MutableFSA<S> addTransition(MutableState<S> dept, MutableState<S> dest, S symbol);
 
     @Override
-    default MutableFSA<S, T> addEpsilonTransition(S dept, S dest)
+    default MutableFSA<S> addEpsilonTransition(MutableState<S> dept, MutableState<S> dest)
     {
-        return (MutableFSA<S, T>) MutableAutomaton.super.addEpsilonTransition(dept, dest);
+        return (MutableFSA<S>) MutableAutomaton.super.addEpsilonTransition(dept, dest);
     }
 
     @Override
-    default FSA<? extends State<T>, T> determinize()
+    default FSA<S> determinize()
     {
         if (isDeterministic()) {
             return this;
         }
 
-        final TransitionGraph<S, T> delta = transitionGraph();
+        final TransitionGraph<S> delta = transitionGraph();
         final int capacity = states().size() * states().size(); // heuristic
-        final MutableFSA<S, T> result = FSAs.ofSameType(this, capacity);
-        final MutableMap<SetIterable<S>, S> stateMapping = UnifiedMap.newMap(capacity);
-        final Queue<SetIterable<S>> pendingChecks = new LinkedList<>();
+        final MutableFSA<S> result = FSAs.create(alphabet(), capacity);
+        final MutableMap<SetIterable<State<S>>, MutableState<S>> stateMapping = UnifiedMap.newMap(capacity);
+        final Queue<SetIterable<State<S>>> pendingChecks = new LinkedList<>();
 
-        final SetIterable<S> startStates = delta.epsilonClosureOf(startState());
-        stateMapping.put(startStates, result.startState());
+        final SetIterable<State<S>> startStates = delta.epsilonClosureOf(startState());
+        stateMapping.put(startStates, (MutableState<S>) result.startState());
         pendingChecks.add(startStates);
-        final SetIterable<T> symbols = alphabet().noEpsilonSet();
-        SetIterable<S> currStates;
+        final SetIterable<S> symbols = alphabet().noEpsilonSet();
+        SetIterable<State<S>> currStates;
         while ((currStates = pendingChecks.poll()) != null) {
-            final S newDept = stateMapping.get(currStates);
+            final MutableState<S> newDept = stateMapping.get(currStates);
             if (currStates.anySatisfy(this::isAcceptState)) {
                 result.setAsAccept(newDept);
             }
-            for (T symbol : symbols) {
-                final SetIterable<S> destStates = delta.epsilonClosureOf(currStates, symbol);
-                final S newDest = stateMapping.computeIfAbsent(destStates, __ -> {
+            for (S symbol : symbols) {
+                final SetIterable<State<S>> destStates = delta.epsilonClosureOf(currStates, symbol);
+                final MutableState<S> newDest = stateMapping.computeIfAbsent(destStates, __ -> {
                     pendingChecks.add(destStates);
                     return result.newState();
                 });
@@ -145,32 +146,32 @@ public interface MutableFSA<S extends MutableState<T>, T> extends MutableAutomat
             }
         }
 
-        return result; // one-off
+        return result; // in-place or one-off
     }
 
     @Override
-    default FSA<? extends State<T>, T> complete()
+    default FSA<S> complete()
     {
         if (!this.isDeterministic()) {
             throw new UnsupportedOperationException("only available on deterministic instances");
         }
 
-        final SetIterable<S> incomplete = incompleteStates();
-        final SetIterable<T> completeAlphabet = alphabet().noEpsilonSet();
+        final SetIterable<State<S>> incomplete = incompleteStates();
+        final SetIterable<S> completeAlphabet = alphabet().noEpsilonSet();
         if (incomplete.isEmpty()) {
-            return FSA.upcast(this);
+            return this;
         }
 
-        final S sink = newState();
+        final MutableState<S> sink = newState();
         completeAlphabet.forEach(symbol -> addTransition(sink, sink, symbol));
-        incomplete.forEach(state -> completeAlphabet.reject(state.enabledSymbols()::contains)
-                                                    .forEach(nonTrans -> addTransition(state, sink, nonTrans)));
+        incomplete.forEach(state -> completeAlphabet.reject(state.enabledSymbols()::contains).forEach(
+            nonTrans -> addTransition((MutableState<S>) state, sink, nonTrans)));
 
-        return FSA.upcast(this); // shallow reference
+        return this; // in-place reference
     }
 
     @Override
-    default FSA<? extends State<T>, T> minimize()
+    default FSA<S> minimize()
     {
         if (!isDeterministic()) {
             throw new UnsupportedOperationException("only available on deterministic instances");
@@ -179,33 +180,33 @@ public interface MutableFSA<S extends MutableState<T>, T> extends MutableAutomat
             return FSAs.acceptingNone(alphabet());
         }
 
-        @SuppressWarnings("unchecked")
-        final FSA<S, T> target = (FSA<S, T>) this.trimUnreachableStates().complete();
-        final ListIterable<S> accepts = target.acceptStates().toList();
-        final ListIterable<S> nonAccepts = target.nonAcceptStates().toList();
-        final RichIterable<ListIterable<S>> initialPartition = Lists.immutable.of(accepts, nonAccepts);
-        final ListIterable<S> initialCheck = accepts.size() < nonAccepts.size() ? accepts : nonAccepts;
-        final RichIterable<ListIterable<S>> statePartition = target.refinePartition(initialPartition, initialCheck);
+        final FSA<S> target = trimUnreachableStates().complete();
+        final ListIterable<State<S>> accepts = target.acceptStates().toList();
+        final ListIterable<State<S>> nonAccepts = target.nonAcceptStates().toList();
+        final RichIterable<ListIterable<State<S>>> initialPart = Lists.immutable.of(accepts, nonAccepts);
+        final ListIterable<State<S>> initialCheck = accepts.size() < nonAccepts.size() ? accepts : nonAccepts;
+        final RichIterable<ListIterable<State<S>>> statePartition = target.refinePartition(initialPart, initialCheck);
 
-        final SetIterable<T> symbols = alphabet().noEpsilonSet();
-        final MutableFSA<S, T> result = FSAs.ofSameType(this, statePartition.size());
-        final MutableMap<ListIterable<S>, S> partitionMapping = UnifiedMap.newMap(statePartition.size());
+        final SetIterable<S> symbols = alphabet().noEpsilonSet();
+        final MutableFSA<S> result = FSAs.create(alphabet(), statePartition.size());
+        final MutableMap<ListIterable<State<S>>, MutableState<S>> partitionMapping = UnifiedMap
+            .newMap(statePartition.size());
         statePartition.forEach(part -> partitionMapping.put(part, result.newState()));
-        final MutableMap<S, S> stateMapping = UnifiedMap.newMap(target.states().size());
+        final MutableMap<State<S>, MutableState<S>> stateMapping = UnifiedMap.newMap(target.states().size());
         statePartition.forEach(part -> part.forEach(state -> stateMapping.put(state, partitionMapping.get(part))));
 
         statePartition.forEach(part -> {
-            final S newState = partitionMapping.get(part);
+            final MutableState<S> newState = partitionMapping.get(part);
             if (part.contains(startState())) {
-                final S dummyStart = result.startState();
+                final State<S> dummyStart = result.startState();
                 result.setAsStart(newState);
-                result.removeState(dummyStart);
+                result.removeState((MutableState<S>) dummyStart);
             }
             if (part.anySatisfy(this::isAcceptState)) {
                 result.setAsAccept(newState);
             }
             symbols.forEach(symbol -> {
-                final S newSuccessor = stateMapping.get(part.getFirst().successor(symbol));
+                final MutableState<S> newSuccessor = stateMapping.get(part.getFirst().successor(symbol));
                 result.addTransition(newState, newSuccessor, symbol);
             });
         });
@@ -214,34 +215,33 @@ public interface MutableFSA<S extends MutableState<T>, T> extends MutableAutomat
     }
 
     @Override
-    default FSA<? extends State<T>, T> complement()
+    default FSA<S> complement()
     {
+        final MutableFSA<S> result = FSAs.shallowCopy((MutableFSA<S>) determinize().complete());
         @SuppressWarnings("unchecked")
-        final MutableFSA<MutableState<T>, T> result = (MutableFSA<MutableState<T>, T>) determinize().complete();
-        final SetIterable<MutableState<T>> originAccepts = result.acceptStates();
+        final SetIterable<MutableState<S>> nonAcceptStates = (SetIterable) nonAcceptStates();
+        result.resetAcceptStates().setAllAsAccept(nonAcceptStates);
 
-        result.resetAcceptStates().setAllAsAccept(result.states().difference(originAccepts));
-
-        return FSA.upcast(result); // shallow reference
+        return result; // shallow reference
     }
 
     @Override
-    default FSA<? extends State<T>, T> intersect(FSA<? extends State<T>, T> target)
+    default FSA<S> intersect(FSA<S> target)
     {
-        return FSA.upcast(this).product(FSA.upcast(target), alphabet(), Labels.matched(), (stateMapping, builder) -> {
-            final BiMap<MutableState<T>, Pair<State<T>, State<T>>> mapping = stateMapping.inverse();
+        return (FSA<S>) product(target, alphabet(), Labels.matched(), (stateMapping, builder) -> {
+            final BiMap<MutableState<S>, Pair<State<S>, State<S>>> mapping = stateMapping.inverse();
             builder.states().forEach(state -> {
-                final State<T> state1 = mapping.get(state).getOne();
-                final State<T> state2 = mapping.get(state).getTwo();
+                final State<S> state1 = mapping.get(state).getOne();
+                final State<S> state2 = mapping.get(state).getTwo();
                 if (this.isAcceptState(state1) && target.isAcceptState(state2)) {
-                    builder.setAsAccept(state);
+                    builder.setAsAccept((MutableState<S>) state);
                 }
             });
         }); // one-off
     }
 
     @Override
-    default FSA<? extends State<T>, T> union(FSA<? extends State<T>, T> target)
+    default FSA<S> union(FSA<S> target)
     {
         if (!alphabet().equals(target.alphabet())) {
             throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
@@ -250,13 +250,13 @@ public interface MutableFSA<S extends MutableState<T>, T> extends MutableAutomat
             throw new IllegalArgumentException(NONEXISTING_STATE);
         }
 
-        final MutableFSA<S, T> result = FSAs.shallowCopy(this);
+        final MutableFSA<S> result = FSAs.shallowCopy(this);
+        final MutableState<S> newStart = result.newState();
         @SuppressWarnings("unchecked")
-        final MutableFSA<S, T> targetCasted = (MutableFSA<S, T>) target;
-        final S newStart = result.newState();
-        result.addEpsilonTransition(newStart, startState()).setAsStart(newStart) //
-              .addStates(targetCasted.states()).addEpsilonTransition(newStart, targetCasted.startState());
+        final SetIterable<MutableState<S>> targetStates = (SetIterable) target.states();
+        result.addEpsilonTransition(newStart, (MutableState<S>) startState()).setAsStart(newStart) //
+              .addStates(targetStates).addEpsilonTransition(newStart, (MutableState<S>) target.startState());
 
-        return FSA.upcast(result); // shallow reference
+        return result; // shallow reference
     }
 }

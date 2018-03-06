@@ -1,17 +1,17 @@
 package api.automata;
 
-public interface ImmutableAutomaton<S extends ImmutableState<T>, T> extends Automaton<S, T>
+public interface ImmutableAutomaton<S> extends Automaton<S>
 {
     @Override
-    TransitionGraph<S, T> transitionGraph();
+    TransitionGraph<S> transitionGraph();
 
     @Override
-    default ImmutableAutomaton<S, T> toImmutable()
+    default ImmutableAutomaton<S> toImmutable()
     {
         return this;
     }
 
-    interface TransitionGraph<N extends ImmutableState<A>, A> extends Automaton.TransitionGraph<N, A>
+    interface TransitionGraph<S> extends Automaton.TransitionGraph<S>
     {
     }
 }

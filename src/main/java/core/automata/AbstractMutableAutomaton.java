@@ -1,26 +1,27 @@
 package core.automata;
 
-import api.automata.Alphabet;
-import api.automata.Automaton;
-import api.automata.MutableAutomaton;
-import api.automata.MutableState;
+import api.automata.*;
 import common.util.Assert;
+import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
+import java.util.LinkedList;
+import java.util.Queue;
+
 import static api.util.Constants.NONEXISTING_STATE;
 
-public abstract class AbstractMutableAutomaton<S extends MutableState<T>, T> implements MutableAutomaton<S, T>
+public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
 {
-    protected final Alphabet<T> alphabet;
-    protected final MutableSet<S> states;
-    protected final MutableSet<S> acceptStates;
-    private S startState;
+    protected final Alphabet<S> alphabet;
+    protected final MutableSet<State<S>> states;
+    protected final MutableSet<State<S>> acceptStates;
+    private State<S> startState;
 
-    public AbstractMutableAutomaton(Alphabet<T> alphabet, int stateCapacity)
+    public AbstractMutableAutomaton(Alphabet<S> alphabet, int stateCapacity)
     {
         this.alphabet = alphabet;
         states = UnifiedSet.newSet(stateCapacity);
@@ -28,83 +29,100 @@ public abstract class AbstractMutableAutomaton<S extends MutableState<T>, T> imp
         startState = newState();
     }
 
-    public AbstractMutableAutomaton(AbstractMutableAutomaton<S, T> toBeCopied, boolean deep)
+    public AbstractMutableAutomaton(AbstractMutableAutomaton<S> toCopy, boolean deep)
     {
         if (deep) {
-            final int stateSize = toBeCopied.states.size();
-            final MutableMap<S, S> stateMapping = UnifiedMap.newMap(stateSize);
+            final int stateSize = toCopy.states.size();
+            final MutableMap<State<S>, MutableState<S>> stateMapping = UnifiedMap.newMap(stateSize);
 
-            alphabet = toBeCopied.alphabet;
+            alphabet = toCopy.alphabet;
             states = UnifiedSet.newSet(stateSize);
             startState = newState();
 
-            toBeCopied.states.forEach(stateToCopy -> {
-                final S newState = stateMapping.computeIfAbsent(stateToCopy, __ -> newState());
+            toCopy.states.forEach(stateToCopy -> {
+                final MutableState<S> newState = stateMapping.computeIfAbsent(stateToCopy, __ -> newState());
                 stateToCopy.enabledSymbols().forEach(symbol -> stateToCopy.successors(symbol).forEach(succ -> {
-                    @SuppressWarnings("unchecked")
-                    final S succCasted = (S) succ;
-                    final S newSucc = stateMapping.computeIfAbsent(succCasted, __ -> newState());
+                    final MutableState<S> newSucc = stateMapping.computeIfAbsent(succ, __ -> newState());
                     newState.addTransition(symbol, newSucc);
                 }));
             });
-            acceptStates = toBeCopied.acceptStates.collect(stateMapping::get);
+            acceptStates = toCopy.acceptStates.collect(stateMapping::get);
         } else {
-            alphabet = toBeCopied.alphabet;
-            states = UnifiedSet.newSet(toBeCopied.states);
-            acceptStates = UnifiedSet.newSet(toBeCopied.acceptStates);
-            startState = toBeCopied.startState;
+            alphabet = toCopy.alphabet;
+            states = UnifiedSet.newSet(toCopy.states);
+            acceptStates = UnifiedSet.newSet(toCopy.acceptStates);
+            startState = toCopy.startState;
         }
     }
 
     @Override
-    public Alphabet<T> alphabet()
+    public Alphabet<S> alphabet()
     {
         return alphabet;
     }
 
     @Override
-    public SetIterable<S> states()
+    public SetIterable<State<S>> states()
     {
         return states.asUnmodifiable();
     }
 
     @Override
-    public S startState()
+    public State<S> startState()
     {
         return startState;
     }
 
     @Override
-    public SetIterable<S> acceptStates()
+    public SetIterable<State<S>> acceptStates()
     {
         return acceptStates.asUnmodifiable();
     }
 
     @Override
-    public SetIterable<S> nonAcceptStates()
+    public SetIterable<State<S>> nonAcceptStates()
     {
         return states.difference(acceptStates);
     }
 
     @Override
-    public MutableAutomaton.TransitionGraph<S, T> transitionGraph()
+    public SetIterable<State<S>> liveStates()
+    {
+        final MutableSet<State<S>> result = UnifiedSet.newSet(states().size()); // upper bound
+        final MapIterable<State<S>, SetIterable<State<S>>> predecessors = predecessorRelation();
+        final Queue<State<S>> pendingChecks = new LinkedList<>(acceptStates);
+
+        State<S> currLiving;
+        while ((currLiving = pendingChecks.poll()) != null) {
+            predecessors.get(currLiving).forEach(alsoLiving -> {
+                if (result.add(alsoLiving)) {
+                    pendingChecks.add(alsoLiving);
+                }
+            });
+        }
+
+        return result;
+    }
+
+    @Override
+    public MutableAutomaton.TransitionGraph<S> transitionGraph()
     {
         return new TransitionGraphView();
     }
 
-    protected abstract S createState();
+    protected abstract MutableState<S> createState();
 
     @Override
-    public S newState()
+    public MutableState<S> newState()
     {
-        final S state = createState();
+        final MutableState<S> state = createState();
         states.add(state);
 
         return state;
     }
 
     @Override
-    public MutableAutomaton<S, T> addState(S state)
+    public MutableAutomaton<S> addState(MutableState<S> state)
     {
         Assert.argumentNotNull(state);
 
@@ -114,7 +132,7 @@ public abstract class AbstractMutableAutomaton<S extends MutableState<T>, T> imp
     }
 
     @Override
-    public MutableAutomaton<S, T> removeState(S state)
+    public MutableAutomaton<S> removeState(MutableState<S> state)
     {
         if (!states.contains(state)) {
             throw new IllegalArgumentException(NONEXISTING_STATE);
@@ -124,13 +142,13 @@ public abstract class AbstractMutableAutomaton<S extends MutableState<T>, T> imp
         }
 
         states.remove(state);
-        states.forEach(affected -> affected.removeTransitionsTo(state));
+        states.forEach(affected -> ((MutableState<S>) affected).removeTransitionsTo(state));
 
         return this;
     }
 
     @Override
-    public MutableAutomaton<S, T> setAsStart(S state)
+    public MutableAutomaton<S> setAsStart(MutableState<S> state)
     {
         if (!states.contains(state)) {
             throw new IllegalArgumentException(NONEXISTING_STATE);
@@ -142,7 +160,7 @@ public abstract class AbstractMutableAutomaton<S extends MutableState<T>, T> imp
     }
 
     @Override
-    public MutableAutomaton<S, T> setAsAccept(S state)
+    public MutableAutomaton<S> setAsAccept(MutableState<S> state)
     {
         if (!states.contains(state)) {
             throw new IllegalArgumentException(NONEXISTING_STATE);
@@ -154,7 +172,7 @@ public abstract class AbstractMutableAutomaton<S extends MutableState<T>, T> imp
     }
 
     @Override
-    public MutableAutomaton<S, T> unsetAccept(S state)
+    public MutableAutomaton<S> unsetAccept(MutableState<S> state)
     {
         if (!states.contains(state)) {
             throw new IllegalArgumentException(NONEXISTING_STATE);
@@ -166,7 +184,7 @@ public abstract class AbstractMutableAutomaton<S extends MutableState<T>, T> imp
     }
 
     @Override
-    public MutableAutomaton<S, T> resetAcceptStates()
+    public MutableAutomaton<S> resetAcceptStates()
     {
         acceptStates.clear();
 
@@ -174,7 +192,7 @@ public abstract class AbstractMutableAutomaton<S extends MutableState<T>, T> imp
     }
 
     @Override
-    public MutableAutomaton<S, T> addTransition(S dept, S dest, T symbol)
+    public MutableAutomaton<S> addTransition(MutableState<S> dept, MutableState<S> dest, S symbol)
     {
         if (!states.containsAllArguments(dept, dest)) {
             throw new IllegalArgumentException(NONEXISTING_STATE);
@@ -191,10 +209,10 @@ public abstract class AbstractMutableAutomaton<S extends MutableState<T>, T> imp
         return toString("", "");
     }
 
-    private class TransitionGraphView implements MutableAutomaton.TransitionGraph<S, T>
+    private class TransitionGraphView implements MutableAutomaton.TransitionGraph<S>
     {
         @Override
-        public Automaton<S, T> automaton()
+        public Automaton<S> automaton()
         {
             return AbstractMutableAutomaton.this;
         }

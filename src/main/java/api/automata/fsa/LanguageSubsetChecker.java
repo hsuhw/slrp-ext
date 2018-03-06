@@ -1,13 +1,12 @@
 package api.automata.fsa;
 
-import api.automata.State;
 import org.eclipse.collections.api.list.ListIterable;
 
-public interface LanguageSubsetChecker<T>
+public interface LanguageSubsetChecker<S>
 {
-    Result<T> test(FSA<State<T>, T> subsumer, FSA<State<T>, T> includer);
+    Result<S> test(FSA<S> subsumer, FSA<S> includer);
 
-    interface Result<T>
+    interface Result<S>
     {
         boolean passed();
 
@@ -16,17 +15,17 @@ public interface LanguageSubsetChecker<T>
             return !passed();
         }
 
-        Counterexample<T> counterexample();
+        Counterexample<S> counterexample();
 
         @Override
         String toString();
     }
 
-    interface Counterexample<T>
+    interface Counterexample<S>
     {
-        FSA<State<T>, T> sourceImage();
+        FSA<S> sourceImage();
 
-        default ListIterable<T> get()
+        default ListIterable<S> get()
         {
             return sourceImage().enumerateOneShortest();
         }

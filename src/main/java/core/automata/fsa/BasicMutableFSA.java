@@ -17,54 +17,53 @@ import org.eclipse.collections.impl.tuple.Tuples;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class BasicMutableFSA<T> extends AbstractMutableFSA<MutableState<T>, T> implements MutableFSA<MutableState<T>, T>
+public class BasicMutableFSA<S> extends AbstractMutableFSA<S> implements MutableFSA<S>
 {
-    private LanguageSubsetChecker<T> languageSubsetChecker;
+    private LanguageSubsetChecker<S> languageSubsetChecker;
 
-    public BasicMutableFSA(Alphabet<T> alphabet, int stateCapacity)
+    public BasicMutableFSA(Alphabet<S> alphabet, int stateCapacity)
     {
         super(alphabet, stateCapacity);
 
         languageSubsetChecker = new LightLanguageSubsetChecker<>();
     }
 
-    public BasicMutableFSA(BasicMutableFSA<T> toBeCopied, boolean deep)
+    public BasicMutableFSA(BasicMutableFSA<S> toCopy, boolean deep)
     {
-        super(toBeCopied, deep);
+        super(toCopy, deep);
 
-        languageSubsetChecker = toBeCopied.languageSubsetChecker;
+        languageSubsetChecker = toCopy.languageSubsetChecker;
     }
 
     @Override
-    public FSA<? extends State<T>, T> trimUnreachableStates()
+    public FSA<S> trimUnreachableStates()
     {
-        final RichIterable<MutableState<T>> toBeTrimmed = unreachableStates();
-        if (toBeTrimmed.isEmpty()) {
+        final RichIterable<State<S>> unreachableStates = unreachableStates();
+        if (unreachableStates.isEmpty()) {
             return this;
         }
 
-        final BasicMutableFSA<T> result = new BasicMutableFSA<>(this, false);
-        result.states.removeAllIterable(toBeTrimmed);
+        final BasicMutableFSA<S> result = new BasicMutableFSA<>(this, false);
+        result.states.removeAllIterable(unreachableStates);
 
         return result;
     }
 
     @Override
-    public <U extends State<V>, V, R> MutableFSA<? extends MutableState<R>, R> product(Automaton<U, V> target,
-        Alphabet<R> alphabet, StepMaker<MutableState<T>, T, U, V, R> stepMaker,
-        Finalizer<MutableState<T>, U, MutableState<R>, R> finalizer)
+    public <T, R> Automaton<R> product(Automaton<T> target, Alphabet<R> alphabet, StepMaker<S, T, R> stepMaker,
+        Finalizer<S, T, R> finalizer)
     {
         return new ProductHandler<>(alphabet, target).makeProduct(stepMaker).settle(finalizer);
     }
 
     @Override
-    public LanguageSubsetChecker.Result<T> checkContaining(FSA<? extends State<T>, T> target)
+    public LanguageSubsetChecker.Result<S> checkContaining(FSA<S> target)
     {
-        return languageSubsetChecker.test(FSA.upcast(target), FSA.upcast(this));
+        return languageSubsetChecker.test(target, this);
     }
 
     @Override
-    protected MutableState<T> createState()
+    protected MutableState<S> createState()
     {
         return new MapSetState<>(alphabet.size());
     }
@@ -75,16 +74,16 @@ public class BasicMutableFSA<T> extends AbstractMutableFSA<MutableState<T>, T> i
         return toString("", "");
     }
 
-    private class ProductHandler<U extends State<V>, V, R>
+    private class ProductHandler<T, R>
     {
-        private final Automaton<U, V> target;
-        private final T epsilon1;
-        private final V epsilon2;
+        private final Automaton<T> target;
+        private final S epsilon1;
+        private final T epsilon2;
         private final BasicMutableFSA<R> result;
-        private final MutableBiMap<Pair<MutableState<T>, U>, MutableState<R>> stateMapping;
-        private final Queue<Pair<MutableState<T>, U>> pendingChecks;
+        private final MutableBiMap<Pair<State<S>, State<T>>, MutableState<R>> stateMapping;
+        private final Queue<Pair<State<S>, State<T>>> pendingChecks;
 
-        private ProductHandler(Alphabet<R> alphabet, Automaton<U, V> target)
+        private ProductHandler(Alphabet<R> alphabet, Automaton<T> target)
         {
             final int capacity = states().size() * target.states().size(); // upper bound
             this.target = target;
@@ -95,7 +94,7 @@ public class BasicMutableFSA<T> extends AbstractMutableFSA<MutableState<T>, T> i
             pendingChecks = new LinkedList<>();
         }
 
-        private MutableState<R> takeState(Pair<MutableState<T>, U> statePair)
+        private MutableState<R> takeState(Pair<State<S>, State<T>> statePair)
         {
             return stateMapping.computeIfAbsent(statePair, pair -> {
                 pendingChecks.add(pair);
@@ -103,39 +102,37 @@ public class BasicMutableFSA<T> extends AbstractMutableFSA<MutableState<T>, T> i
             });
         }
 
-        private MutableState<R> takeState(MutableState<T> one, U two)
+        private MutableState<R> takeState(State<S> one, State<T> two)
         {
             return takeState(Tuples.pair(one, two));
         }
 
-        private void handleEpsilonTransitions(Pair<MutableState<T>, U> statePair)
+        private void handleEpsilonTransitions(Pair<State<S>, State<T>> statePair)
         {
             final MutableState<R> deptP = takeState(statePair);
-            final MutableState<T> dept1 = statePair.getOne();
-            final U dept2 = statePair.getTwo();
+            final State<S> dept1 = statePair.getOne();
+            final State<T> dept2 = statePair.getTwo();
             dept1.successors(epsilon1).forEach(dest -> result.addEpsilonTransition(deptP, takeState(dest, dept2)));
             dept2.successors(epsilon2).forEach(dest -> {
-                @SuppressWarnings("unchecked")
-                final U destCasted = (U) dest;
-                result.addEpsilonTransition(deptP, takeState(dept1, destCasted));
+                result.addEpsilonTransition(deptP, takeState(dept1, dest));
             });
         }
 
-        private ProductHandler<U, V, R> makeProduct(StepMaker<MutableState<T>, T, U, V, R> stepMaker)
+        private ProductHandler<T, R> makeProduct(StepMaker<S, T, R> stepMaker)
         {
             takeState(startState(), target.startState());
-            Pair<MutableState<T>, U> currStatePair;
+            Pair<State<S>, State<T>> currStatePair;
             while ((currStatePair = pendingChecks.poll()) != null) {
                 final MutableState<R> deptP = stateMapping.get(currStatePair);
                 handleEpsilonTransitions(currStatePair);
-                final MutableState<T> dept1 = currStatePair.getOne();
-                final U dept2 = currStatePair.getTwo();
+                final State<S> dept1 = currStatePair.getOne();
+                final State<T> dept2 = currStatePair.getTwo();
                 // stepMaker.apply(currStatePair, epsilon1, epsilon2); // TODO: check why do we need this
-                for (T symbol1 : dept1.enabledSymbols()) {
+                for (S symbol1 : dept1.enabledSymbols()) {
                     if (symbol1.equals(epsilon1)) {
                         continue; // already handled
                     }
-                    for (V symbol2 : dept2.enabledSymbols()) {
+                    for (T symbol2 : dept2.enabledSymbols()) {
                         if (symbol2.equals(epsilon2)) {
                             continue; // already handled
                         }
@@ -144,17 +141,16 @@ public class BasicMutableFSA<T> extends AbstractMutableFSA<MutableState<T>, T> i
                             continue; // no step should be made
                         }
                         dept1.successors(symbol1).forEach(dest1 -> dept2.successors(symbol2).forEach(dest2 -> {
-                            @SuppressWarnings("unchecked")
-                            final U dest2Casted = (U) dest2;
-                            result.addTransition(deptP, takeState(dest1, dest2Casted), symbolP);
+                            result.addTransition(deptP, takeState(dest1, dest2), symbolP);
                         }));
                     }
                 }
             }
+
             return this;
         }
 
-        private MutableFSA<MutableState<R>, R> settle(Finalizer<MutableState<T>, U, MutableState<R>, R> finalizer)
+        private MutableFSA<R> settle(Finalizer<S, T, R> finalizer)
         {
             finalizer.apply(stateMapping, result);
 

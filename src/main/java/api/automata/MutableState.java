@@ -4,34 +4,34 @@ import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Pair;
 
-public interface MutableState<T> extends State<T>
+public interface MutableState<S> extends State<S>
 {
     @Override
-    RichIterable<? extends Pair<T, ? extends MutableState<T>>> transitions();
+    RichIterable<Pair<S, State<S>>> transitions();
 
     @Override
-    SetIterable<? extends MutableState<T>> successors();
+    SetIterable<State<S>> successors();
 
     @Override
-    SetIterable<? extends MutableState<T>> successors(T transLabel);
+    SetIterable<State<S>> successors(S transLabel);
 
     @Override
-    default MutableState<T> successor(T transLabel)
+    default State<S> successor(S transLabel)
     {
         return successors().getOnly();
     }
 
     @Override
-    default MutableState<T> toMutable()
+    default MutableState<S> toMutable()
     {
         return this;
     }
 
-    MutableState<T> setName(String name);
+    MutableState<S> setName(String name);
 
-    boolean addTransition(T transLabel, MutableState<T> to);
+    boolean addTransition(S transLabel, MutableState<S> to);
 
-    MutableState<T> removeTransitionsTo(MutableState<T> state);
+    MutableState<S> removeTransitionsTo(MutableState<S> state);
 
     @Override
     String toString();

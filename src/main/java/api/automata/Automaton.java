@@ -11,47 +11,43 @@ import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
-import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.LinkedList;
 import java.util.Queue;
-import java.util.Set;
 import java.util.function.Function;
 
 import static api.util.Constants.NONEXISTING_STATE;
 import static common.util.Constants.NOT_IMPLEMENTED_YET;
 
-public interface Automaton<S extends State<T>, T>
+public interface Automaton<S>
 {
-    Alphabet<T> alphabet();
+    Alphabet<S> alphabet();
 
-    SetIterable<S> states();
+    SetIterable<State<S>> states();
 
-    S startState();
+    State<S> startState();
 
-    SetIterable<S> acceptStates();
+    SetIterable<State<S>> acceptStates();
 
-    SetIterable<S> nonAcceptStates();
+    SetIterable<State<S>> nonAcceptStates();
 
-    default boolean isAcceptState(State<T> state)
+    default boolean isAcceptState(State<S> state)
     {
         return acceptStates().contains(state);
     }
 
-    default SetIterable<S> reachableStates()
+    default SetIterable<State<S>> reachableStates()
     {
-        final MutableSet<S> result = UnifiedSet.newSet(states().size()); // upper bound
+        final MutableSet<State<S>> result = UnifiedSet.newSet(states().size()); // upper bound
         result.add(startState());
-        final Queue<S> pendingChecks = new LinkedList<>();
+        final Queue<State<S>> pendingChecks = new LinkedList<>();
         pendingChecks.add(startState());
 
-        S currReached;
+        State<S> currReached;
         while ((currReached = pendingChecks.poll()) != null) {
             currReached.successors().forEach(thenReached -> {
-                @SuppressWarnings("unchecked")
-                final S laterReachedCasted = (S) thenReached;
-                if (result.add(laterReachedCasted)) {
-                    pendingChecks.add(laterReachedCasted);
+                if (result.add(thenReached)) {
+                    pendingChecks.add(thenReached);
                 }
             });
         }
@@ -59,80 +55,52 @@ public interface Automaton<S extends State<T>, T>
         return result;
     }
 
-    default SetIterable<S> unreachableStates()
+    default SetIterable<State<S>> unreachableStates()
     {
+
         return states().difference(reachableStates());
     }
 
-    default MapIterable<S, SetIterable<S>> predecessorRelation()
+    default MapIterable<State<S>, SetIterable<State<S>>> predecessorRelation()
     {
-        final MutableMap<S, MutableSet<S>> result = UnifiedMap.newMap(states().size());
+        final MutableMap<State<S>, MutableSet<State<S>>> result = UnifiedMap.newMap(states().size());
         states().forEach(dept -> dept.successors().forEach(dest -> {
-            @SuppressWarnings("unchecked")
-            final S destCasted = (S) dest;
-            result.computeIfAbsent(destCasted, __ -> UnifiedSet.newSet()).add(dept);
+            result.computeIfAbsent(dest, __ -> UnifiedSet.newSet()).add(dept);
         }));
 
-        return result.collect((key, value) -> Tuples.pair(key, (SetIterable<S>) value));
-    }
-
-    default SetIterable<S> liveStates()
-    {
-        final MutableSet<S> result = UnifiedSet.newSet(states().size()); // upper bound
-        final MapIterable<S, SetIterable<S>> predecessors = predecessorRelation();
         @SuppressWarnings("unchecked")
-        final Set<S> acceptStates = (Set<S>) acceptStates();
-        final Queue<S> pendingChecks = new LinkedList<>(acceptStates);
-
-        S currLiving;
-        while ((currLiving = pendingChecks.poll()) != null) {
-            predecessors.get(currLiving).forEach(alsoLiving -> {
-                if (result.add(alsoLiving)) {
-                    pendingChecks.add(alsoLiving);
-                }
-            });
-        }
-
-        return result;
+        final MutableMap<State<S>, SetIterable<State<S>>> resultCasted = (MutableMap) result;
+        return resultCasted;
     }
 
-    default SetIterable<S> deadEndStates()
+    SetIterable<State<S>> liveStates();
+
+    default SetIterable<State<S>> deadEndStates()
     {
         return states().difference(liveStates());
     }
 
-    default SetIterable<S> danglingStates()
+    default SetIterable<State<S>> danglingStates()
     {
         return states().difference(reachableStates().intersect(liveStates()));
     }
 
-    Automaton<? extends State<T>, T> trimUnreachableStates();
+    Automaton<S> trimUnreachableStates();
 
-    <R> Automaton<? extends State<R>, R> project(Alphabet<R> alphabet, Function<T, R> projector);
+    <R> Automaton<R> project(Alphabet<R> alphabet, Function<S, R> projector);
 
-    <U extends State<V>, V, R> Automaton<? extends State<R>, R> product(Automaton<U, V> target, Alphabet<R> alphabet,
-        StepMaker<S, T, U, V, R> stepMaker, Finalizer<S, U, MutableState<R>, R> finalizer);
+    <T, R> Automaton<R> product(Automaton<T> target, Alphabet<R> alphabet, StepMaker<S, T, R> stepMaker,
+        Finalizer<S, T, R> finalizer);
 
     boolean isDeterministic();
 
-    TransitionGraph<S, T> transitionGraph();
+    TransitionGraph<S> transitionGraph();
 
-    MutableAutomaton<? extends MutableState<T>, T> toMutable();
+    MutableAutomaton<S> toMutable();
 
-    default ImmutableAutomaton<? extends ImmutableState<T>, T> toImmutable()
+    default ImmutableAutomaton<S> toImmutable()
     {
         throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
-    }
-
-    /**
-     * This method only make sense when there is no possible contravariance
-     * introduced in this interface.
-     */
-    static <S extends State<T>, T> Automaton<State<T>, T> upcast(Automaton<S, T> derivative)
-    {
-        @SuppressWarnings("unchecked")
-        final Automaton<State<T>, T> generalized = (Automaton<State<T>, T>) derivative;
-        return generalized;
     }
 
     @Override
@@ -140,57 +108,53 @@ public interface Automaton<S extends State<T>, T>
 
     String toString(String indent, String nameTag);
 
-
     @FunctionalInterface
-    interface StepMaker<S extends State<T>, T, U extends State<V>, V, R>
+    interface StepMaker<S, T, R>
     {
-        R apply(Pair<S, U> deptPair, T symbol1, V symbol2);
+        R apply(Pair<State<S>, State<T>> statePair, S symbol1, T symbol2);
     }
 
     @FunctionalInterface
-    interface Finalizer<S, T, U extends MutableState<R>, R>
+    interface Finalizer<S, T, R>
     {
-        void apply(BiMap<Pair<S, T>, U> stateMapping, MutableAutomaton<U, R> builder);
+        void apply(BiMap<Pair<State<S>, State<T>>, MutableState<R>> stateMapping, MutableAutomaton<R> builder);
     }
 
-    interface TransitionGraph<N extends State<A>, A> extends Digraph<N, A>
+    interface TransitionGraph<S> extends Digraph<State<S>, S>
     {
-        Automaton<N, A> automaton();
+
+        Automaton<S> automaton();
 
         @Override
-        default SetIterable<N> referredNodes()
+        default SetIterable<State<S>> referredNodes()
         {
             return automaton().states();
         }
 
         @Override
-        default boolean nodeExists(Object node)
+        default boolean nodeExists(State<S> node)
         {
             return automaton().states().contains(node);
         }
 
         @Override
-        default SetIterable<A> referredArcLabels()
+        default SetIterable<S> referredArcLabels()
         {
             return automaton().alphabet().asSet();
         }
 
         @Override
-        default RichIterable<? extends Pair<A, N>> arcsFrom(N node)
+        default RichIterable<Pair<S, State<S>>> arcsFrom(State<S> node)
         {
             if (!nodeExists(node)) {
                 throw new IllegalArgumentException(NONEXISTING_STATE);
             }
 
-            return node.transitions().collect(each -> {
-                @SuppressWarnings("unchecked")
-                final N State = (N) each.getTwo();
-                return Tuples.pair(each.getOne(), State);
-            });
+            return node.transitions();
         }
 
         @Override
-        default SetIterable<A> arcLabelsFrom(N node)
+        default SetIterable<S> arcLabelsFrom(State<S> node)
         {
             if (!nodeExists(node)) {
                 throw new IllegalArgumentException(NONEXISTING_STATE);
@@ -200,7 +164,7 @@ public interface Automaton<S extends State<T>, T>
         }
 
         @Override
-        default boolean arcLabeledFrom(N node, A arcLabel)
+        default boolean arcLabeledFrom(State<S> node, S arcLabel)
         {
             if (!nodeExists(node)) {
                 throw new IllegalArgumentException(NONEXISTING_STATE);
@@ -210,25 +174,25 @@ public interface Automaton<S extends State<T>, T>
         }
 
         @Override
-        default RichIterable<Pair<N, A>> arcsTo(N node)
+        default RichIterable<Pair<State<S>, S>> arcsTo(State<S> node)
         {
             throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
         }
 
         @Override
-        default SetIterable<A> arcLabelsTo(N node)
+        default SetIterable<S> arcLabelsTo(State<S> node)
         {
             throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
         }
 
         @Override
-        default boolean arcLabeledTo(N node, A arcLabel)
+        default boolean arcLabeledTo(State<S> node, S arcLabel)
         {
             throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
         }
 
         @Override
-        default SetIterable<A> arcLabelsOn(N from, N to)
+        default SetIterable<S> arcLabelsOn(State<S> from, State<S> to)
         {
             if (!automaton().states().containsAllArguments(from, to)) {
                 throw new IllegalArgumentException(NONEXISTING_STATE);
@@ -238,41 +202,33 @@ public interface Automaton<S extends State<T>, T>
         }
 
         @Override
-        default SetIterable<N> directSuccessorsOf(N node)
+        default SetIterable<State<S>> directSuccessorsOf(State<S> node)
         {
             if (!nodeExists(node)) {
                 throw new IllegalArgumentException(NONEXISTING_STATE);
             }
 
-            return node.successors().collect(each -> {
-                @SuppressWarnings("unchecked")
-                final N succ = (N) each;
-                return succ;
-            }).toSet();
+            return node.successors();
         }
 
         @Override
-        default SetIterable<N> directSuccessorsOf(N node, A arcLabel)
+        default SetIterable<State<S>> directSuccessorsOf(State<S> node, S arcLabel)
         {
             if (!nodeExists(node)) {
                 throw new IllegalArgumentException(NONEXISTING_STATE);
             }
 
-            return node.successors(arcLabel).collect(each -> {
-                @SuppressWarnings("unchecked")
-                final N succ = (N) each;
-                return succ;
-            }).toSet();
+            return node.successors(arcLabel);
         }
 
         @Override
-        default SetIterable<N> directPredecessorsOf(N node)
+        default SetIterable<State<S>> directPredecessorsOf(State<S> node)
         {
             throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
         }
 
         @Override
-        default SetIterable<N> directPredecessorsOf(N node, A arcLabel)
+        default SetIterable<State<S>> directPredecessorsOf(State<S> node, S arcLabel)
         {
             throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
         }
@@ -288,40 +244,38 @@ public interface Automaton<S extends State<T>, T>
             return size() == 0;
         }
 
-        default A epsilonLabel()
+        default S epsilonLabel()
         {
             return automaton().alphabet().epsilon();
         }
 
-        default SetIterable<A> nonEpsilonArcLabelsFrom(N node)
+        default SetIterable<S> nonEpsilonArcLabelsFrom(State<S> node)
         {
             return arcLabelsFrom(node).difference(Sets.immutable.of(epsilonLabel()));
         }
 
-        default N directSuccessorOf(N node, A arcLabel)
+        default State<S> directSuccessorOf(State<S> node, S arcLabel)
         {
             if (!nodeExists(node)) {
                 throw new IllegalArgumentException(NONEXISTING_STATE);
             }
 
-            @SuppressWarnings("unchecked")
-            final N succ = (N) node.successor(arcLabel);
-            return succ;
+            return node.successor(arcLabel);
         }
 
-        default SetIterable<N> epsilonClosureOf(N node)
+        default SetIterable<State<S>> epsilonClosureOf(State<S> node)
         {
             return epsilonClosureOf(Sets.immutable.of(node));
         }
 
-        default SetIterable<N> epsilonClosureOf(SetIterable<N> nodes)
+        default SetIterable<State<S>> epsilonClosureOf(SetIterable<State<S>> nodes)
         {
             return epsilonClosureOf(nodes, epsilonLabel());
         }
 
-        default SetIterable<N> epsilonClosureOf(SetIterable<N> nodes, A arcLabel)
+        default SetIterable<State<S>> epsilonClosureOf(SetIterable<State<S>> nodes, S arcLabel)
         {
-            MutableSet<N> base = UnifiedSet.newSet(referredNodes().size()); // upper bound
+            MutableSet<State<S>> base = UnifiedSet.newSet(referredNodes().size()); // upper bound
             base.addAllIterable(nodes);
             while (true) {
                 if (!base.addAllIterable(directSuccessorsOf(base, epsilonLabel()))) {

@@ -7,32 +7,32 @@ import org.eclipse.collections.api.tuple.Pair;
 import static common.util.Constants.DISPLAY_NEWLINE;
 import static common.util.Constants.NOT_IMPLEMENTED_YET;
 
-public interface State<T>
+public interface State<S>
 {
     String name();
 
-    RichIterable<? extends Pair<T, ? extends State<T>>> transitions();
+    RichIterable<Pair<S, State<S>>> transitions();
 
-    SetIterable<T> enabledSymbols();
+    SetIterable<S> enabledSymbols();
 
-    SetIterable<T> enabledSymbolsTo(State<T> state);
+    SetIterable<S> enabledSymbolsTo(State<S> state);
 
-    boolean transitionExists(T transLabel);
+    boolean transitionExists(S transLabel);
 
-    boolean transitionExists(State<T> state);
+    boolean transitionExists(State<S> state);
 
-    SetIterable<? extends State<T>> successors();
+    SetIterable<State<S>> successors();
 
-    SetIterable<? extends State<T>> successors(T transLabel);
+    SetIterable<State<S>> successors(S transLabel);
 
-    default State<T> successor(T transLabel)
+    default State<S> successor(S transLabel)
     {
         return successors().getOnly();
     }
 
-    MutableState<T> toMutable();
+    MutableState<S> toMutable();
 
-    default ImmutableState<T> toImmutable()
+    default ImmutableState<S> toImmutable()
     {
         throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
     }

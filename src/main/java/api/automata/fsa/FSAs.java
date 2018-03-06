@@ -2,7 +2,6 @@ package api.automata.fsa;
 
 import api.automata.Alphabet;
 import api.automata.MutableState;
-import api.automata.State;
 import core.automata.fsa.BasicMutableFSA;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.set.SetIterable;
@@ -24,103 +23,84 @@ public final class FSAs
     {
     }
 
-    public static <T> MutableFSA<MutableState<T>, T> create(Alphabet<T> alphabet, int stateCapacity)
+    public static <S> MutableFSA<S> create(Alphabet<S> alphabet, int stateCapacity)
     {
         return new BasicMutableFSA<>(alphabet, stateCapacity);
     }
 
-    public static <S extends MutableState<T>, T> MutableFSA<S, T> ofSameType(MutableFSA<S, T> target, int stateCapacity)
-    {
-        final MutableFSA<MutableState<T>, T> result = FSAs.create(target.alphabet(), stateCapacity);
-        final MutableState<T> dummyStart = result.startState();
-        final S realStart = target.newState();
-        target.removeState(realStart);
-        result.addState(realStart).setAsStart(realStart).removeState(dummyStart);
-
-        @SuppressWarnings("unchecked")
-        final MutableFSA<S, T> resultCasted = (MutableFSA<S, T>) result;
-        return resultCasted;
-    }
-
-    public static <S extends MutableState<T>, T> MutableFSA<S, T> shallowCopy(MutableFSA<S, T> target)
+    public static <S> MutableFSA<S> shallowCopy(MutableFSA<S> target)
     {
         if (target instanceof BasicMutableFSA<?>) {
-            final BasicMutableFSA<T> targetCasted = (BasicMutableFSA<T>) target;
-            @SuppressWarnings("unchecked")
-            final MutableFSA<S, T> result = (MutableFSA<S, T>) new BasicMutableFSA<>(targetCasted, false);
-            return result;
+            return new BasicMutableFSA<>((BasicMutableFSA<S>) target, false);
         }
 
         throw new UnsupportedOperationException(NO_IMPLEMENTATION_FOUND);
     }
 
-    public static <S extends MutableState<T>, T> MutableFSA<S, T> deepCopy(MutableFSA<S, T> target)
+    public static <S> MutableFSA<S> deepCopy(MutableFSA<S> target)
     {
         if (target instanceof BasicMutableFSA<?>) {
-            final BasicMutableFSA<T> targetCasted = (BasicMutableFSA<T>) target;
-            @SuppressWarnings("unchecked")
-            final MutableFSA<S, T> r = (MutableFSA<S, T>) new BasicMutableFSA<>(targetCasted, true);
-            return r;
+            return new BasicMutableFSA<>((BasicMutableFSA<S>) target, true);
         }
 
         throw new UnsupportedOperationException(NO_IMPLEMENTATION_FOUND);
     }
 
-    private static <T> FSA<State<T>, T> createAcceptingNone(Alphabet<T> alphabet)
+    private static <S> FSA<S> createAcceptingNone(Alphabet<S> alphabet)
     {
-        return FSA.upcast(create(alphabet, 1));
+        return create(alphabet, 1);
     }
 
     /**
      * Should use {@link ImmutableFSA} instead of just {@link FSA}.
      */
-    public static <T> FSA<State<T>, T> acceptingNone(Alphabet<T> alphabet)
+    public static <S> FSA<S> acceptingNone(Alphabet<S> alphabet)
     {
         Pair<SoftReference<Alphabet>, FSA> cache = NONE_CACHE.get(alphabet);
         if (cache != null && cache.getOne().get() != null) {
             @SuppressWarnings("unchecked")
-            final FSA<State<T>, T> cachedInstance = cache.getTwo();
-            return cachedInstance;
+            final FSA<S> cachedResult = cache.getTwo();
+            return cachedResult;
         }
 
-        final FSA<State<T>, T> instance = createAcceptingNone(alphabet);
-        NONE_CACHE.put(alphabet, Tuples.pair(new SoftReference<>(alphabet), instance));
+        final FSA<S> result = createAcceptingNone(alphabet);
+        NONE_CACHE.put(alphabet, Tuples.pair(new SoftReference<>(alphabet), result));
 
-        return instance;
+        return result;
     }
 
-    private static <T> FSA<State<T>, T> createAcceptingAll(Alphabet<T> alphabet)
+    private static <S> FSA<S> createAcceptingAll(Alphabet<S> alphabet)
     {
-        final MutableFSA<MutableState<T>, T> result = create(alphabet, 1);
+        final MutableFSA<S> result = create(alphabet, 1);
 
-        final MutableState<T> state = result.startState();
+        final MutableState<S> state = (MutableState<S>) result.startState();
         alphabet.noEpsilonSet().forEach(symbol -> result.addTransition(state, state, symbol));
 
-        return FSA.upcast(result);
+        return result;
     }
 
     /**
      * Should use {@link ImmutableFSA} instead of just {@link FSA}.
      */
-    public static <T> FSA<State<T>, T> acceptingAll(Alphabet<T> alphabet)
+    public static <S> FSA<S> acceptingAll(Alphabet<S> alphabet)
     {
         Pair<SoftReference<Alphabet>, FSA> cache = ALL_CACHE.get(alphabet);
         if (cache != null && cache.getOne().get() != null) {
             @SuppressWarnings("unchecked")
-            final FSA<State<T>, T> cachedInstance = cache.getTwo();
-            return cachedInstance;
+            final FSA<S> cachedResult = cache.getTwo();
+            return cachedResult;
         }
 
-        final FSA<State<T>, T> instance = createAcceptingAll(alphabet);
-        ALL_CACHE.put(alphabet, Tuples.pair(new SoftReference<>(alphabet), instance));
+        final FSA<S> result = createAcceptingAll(alphabet);
+        ALL_CACHE.put(alphabet, Tuples.pair(new SoftReference<>(alphabet), result));
 
-        return instance;
+        return result;
     }
 
     /**
      * Should use {@link ImmutableFSA} instead of just {@link FSA}.
      */
-    public static <T> FSA<State<T>, T> acceptingOnly(Alphabet<T> alphabet, ListIterable<T> word)
+    public static <S> FSA<S> acceptingOnly(Alphabet<S> alphabet, ListIterable<S> word)
     {
         return acceptingOnly(alphabet, Sets.immutable.of(word));
     }
@@ -128,18 +108,18 @@ public final class FSAs
     /**
      * Should use {@link ImmutableFSA} instead of just {@link FSA}.
      */
-    public static <T> FSA<State<T>, T> acceptingOnly(Alphabet<T> alphabet, SetIterable<ListIterable<T>> words)
+    public static <S> FSA<S> acceptingOnly(Alphabet<S> alphabet, SetIterable<ListIterable<S>> words)
     {
         final int stateCapacity = (int) words.sumOfInt(ListIterable::size); // upper bound
-        final MutableFSA<MutableState<T>, T> result = create(alphabet, stateCapacity);
-        final MutableState<T> startState = result.startState();
-        final MutableState<T> acceptState = result.newState();
+        final MutableFSA<S> result = create(alphabet, stateCapacity);
+        final MutableState<S> startState = (MutableState<S>) result.startState();
+        final MutableState<S> acceptState = result.newState();
         result.setAsAccept(acceptState);
 
-        MutableState<T> currState = startState, nextState;
+        MutableState<S> currState = startState, nextState;
         int lastSymbolPos;
-        T symbol;
-        for (ListIterable<T> word : words) {
+        S symbol;
+        for (ListIterable<S> word : words) {
             if (word.isEmpty()) {
                 result.addEpsilonTransition(currState, acceptState);
                 continue;
@@ -155,6 +135,6 @@ public final class FSAs
             currState = startState;
         }
 
-        return FSA.upcast(result);
+        return result;
     }
 }

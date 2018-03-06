@@ -1,6 +1,8 @@
 package api.automata.fsa;
 
-import api.automata.*;
+import api.automata.Alphabet;
+import api.automata.Automaton;
+import api.automata.State;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.block.predicate.Predicate;
 import org.eclipse.collections.api.list.ListIterable;
@@ -24,21 +26,17 @@ import java.util.function.Function;
 
 import static common.util.Constants.NOT_IMPLEMENTED_YET;
 
-public interface FSA<S extends State<T>, T> extends Automaton<S, T>
+public interface FSA<S> extends Automaton<S>
 {
     @Override
-    FSA<? extends State<T>, T> trimUnreachableStates();
+    FSA<S> trimUnreachableStates();
 
     @Override
-    <R> FSA<? extends State<R>, R> project(Alphabet<R> alphabet, Function<T, R> projector);
-
-    @Override
-    <U extends State<V>, V, R> FSA<? extends MutableState<R>, R> product(Automaton<U, V> target, Alphabet<R> alphabet,
-        StepMaker<S, T, U, V, R> stepMaker, Finalizer<S, U, MutableState<R>, R> finalizer);
+    <R> FSA<R> project(Alphabet<R> alphabet, Function<S, R> projector);
 
     default boolean isDeterministic()
     {
-        final Predicate<? super S> noEpsilonTransAndOnlyOneSucc = state -> {
+        final Predicate<State<S>> noEpsilonTransAndOnlyOneSucc = state -> {
             final boolean noEpsilonTrans = !state.transitionExists(alphabet().epsilon());
             final boolean onlyOneSucc = state.enabledSymbols()
                                              .allSatisfy(symbol -> state.successors(symbol).size() == 1);
@@ -49,21 +47,21 @@ public interface FSA<S extends State<T>, T> extends Automaton<S, T>
     }
 
     @Override
-    MutableFSA<? extends MutableState<T>, T> toMutable();
+    MutableFSA<S> toMutable();
 
     @Override
-    default ImmutableFSA<? extends ImmutableState<T>, T> toImmutable()
+    default ImmutableFSA<S> toImmutable()
     {
         throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
     }
 
-    default SetIterable<S> incompleteStates()
+    default SetIterable<State<S>> incompleteStates()
     {
         if (!isDeterministic()) {
             throw new UnsupportedOperationException("only available on deterministic instances");
         }
 
-        final SetIterable<T> complete = alphabet().noEpsilonSet();
+        final SetIterable<S> complete = alphabet().noEpsilonSet();
 
         return states().reject(which -> which.enabledSymbols().containsAllIterable(complete));
     }
@@ -73,13 +71,13 @@ public interface FSA<S extends State<T>, T> extends Automaton<S, T>
         return incompleteStates().size() == 0;
     }
 
-    private boolean acceptsDeterminedly(ListIterable<T> word)
+    private boolean acceptsDeterminedly(ListIterable<S> word)
     {
-        final T epsilon = alphabet().epsilon();
+        final S epsilon = alphabet().epsilon();
 
-        State<T> currState = startState();
-        SetIterable<? extends State<T>> nextState;
-        T symbol;
+        State<S> currState = startState();
+        SetIterable<State<S>> nextState;
+        S symbol;
         for (int readHead = 0; readHead < word.size(); readHead++) {
             symbol = word.get(readHead);
             if (symbol.equals(epsilon)) {
@@ -94,13 +92,13 @@ public interface FSA<S extends State<T>, T> extends Automaton<S, T>
         return isAcceptState(currState);
     }
 
-    private boolean acceptsNondeterminedly(ListIterable<T> word)
+    private boolean acceptsNondeterminedly(ListIterable<S> word)
     {
-        final T epsilon = alphabet().epsilon();
-        final api.automata.Automaton.TransitionGraph<S, T> delta = transitionGraph();
+        final S epsilon = alphabet().epsilon();
+        final TransitionGraph<S> delta = transitionGraph();
 
-        SetIterable<S> currStates = Sets.immutable.of(startState()), nextStates;
-        T symbol;
+        SetIterable<State<S>> currStates = Sets.immutable.of(startState()), nextStates;
+        S symbol;
         for (int readHead = 0; readHead < word.size(); readHead++) {
             symbol = word.get(readHead);
             if (symbol.equals(epsilon)) {
@@ -115,7 +113,7 @@ public interface FSA<S extends State<T>, T> extends Automaton<S, T>
         return currStates.anySatisfy(this::isAcceptState);
     }
 
-    default boolean accepts(ListIterable<T> word)
+    default boolean accepts(ListIterable<S> word)
     {
         return alphabet().asSet().containsAllIterable(word) && // valid word given
             (isDeterministic() ? acceptsDeterminedly(word) : acceptsNondeterminedly(word));
@@ -126,27 +124,27 @@ public interface FSA<S extends State<T>, T> extends Automaton<S, T>
         return !liveStates().anySatisfy(this::isAcceptState);
     }
 
-    private ListIterable<T> getOneShortestWordDeterminedly()
+    private ListIterable<S> getOneShortestWordDeterminedly()
     {
         final int stateNumber = states().size();
-        final MutableMap<State<T>, Pair<State<T>, T>> visitRecord = UnifiedMap.newMap(stateNumber); // upper bound
-        final Queue<State<T>> pendingChecks = new LinkedList<>();
+        final MutableMap<State<S>, Pair<State<S>, S>> visitRecord = UnifiedMap.newMap(stateNumber); // upper bound
+        final Queue<State<S>> pendingChecks = new LinkedList<>();
 
-        final S startState = startState();
+        final State<S> startState = startState();
         pendingChecks.add(startState);
-        State<T> currState;
+        State<S> currState;
         while ((currState = pendingChecks.poll()) != null) {
             if (isAcceptState(currState)) {
-                final MutableList<T> word = FastList.newList(stateNumber); // upper bound
+                final MutableList<S> word = FastList.newList(stateNumber); // upper bound
                 while (currState != startState) {
-                    final Pair<State<T>, T> visitorAndSymbol = visitRecord.get(currState);
+                    final Pair<State<S>, S> visitorAndSymbol = visitRecord.get(currState);
                     word.add(visitorAndSymbol.getTwo());
                     currState = visitorAndSymbol.getOne();
                 }
                 return word.reverseThis();
             }
-            final State<T> visitor = currState; // effectively finalized for the lambda expression
-            for (T symbol : currState.enabledSymbols()) {
+            final State<S> visitor = currState; // effectively finalized for the lambda expression
+            for (S symbol : currState.enabledSymbols()) {
                 visitRecord.computeIfAbsent(visitor.successor(symbol), visited -> {
                     pendingChecks.add(visited);
                     return Tuples.pair(visitor, symbol);
@@ -157,29 +155,30 @@ public interface FSA<S extends State<T>, T> extends Automaton<S, T>
         return null;
     }
 
-    private ListIterable<T> getOneShortestWordNondeterminedly()
+    private ListIterable<S> getOneShortestWordNondeterminedly()
     {
-        final SetIterable<T> noEpsilonAlphabet = alphabet().noEpsilonSet();
-        final api.automata.Automaton.TransitionGraph<S, T> delta = transitionGraph();
+        final SetIterable<S> noEpsilonAlphabet = alphabet().noEpsilonSet();
+        final TransitionGraph<S> delta = transitionGraph();
         final int stateNumber = states().size(); // upper bound
-        final MutableMap<SetIterable<S>, Pair<SetIterable<S>, T>> visitRecord = UnifiedMap.newMap(stateNumber);
-        final Queue<SetIterable<S>> pendingChecks = new LinkedList<>();
+        final MutableMap<SetIterable<State<S>>, Pair<SetIterable<State<S>>, S>> visitRecord = UnifiedMap
+            .newMap(stateNumber);
+        final Queue<SetIterable<State<S>>> pendingChecks = new LinkedList<>();
 
-        final SetIterable<S> startStates = transitionGraph().epsilonClosureOf(startState());
+        final SetIterable<State<S>> startStates = transitionGraph().epsilonClosureOf(startState());
         pendingChecks.add(startStates);
-        SetIterable<S> currStates;
+        SetIterable<State<S>> currStates;
         while ((currStates = pendingChecks.poll()) != null) {
             if (currStates.anySatisfy(this::isAcceptState)) {
-                final MutableList<T> word = FastList.newList(stateNumber);
+                final MutableList<S> word = FastList.newList(stateNumber);
                 while (currStates != startStates) {
-                    final Pair<SetIterable<S>, T> visitorAndSymbol = visitRecord.get(currStates);
+                    final Pair<SetIterable<State<S>>, S> visitorAndSymbol = visitRecord.get(currStates);
                     word.add(visitorAndSymbol.getTwo());
                     currStates = visitorAndSymbol.getOne();
                 }
                 return word.reverseThis();
             }
-            final SetIterable<S> visitor = currStates; // effectively finalized for the lambda expression
-            for (T symbol : noEpsilonAlphabet) {
+            final SetIterable<State<S>> visitor = currStates; // effectively finalized for the lambda expression
+            for (S symbol : noEpsilonAlphabet) {
                 visitRecord.computeIfAbsent(delta.epsilonClosureOf(visitor, symbol), touchedStates -> {
                     pendingChecks.add(touchedStates);
                     return Tuples.pair(visitor, symbol);
@@ -190,37 +189,39 @@ public interface FSA<S extends State<T>, T> extends Automaton<S, T>
         return null;
     }
 
-    default ListIterable<T> enumerateOneShortest()
+    default ListIterable<S> enumerateOneShortest()
     {
         return isDeterministic() ? getOneShortestWordDeterminedly() : getOneShortestWordNondeterminedly();
     }
 
-    static <S extends State<T>, T> Twin<ListIterable<S>> splitPartition(ListIterable<S> toBeSplit,
-        RichIterable<S> checkSet, T symbol)
+    static <S> Twin<ListIterable<State<S>>> splitPartition(ListIterable<State<S>> toSplit,
+        RichIterable<State<S>> checkSet, S symbol)
     {
-        final ListIterable<S> inSet = toBeSplit.select(eachState -> checkSet.contains(eachState.successor(symbol)));
-        final ListIterable<S> outSet = toBeSplit.reject(inSet::contains);
+        final ListIterable<State<S>> inSet = toSplit
+            .select(eachState -> checkSet.contains(eachState.successor(symbol)));
+        final ListIterable<State<S>> outSet = toSplit.reject(inSet::contains);
 
         return inSet.size() < outSet.size() ? Tuples.twin(inSet, outSet) : Tuples.twin(outSet, inSet);
     }
 
-    default RichIterable<ListIterable<S>> refinePartition(RichIterable<ListIterable<S>> initialPartition,
-        ListIterable<S> initialCheckSet)
+    default RichIterable<ListIterable<State<S>>> refinePartition(RichIterable<ListIterable<State<S>>> initialPartition,
+        ListIterable<State<S>> initialCheckSet)
     {
-        final MutableSortedSet<Pair<ListIterable<S>, T>> pendingChecks = TreeSortedSet
+        final MutableSortedSet<Pair<ListIterable<State<S>>, S>> pendingChecks = TreeSortedSet
             .newSet(Comparator.comparingInt(Object::hashCode));
-        final SetIterable<T> symbols = alphabet().noEpsilonSet();
+        final SetIterable<S> symbols = alphabet().noEpsilonSet();
         symbols.forEach(symbol -> pendingChecks.add(Tuples.pair(initialCheckSet, symbol)));
 
-        RichIterable<ListIterable<S>> currPartition = initialPartition;
+        RichIterable<ListIterable<State<S>>> currPartition = initialPartition;
         while (pendingChecks.notEmpty()) {
-            final Pair<ListIterable<S>, T> currCheck = pendingChecks.getFirst();
+            final Pair<ListIterable<State<S>>, S> currCheck = pendingChecks.getFirst();
             pendingChecks.remove(currCheck);
             currPartition = currPartition.flatCollect(part -> {
-                final Twin<ListIterable<S>> splitPart = splitPartition(part, currCheck.getOne(), currCheck.getTwo());
+                final Twin<ListIterable<State<S>>> splitPart = splitPartition(part, currCheck.getOne(),
+                                                                              currCheck.getTwo());
                 if (splitPart.getOne().notEmpty()) {
                     symbols.forEach(symbol -> {
-                        final Pair<ListIterable<S>, T> splitCheck = Tuples.pair(part, symbol);
+                        final Pair<ListIterable<State<S>>, S> splitCheck = Tuples.pair(part, symbol);
                         if (pendingChecks.contains(splitCheck)) {
                             pendingChecks.remove(splitCheck);
                             pendingChecks.add(Tuples.pair(splitPart.getOne(), symbol));
@@ -238,30 +239,19 @@ public interface FSA<S extends State<T>, T> extends Automaton<S, T>
         return currPartition;
     }
 
-    FSA<? extends State<T>, T> determinize();
+    FSA<S> determinize();
 
-    FSA<? extends State<T>, T> complete();
+    FSA<S> complete();
 
-    FSA<? extends State<T>, T> minimize();
+    FSA<S> minimize();
 
-    FSA<? extends State<T>, T> complement();
+    FSA<S> complement();
 
-    FSA<? extends State<T>, T> intersect(FSA<? extends State<T>, T> target);
+    FSA<S> intersect(FSA<S> target);
 
-    FSA<? extends State<T>, T> union(FSA<? extends State<T>, T> target);
+    FSA<S> union(FSA<S> target);
 
-    LanguageSubsetChecker.Result<T> checkContaining(FSA<? extends State<T>, T> target);
-
-    /**
-     * This method only make sense when there is no possible contravariance
-     * introduced in this interface.
-     */
-    static <S extends State<T>, T> FSA<State<T>, T> upcast(FSA<S, T> derivative)
-    {
-        @SuppressWarnings("unchecked")
-        final FSA<State<T>, T> generalized = (FSA<State<T>, T>) derivative;
-        return generalized;
-    }
+    LanguageSubsetChecker.Result<S> checkContaining(FSA<S> target);
 
     @Override
     String toString();

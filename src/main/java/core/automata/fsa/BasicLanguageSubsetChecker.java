@@ -1,6 +1,5 @@
 package core.automata.fsa;
 
-import api.automata.State;
 import api.automata.fsa.FSA;
 import api.automata.fsa.LanguageSubsetChecker;
 import common.util.Assert;
@@ -9,10 +8,10 @@ import org.eclipse.collections.api.list.ListIterable;
 import static common.util.Constants.DISPLAY_INDENT;
 import static common.util.Constants.DISPLAY_NEWLINE;
 
-public class BasicLanguageSubsetChecker<T> implements LanguageSubsetChecker<T>
+public class BasicLanguageSubsetChecker<S> implements LanguageSubsetChecker<S>
 {
     @Override
-    public Result test(FSA<State<T>, T> subsumer, FSA<State<T>, T> includer)
+    public Result test(FSA<S> subsumer, FSA<S> includer)
     {
         if (!subsumer.alphabet().epsilon().equals(includer.alphabet().epsilon())) {
             throw new IllegalArgumentException("incompatible two alphabet given");
@@ -24,19 +23,19 @@ public class BasicLanguageSubsetChecker<T> implements LanguageSubsetChecker<T>
         if (includer.acceptsNone()) { // empty includes nobody
             return new Result(false, new Counterexample(subsumer));
         }
-        final FSA<? extends State<T>, T> includerBar = includer.complement();
+        final FSA<S> includerBar = includer.complement();
         if (includerBar.acceptsNone()) { // universe includes anyone
             return new Result(true, null);
         }
 
-        final FSA<? extends State<T>, T> divergentImage = includerBar.intersect(subsumer);
+        final FSA<S> divergentImage = includerBar.intersect(subsumer);
 
         return divergentImage.acceptsNone()
                ? new Result(true, null)
-               : new Result(false, new Counterexample(FSA.upcast(divergentImage)));
+               : new Result(false, new Counterexample(divergentImage));
     }
 
-    private class Result implements LanguageSubsetChecker.Result<T>
+    private class Result implements LanguageSubsetChecker.Result<S>
     {
         private final boolean passed;
         private final Counterexample counterexample;
@@ -66,24 +65,24 @@ public class BasicLanguageSubsetChecker<T> implements LanguageSubsetChecker<T>
         }
     }
 
-    private class Counterexample implements LanguageSubsetChecker.Counterexample<T>
+    private class Counterexample implements LanguageSubsetChecker.Counterexample<S>
     {
-        private final FSA<State<T>, T> sourceImage;
-        private ListIterable<T> instance;
+        private final FSA<S> sourceImage;
+        private ListIterable<S> instance;
 
-        private Counterexample(FSA<State<T>, T> source)
+        private Counterexample(FSA<S> source)
         {
             sourceImage = source;
         }
 
         @Override
-        public FSA<State<T>, T> sourceImage()
+        public FSA<S> sourceImage()
         {
             return sourceImage;
         }
 
         @Override
-        public ListIterable<T> get()
+        public ListIterable<S> get()
         {
             if (instance == null) {
                 instance = LanguageSubsetChecker.Counterexample.super.get();

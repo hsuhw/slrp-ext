@@ -1,9 +1,9 @@
 package api.automata;
 
-public interface ImmutableState<T> extends State<T>
+public interface ImmutableState<S> extends State<S>
 {
     @Override
-    default ImmutableState<T> toImmutable()
+    default ImmutableState<S> toImmutable()
     {
         return this;
     }
