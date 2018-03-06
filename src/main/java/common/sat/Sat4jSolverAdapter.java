@@ -1,5 +1,6 @@
 package common.sat;
 
+import common.util.Stopwatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
@@ -26,6 +27,7 @@ public class Sat4jSolverAdapter implements SatSolver
     private ISolver solver;
     private int nextFreeVariableId = 1;
     private ImmutableIntSet model;
+    private long profilingStartTime;
 
     private static ISolver newSolverInstance()
     {
@@ -163,24 +165,23 @@ public class Sat4jSolverAdapter implements SatSolver
             return model != NONSOLUTION;
         }
 
-        LOGGER.debug("Invoke a solving on SAT4J.");
-        final long startTime = System.currentTimeMillis();
-        long endTime;
+        LOGGER.info("Invoke a SAT solving on SAT4J at thread time {}ms.",
+                    () -> (profilingStartTime = Stopwatch.currentThreadCpuTimeInMs()));
         try {
             if (solver.isSatisfiable()) {
-                endTime = System.currentTimeMillis();
-                LOGGER.info("SAT4J found a solution in {}ms.", endTime - startTime);
+                LOGGER.info("SAT4J found a solution in {}ms.",
+                            () -> Stopwatch.currentThreadCpuTimeInMs() - profilingStartTime);
                 model = IntSets.immutable.of(solver.model());
 
                 return true;
             }
         } catch (org.sat4j.specs.TimeoutException e) {
-            endTime = System.currentTimeMillis();
-            LOGGER.info("SAT4J failed to solve the problem within {}ms.", endTime - startTime);
+            LOGGER.info("SAT4J failed to solve the problem within {}ms.",
+                        () -> Stopwatch.currentThreadCpuTimeInMs() - profilingStartTime);
             throw new TimeoutException();
         }
-        endTime = System.currentTimeMillis();
-        LOGGER.info("SAT4J found it unsatisfiable in {}ms.", endTime - startTime);
+        LOGGER.info("SAT4J found it unsatisfiable in {}ms.",
+                    () -> Stopwatch.currentThreadCpuTimeInMs() - profilingStartTime);
         model = NONSOLUTION;
 
         return false;
