@@ -2,17 +2,22 @@ package core.automata;
 
 import api.automata.*;
 import common.util.Assert;
+import org.eclipse.collections.api.bimap.MutableBiMap;
 import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.bimap.mutable.HashBiMap;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
+import org.eclipse.collections.impl.tuple.Tuples;
 
 import java.util.LinkedList;
 import java.util.Queue;
 
 import static api.util.Constants.NONEXISTING_STATE;
+import static core.Parameters.estimateExtendedSize;
 
 public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
 {
@@ -31,12 +36,12 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
 
     public AbstractMutableAutomaton(AbstractMutableAutomaton<S> toCopy, boolean deep)
     {
+        final int capacity = estimateExtendedSize(toCopy.states.size());
         if (deep) {
-            final int stateSize = toCopy.states.size();
-            final MutableMap<State<S>, MutableState<S>> stateMapping = UnifiedMap.newMap(stateSize);
+            final MutableMap<State<S>, MutableState<S>> stateMapping = UnifiedMap.newMap(capacity);
 
             alphabet = toCopy.alphabet;
-            states = UnifiedSet.newSet(stateSize);
+            states = UnifiedSet.newSet(capacity);
             startState = newState();
 
             toCopy.states.forEach(stateToCopy -> {
@@ -46,11 +51,14 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
                     newState.addTransition(symbol, newSucc);
                 }));
             });
-            acceptStates = toCopy.acceptStates.collect(stateMapping::get);
+            acceptStates = UnifiedSet.newSet(toCopy.states.size());
+            toCopy.acceptStates.forEach(state -> acceptStates.add(stateMapping.get(state)));
         } else {
             alphabet = toCopy.alphabet;
-            states = UnifiedSet.newSet(toCopy.states);
-            acceptStates = UnifiedSet.newSet(toCopy.acceptStates);
+            states = UnifiedSet.newSet(capacity);
+            states.addAllIterable(toCopy.states);
+            acceptStates = UnifiedSet.newSet(toCopy.states.size());
+            acceptStates.addAllIterable(toCopy.acceptStates);
             startState = toCopy.startState;
         }
     }
@@ -215,6 +223,87 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
         public Automaton<S> automaton()
         {
             return AbstractMutableAutomaton.this;
+        }
+    }
+
+
+    protected class ProductHandler<T, R>
+    {
+        private final Automaton<T> target;
+        private final S epsilon1;
+        private final T epsilon2;
+        private final MutableAutomaton<R> result;
+        private final MutableBiMap<Pair<State<S>, State<T>>, MutableState<R>> stateMapping;
+        private final Queue<Pair<State<S>, State<T>>> pendingChecks;
+
+        public ProductHandler(Automaton<T> target, MutableAutomaton<R> result, int capacity)
+        {
+            this.target = target;
+            epsilon1 = alphabet().epsilon();
+            epsilon2 = target.alphabet().epsilon();
+            this.result = result;
+            stateMapping = new HashBiMap<>(capacity);
+            pendingChecks = new LinkedList<>();
+        }
+
+        private MutableState<R> takeState(Pair<State<S>, State<T>> statePair)
+        {
+            return stateMapping.computeIfAbsent(statePair, pair -> {
+                pendingChecks.add(pair);
+                return result.newState();
+            });
+        }
+
+        private MutableState<R> takeState(State<S> one, State<T> two)
+        {
+            return takeState(Tuples.pair(one, two));
+        }
+
+        private void handleEpsilonTransitions(Pair<State<S>, State<T>> statePair)
+        {
+            final MutableState<R> deptP = takeState(statePair);
+            final State<S> dept1 = statePair.getOne();
+            final State<T> dept2 = statePair.getTwo();
+            dept1.successors(epsilon1).forEach(dest -> result.addEpsilonTransition(deptP, takeState(dest, dept2)));
+            dept2.successors(epsilon2).forEach(dest -> result.addEpsilonTransition(deptP, takeState(dept1, dest)));
+        }
+
+        public ProductHandler<T, R> makeProduct(StepMaker<S, T, R> stepMaker)
+        {
+            takeState(startState(), target.startState());
+            Pair<State<S>, State<T>> currStatePair;
+            while ((currStatePair = pendingChecks.poll()) != null) {
+                final MutableState<R> deptP = stateMapping.get(currStatePair);
+                handleEpsilonTransitions(currStatePair);
+                final State<S> dept1 = currStatePair.getOne();
+                final State<T> dept2 = currStatePair.getTwo();
+                for (S symbol1 : dept1.enabledSymbols()) {
+                    if (symbol1.equals(epsilon1)) {
+                        continue; // already handled
+                    }
+                    for (T symbol2 : dept2.enabledSymbols()) {
+                        if (symbol2.equals(epsilon2)) {
+                            continue; // already handled
+                        }
+                        final R symbolP = stepMaker.apply(currStatePair, symbol1, symbol2);
+                        if (symbolP == null) {
+                            continue; // no step should be made
+                        }
+                        dept1.successors(symbol1).forEach(dest1 -> dept2.successors(symbol2).forEach(dest2 -> {
+                            result.addTransition(deptP, takeState(dest1, dest2), symbolP);
+                        }));
+                    }
+                }
+            }
+
+            return this;
+        }
+
+        public MutableAutomaton<R> settle(Finalizer<S, T, R> finalizer)
+        {
+            finalizer.apply(stateMapping, result);
+
+            return result;
         }
     }
 }

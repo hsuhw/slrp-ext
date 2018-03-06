@@ -10,16 +10,6 @@ import static common.util.Constants.*;
 public interface MutableAutomaton<S> extends Automaton<S>
 {
     @Override
-    Automaton<S> trimUnreachableStates();
-
-    @Override
-    <R> Automaton<R> project(Alphabet<R> alphabet, Function<S, R> projector);
-
-    @Override
-    <T, R> Automaton<R> product(Automaton<T> target, Alphabet<R> alphabet, StepMaker<S, T, R> stepMaker,
-        Finalizer<S, T, R> finalizer);
-
-    @Override
     TransitionGraph<S> transitionGraph();
 
     @Override

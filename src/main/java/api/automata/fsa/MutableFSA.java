@@ -2,11 +2,9 @@ package api.automata.fsa;
 
 import api.automata.*;
 import org.eclipse.collections.api.RichIterable;
-import org.eclipse.collections.api.bimap.BiMap;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.SetIterable;
-import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 
@@ -14,7 +12,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.function.Function;
 
-import static api.util.Connectives.Labels;
+import static api.util.Connectives.*;
 import static api.util.Constants.NONEXISTING_STATE;
 import static common.util.Constants.NOT_IMPLEMENTED_YET;
 
@@ -51,10 +49,6 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
 
         return result.trimUnreachableStates(); // one-off
     }
-
-    @Override
-    <T, R> Automaton<R> product(Automaton<T> target, Alphabet<R> alphabet, StepMaker<S, T, R> stepMaker,
-        Finalizer<S, T, R> finalizer);
 
     @Override
     default MutableFSA<S> toMutable()
@@ -228,22 +222,14 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
     @Override
     default FSA<S> intersect(FSA<S> target)
     {
-        return (FSA<S>) product(target, alphabet(), Labels.matched(), (stateMapping, builder) -> {
-            final BiMap<MutableState<S>, Pair<State<S>, State<S>>> mapping = stateMapping.inverse();
-            builder.states().forEach(state -> {
-                final State<S> state1 = mapping.get(state).getOne();
-                final State<S> state2 = mapping.get(state).getTwo();
-                if (this.isAcceptState(state1) && target.isAcceptState(state2)) {
-                    builder.setAsAccept((MutableState<S>) state);
-                }
-            });
-        }); // one-off
+        return (FSA<S>) product(target, alphabet(), Labels.matched(),
+                                AcceptStates.select(this, target, AND)); // one-off
     }
 
     @Override
     default FSA<S> union(FSA<S> target)
     {
-        if (!alphabet().equals(target.alphabet())) {
+        if (!(target instanceof MutableFSA<?>) || !alphabet().equals(target.alphabet())) {
             throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
         }
         if (!states().containsAllIterable(target.states())) {

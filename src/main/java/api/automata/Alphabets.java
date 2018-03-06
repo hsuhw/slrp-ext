@@ -7,7 +7,6 @@ import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.tuple.Tuples;
 
@@ -46,14 +45,18 @@ public final class Alphabets
         return new SetAlphabet<>(definition, epsilon);
     }
 
-    public static <S> Alphabet<Pair<S, S>> product(Alphabet<S> alphabet)
+    public static <S, T> Alphabet<Pair<S, T>> product(Alphabet<S> one, Alphabet<T> two)
     {
-        final SetIterable<S> symbols = alphabet.noEpsilonSet();
-        final Set<S> symbolSet = symbols instanceof ImmutableSet<?>
-                                 ? ((ImmutableSet<S>) symbols).castToSet()
-                                 : (MutableSet<S>) symbols;
-        final Twin<S> epsilon = Tuples.twin(alphabet.epsilon(), alphabet.epsilon());
-        final MutableSet<Pair<S, S>> product = Sets.cartesianProduct(symbolSet, symbolSet, Tuples::pair).toSet();
+        final SetIterable<S> symbols1 = one.noEpsilonSet();
+        final Set<S> symbolSet1 = symbols1 instanceof ImmutableSet<?>
+                                  ? ((ImmutableSet<S>) symbols1).castToSet()
+                                  : (MutableSet<S>) symbols1;
+        final SetIterable<T> symbols2 = two.noEpsilonSet();
+        final Set<T> symbolSet2 = symbols2 instanceof ImmutableSet<?>
+                                  ? ((ImmutableSet<T>) symbols2).castToSet()
+                                  : (MutableSet<T>) symbols2;
+        final Pair<S, T> epsilon = Tuples.pair(one.epsilon(), two.epsilon());
+        final MutableSet<Pair<S, T>> product = Sets.cartesianProduct(symbolSet1, symbolSet2, Tuples::pair).toSet();
         product.add(epsilon);
 
         return create(product, epsilon);
