@@ -3,10 +3,14 @@ package core.automata;
 import com.mscharhag.oleaster.runner.OleasterRunner;
 import org.junit.runner.RunWith;
 
+import static api.automata.Alphabet.Builder;
+
 @RunWith(OleasterRunner.class)
 public class SetAlphabetTest extends AbstractAlphabetTest
 {
+    @Override
+    protected Builder<Object> newBuilder(int capacity, Object epsilon)
     {
-        Alphabets = new BasicAlphabetProvider();
+        return new SetAlphabetBuilder<>(capacity, epsilon);
     }
 }
