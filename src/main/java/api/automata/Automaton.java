@@ -57,7 +57,6 @@ public interface Automaton<S>
 
     default SetIterable<State<S>> unreachableStates()
     {
-
         return states().difference(reachableStates());
     }
 
