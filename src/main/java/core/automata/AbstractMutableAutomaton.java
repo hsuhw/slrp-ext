@@ -26,6 +26,14 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
     protected final MutableSet<State<S>> acceptStates;
     private State<S> startState;
 
+    protected boolean hasChanged;
+    private SetIterable<State<S>> reachableStates;
+    private SetIterable<State<S>> unreachableStates;
+    private MapIterable<State<S>, SetIterable<State<S>>> predecessorRelation;
+    private SetIterable<State<S>> liveStates;
+    private SetIterable<State<S>> deadEndStates;
+    private SetIterable<State<S>> danglingStates;
+
     public AbstractMutableAutomaton(Alphabet<S> alphabet, int stateCapacity)
     {
         this.alphabet = alphabet;
@@ -94,8 +102,42 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
     }
 
     @Override
+    public SetIterable<State<S>> reachableStates()
+    {
+        if (!hasChanged && reachableStates != null) {
+            return reachableStates;
+        }
+
+        return (reachableStates = MutableAutomaton.super.unreachableStates());
+    }
+
+    @Override
+    public SetIterable<State<S>> unreachableStates()
+    {
+        if (!hasChanged && unreachableStates != null) {
+            return unreachableStates;
+        }
+
+        return (unreachableStates = MutableAutomaton.super.unreachableStates());
+    }
+
+    @Override
+    public MapIterable<State<S>, SetIterable<State<S>>> predecessorRelation()
+    {
+        if (!hasChanged && predecessorRelation != null) {
+            return predecessorRelation;
+        }
+
+        return (predecessorRelation = MutableAutomaton.super.predecessorRelation());
+    }
+
+    @Override
     public SetIterable<State<S>> liveStates()
     {
+        if (!hasChanged && liveStates != null) {
+            return liveStates;
+        }
+
         final MutableSet<State<S>> result = UnifiedSet.newSet(states().size()); // upper bound
         final MapIterable<State<S>, SetIterable<State<S>>> predecessors = predecessorRelation();
         final Queue<State<S>> pendingChecks = new LinkedList<>(acceptStates);
@@ -109,7 +151,27 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
             });
         }
 
-        return result;
+        return (liveStates = result);
+    }
+
+    @Override
+    public SetIterable<State<S>> deadEndStates()
+    {
+        if (!hasChanged && deadEndStates != null) {
+            return deadEndStates;
+        }
+
+        return (deadEndStates = MutableAutomaton.super.deadEndStates());
+    }
+
+    @Override
+    public SetIterable<State<S>> danglingStates()
+    {
+        if (!hasChanged && danglingStates != null) {
+            return danglingStates;
+        }
+
+        return (danglingStates = MutableAutomaton.super.deadEndStates());
     }
 
     @Override
@@ -125,6 +187,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
     {
         final MutableState<S> state = createState();
         states.add(state);
+        hasChanged = true;
 
         return state;
     }
@@ -135,6 +198,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
         Assert.argumentNotNull(state);
 
         states.add(state);
+        hasChanged = true;
 
         return this;
     }
@@ -151,6 +215,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
 
         states.remove(state);
         states.forEach(affected -> ((MutableState<S>) affected).removeTransitionsTo(state));
+        hasChanged = true;
 
         return this;
     }
@@ -163,6 +228,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
         }
 
         startState = state;
+        hasChanged = true;
 
         return this;
     }
@@ -175,6 +241,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
         }
 
         acceptStates.add(state);
+        hasChanged = true;
 
         return this;
     }
@@ -187,6 +254,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
         }
 
         acceptStates.remove(state);
+        hasChanged = true;
 
         return this;
     }
@@ -195,6 +263,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
     public MutableAutomaton<S> resetAcceptStates()
     {
         acceptStates.clear();
+        hasChanged = true;
 
         return this;
     }
@@ -207,6 +276,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
         }
 
         dept.addTransition(symbol, dest);
+        hasChanged = true;
 
         return this;
     }
