@@ -21,9 +21,9 @@ import static core.Parameters.estimateExtendedSize;
 
 public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
 {
-    protected final Alphabet<S> alphabet;
     protected final MutableSet<State<S>> states;
     protected final MutableSet<State<S>> acceptStates;
+    private Alphabet<S> alphabet;
     private State<S> startState;
 
     protected boolean hasChanged;
@@ -180,6 +180,18 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
         return new TransitionGraphView();
     }
 
+    @Override
+    public MutableAutomaton<S> setAlphabet(Alphabet<S> alphabet)
+    {
+        if (states.anySatisfy(that -> !alphabet.asSet().containsAllIterable(that.enabledSymbols()))) {
+            throw new IllegalArgumentException("given alphabet does not contain all used symbols");
+        }
+
+        this.alphabet = alphabet;
+
+        return this;
+    }
+
     protected abstract MutableState<S> createState();
 
     @Override
@@ -273,6 +285,9 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
     {
         if (!states.containsAllArguments(dept, dest)) {
             throw new IllegalArgumentException(NONEXISTING_STATE);
+        }
+        if (!alphabet.asSet().contains(symbol)) {
+            throw new IllegalArgumentException("symbol given does not exist in the alphabet");
         }
 
         dept.addTransition(symbol, dest);

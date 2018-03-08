@@ -39,7 +39,7 @@ public class BasicMutableFST<S, T> extends AbstractMutableFST<S, T> implements M
     @Override
     protected MutableState<Pair<S, T>> createState()
     {
-        return new MapSetState<>(alphabet.size());
+        return new MapSetState<>(alphabet().size());
     }
 
     @Override

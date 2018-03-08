@@ -58,7 +58,7 @@ public class BasicMutableFSA<S> extends AbstractMutableFSA<S> implements Mutable
     @Override
     protected MutableState<S> createState()
     {
-        return new MapSetState<>(alphabet.size());
+        return new MapSetState<>(alphabet().size());
     }
 
     @Override

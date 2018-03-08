@@ -1,6 +1,7 @@
 package core.automata.fsa;
 
 import api.automata.Alphabet;
+import api.automata.MutableAutomaton;
 import api.automata.MutableState;
 import api.automata.fsa.MutableFSA;
 import core.automata.AbstractMutableAutomaton;
@@ -15,6 +16,12 @@ public abstract class AbstractMutableFSA<S> extends AbstractMutableAutomaton<S> 
     public AbstractMutableFSA(AbstractMutableFSA<S> toCopy, boolean deep)
     {
         super(toCopy, deep);
+    }
+
+    @Override
+    public MutableFSA<S> setAlphabet(Alphabet<S> alphabet)
+    {
+        return (MutableFSA<S>) super.setAlphabet(alphabet);
     }
 
     @Override

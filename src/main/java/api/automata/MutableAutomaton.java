@@ -18,6 +18,8 @@ public interface MutableAutomaton<S> extends Automaton<S>
         return this;
     }
 
+    MutableAutomaton<S> setAlphabet(Alphabet<S> alphabet);
+
     default MutableAutomaton<S> addSymbol(S symbol)
     {
         throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);

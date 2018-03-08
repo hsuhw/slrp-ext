@@ -63,6 +63,9 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
     }
 
     @Override
+    MutableFSA<S> setAlphabet(Alphabet<S> alphabet);
+
+    @Override
     MutableFSA<S> addState(MutableState<S> state);
 
     @Override

@@ -74,6 +74,9 @@ public interface MutableFST<S, T> extends MutableAutomaton<Pair<S, T>>, FST<S, T
     }
 
     @Override
+    MutableFST<S, T> setAlphabet(Alphabet<Pair<S, T>> alphabet);
+
+    @Override
     MutableFST<S, T> addState(MutableState<Pair<S, T>> state);
 
     @Override
