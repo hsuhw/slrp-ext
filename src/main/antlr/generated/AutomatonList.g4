@@ -6,6 +6,6 @@ import Automaton;
 package generated;
 }
 
-automata
+automatonList
     : automaton*
     ;

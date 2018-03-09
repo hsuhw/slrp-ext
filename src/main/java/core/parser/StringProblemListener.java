@@ -2,49 +2,52 @@ package core.parser;
 
 import api.automata.Alphabet;
 import api.automata.Alphabets;
+import api.automata.MutableAutomaton;
 import api.automata.fsa.FSA;
+import api.automata.fsa.FSAs;
+import api.automata.fst.FST;
+import api.automata.fst.FSTs;
 import api.proof.Problem;
-import core.parser.fsa.FSAListener;
 import core.proof.BasicProblem;
 import generated.ProblemBaseListener;
 import org.eclipse.collections.api.list.ListIterable;
+import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.tuple.Tuples;
 import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
 
-import static api.util.Values.DISPLAY_EPSILON_SYMBOL;
+import static api.util.Constants.DISPLAY_EPSILON_SYMBOL;
 import static generated.ProblemParser.*;
 
 public class StringProblemListener extends ProblemBaseListener
 {
     private static final String EPSILON_SYMBOL = DISPLAY_EPSILON_SYMBOL;
-    private static final Twin<String> TRANSDUCER_EPSILON_SYMBOL = Tuples.twin(EPSILON_SYMBOL, EPSILON_SYMBOL);
+    private static final Twin<String> TWIN_EPSILON_SYMBOL = Tuples.twin(EPSILON_SYMBOL, EPSILON_SYMBOL);
 
+    private final FSAListener fsaListener;
+    private final FSTListener fstListener;
     private int commonCapacity;
     private Alphabet.Builder<String> alphabetRecorder;
-    private FSAPartListener initialConfigsListener;
-    private FSAPartListener finalConfigsListener;
-    private TransducerPartListener schedulerListener;
-    private TransducerPartListener processListener;
-    private FSAPartListener invariantListener;
-    private TransducerPartListener orderListener;
     private IntIntPair invSize;
     private IntIntPair ordSize;
     private boolean invEnclosesAll;
 
-    public ListIterable<Problem<String>> getProblem()
+    public StringProblemListener()
     {
-        final FSA<String> init = initialConfigsListener.getAutomata().getOnly();
-        final FSA<String> fin = finalConfigsListener.getAutomata().getOnly();
-        final ListIterable<FSA<String>> invariantParsed = invariantListener.getAutomata();
-        final FSA<String> inv = invariantParsed.notEmpty() ? invariantParsed.getOnly() : null;
-        final Alphabet<Twin<String>> relationAlphabet = Alphabets.product(init.alphabet());
-        final FSA<Twin<String>> sched = schedulerListener.getAutomataWith(relationAlphabet).getOnly();
-        final FSA<Twin<String>> proc = processListener.getAutomataWith(relationAlphabet).getOnly();
-        final ListIterable<FSA<Twin<String>>> orderParsed = orderListener.getAutomataWith(relationAlphabet);
-        final FSA<Twin<String>> ord = orderParsed.notEmpty() ? orderParsed.getOnly() : null;
+        fsaListener = new FSAListener();
+        fstListener = new FSTListener();
+    }
+
+    public ListIterable<Problem<String>> result()
+    {
+        final FSA<String> init = fsaListener.result().get(0);
+        final FSA<String> fin = fsaListener.result().get(1);
+        final FSA<String> inv = fsaListener.result().getLastOptional().orElse(null);
+        final FST<String, String> sched = fstListener.result().get(0);
+        final FST<String, String> proc = fstListener.result().get(1);
+        final FST<String, String> ord = fstListener.result().getLastOptional().orElse(null);
         final Problem<String> problem = new BasicProblem<>(init, fin, sched, proc, inv, ord, invSize, ordSize,
                                                            invEnclosesAll);
 
@@ -56,48 +59,42 @@ public class StringProblemListener extends ProblemBaseListener
     {
         commonCapacity = (ctx.getStop().getLine() - ctx.getStart().getLine()) / 4; // loose upper bound
         alphabetRecorder = Alphabets.builder(commonCapacity, EPSILON_SYMBOL);
-        initialConfigsListener = new FSAPartListener();
-        finalConfigsListener = new FSAPartListener();
-        invariantListener = new FSAPartListener();
-        schedulerListener = new TransducerPartListener();
-        processListener = new TransducerPartListener();
-        orderListener = new TransducerPartListener();
     }
 
     @Override
     public void enterInitialConfigs(InitialConfigsContext ctx)
     {
-        ctx.automaton().enterRule(initialConfigsListener);
+        ctx.automaton().enterRule(fsaListener);
     }
 
     @Override
     public void enterFinalConfigs(FinalConfigsContext ctx)
     {
-        ctx.automaton().enterRule(finalConfigsListener);
+        ctx.automaton().enterRule(fsaListener);
     }
 
     @Override
     public void enterScheduler(SchedulerContext ctx)
     {
-        ctx.transducer().enterRule(schedulerListener);
+        ctx.transducer().enterRule(fstListener);
     }
 
     @Override
     public void enterProcess(ProcessContext ctx)
     {
-        ctx.transducer().enterRule(processListener);
+        ctx.transducer().enterRule(fstListener);
     }
 
     @Override
     public void enterInvariant(InvariantContext ctx)
     {
-        ctx.automaton().enterRule(invariantListener);
+        ctx.automaton().enterRule(fsaListener);
     }
 
     @Override
     public void enterOrder(OrderContext ctx)
     {
-        ctx.transducer().enterRule(orderListener);
+        ctx.transducer().enterRule(fstListener);
     }
 
     private static IntIntPair sortedIntIntPair(int one, int two)
@@ -133,24 +130,33 @@ public class StringProblemListener extends ProblemBaseListener
         invEnclosesAll = true;
     }
 
-    private class FSAPartListener extends ProblemBaseListener
+    private class FSAListener extends ProblemBaseListener
     {
-        private final FSAListener<String> impl;
+        private final AbstractAutomatonListListener<String> listener;
 
-        private FSAPartListener()
+        private FSAListener()
         {
-            impl = new FSAListener<>(alphabetRecorder);
+            listener = new AbstractAutomatonListListener<>(alphabetRecorder)
+            {
+                @Override
+                protected MutableAutomaton<String> newBuilder(Alphabet<String> dummyAlphabet, int stateCapacity)
+                {
+                    return FSAs.create(dummyAlphabet, stateCapacity);
+                }
+            };
         }
 
-        private ListIterable<FSA<String>> getAutomata()
+        private ListIterable<FSA<String>> result()
         {
-            return impl.getAutomata();
+            @SuppressWarnings("unchecked")
+            final ListIterable<FSA<String>> result = (ListIterable) listener.result();
+            return result;
         }
 
         @Override
         public void enterAutomaton(AutomatonContext ctx)
         {
-            impl.enterAutomaton(ctx.getStart().getLine(), ctx.getStop().getLine());
+            listener.enterAutomaton(ctx.getStart().getLine(), ctx.getStop().getLine());
             ctx.startStates().enterRule(this);
             ctx.transitions().transition().forEach(transCtx -> transCtx.enterRule(this));
             ctx.acceptStates().enterRule(this);
@@ -160,52 +166,61 @@ public class StringProblemListener extends ProblemBaseListener
         @Override
         public void exitAutomaton(AutomatonContext ctx)
         {
-            impl.exitAutomaton();
+            listener.exitAutomaton();
         }
 
         @Override
         public void enterStartStates(StartStatesContext ctx)
         {
-            impl.enterStartStates(ctx.stateList().ID());
+            listener.enterStartStates(ctx.states().ID());
         }
 
         @Override
         public void enterTransition(TransitionContext ctx)
         {
-            final String symbol = ctx.transitionLabel().epsilonTransitionLabel() != null
-                                  ? EPSILON_SYMBOL
-                                  : ctx.transitionLabel().monadTransitionLabel().getText();
+            final String symbol = ctx.transitionLabel().emptyLabel() != null // see if it is epsilon symbol
+                                  ? EPSILON_SYMBOL : ctx.transitionLabel().simpleLabel().getText();
 
-            impl.enterTransition(ctx.ID(), symbol);
+            listener.enterTransition(ctx.ID(), symbol);
         }
 
         @Override
         public void enterAcceptStates(AcceptStatesContext ctx)
         {
-            impl.enterAcceptStates(ctx.stateList().ID());
+            listener.enterAcceptStates(ctx.states().ID());
         }
     }
 
-    private class TransducerPartListener extends ProblemBaseListener
+    private class FSTListener extends ProblemBaseListener
     {
-        private final FSAListener<Twin<String>> impl;
+        private final AbstractAutomatonListListener<Pair<String, String>> listener;
 
-        private TransducerPartListener()
+        private FSTListener()
         {
-            impl = new FSAListener<>(Alphabets.builder(commonCapacity, TRANSDUCER_EPSILON_SYMBOL));
+            listener = new AbstractAutomatonListListener<>(Alphabets.builder(commonCapacity, TWIN_EPSILON_SYMBOL))
+            {
+                @Override
+                protected MutableAutomaton<Pair<String, String>> newBuilder(
+                    Alphabet<Pair<String, String>> dummyAlphabet, int stateCapacity)
+                {
+                    return FSTs.create(dummyAlphabet, stateCapacity);
+                }
+            };
         }
 
-        private ListIterable<FSA<Twin<String>>> getAutomataWith(Alphabet<Twin<String>> override)
+        private ListIterable<FST<String, String>> result()
         {
-            return impl.getAutomataWith(override);
+            @SuppressWarnings("unchecked")
+            final ListIterable<FST<String, String>> result = (ListIterable) listener.result();
+            return result;
         }
 
         @Override
         public void enterTransducer(TransducerContext ctx)
         {
-            impl.enterAutomaton(ctx.getStart().getLine(), ctx.getStop().getLine());
+            listener.enterAutomaton(ctx.getStart().getLine(), ctx.getStop().getLine());
             ctx.startStates().enterRule(this);
-            ctx.transducerTransitions().transducerTransition().forEach(transCtx -> transCtx.enterRule(this));
+            ctx.inOutTransitions().inOutTransition().forEach(transCtx -> transCtx.enterRule(this));
             ctx.acceptStates().enterRule(this);
             ctx.exitRule(this);
         }
@@ -213,36 +228,32 @@ public class StringProblemListener extends ProblemBaseListener
         @Override
         public void exitTransducer(TransducerContext ctx)
         {
-            impl.exitAutomaton();
+            listener.exitAutomaton();
         }
 
         @Override
         public void enterStartStates(StartStatesContext ctx)
         {
-            impl.enterStartStates(ctx.stateList().ID());
+            listener.enterStartStates(ctx.states().ID());
         }
 
         @Override
-        public void enterTransducerTransition(TransducerTransitionContext ctx)
+        public void enterInOutTransition(InOutTransitionContext ctx)
         {
-            final Twin<String> symbol;
-            final TransducerTransitionLabelContext label = ctx.transducerTransitionLabel();
-            if (label.epsilonTransitionLabel() != null) {
-                symbol = TRANSDUCER_EPSILON_SYMBOL;
-            } else {
-                final String input = label.monadIOTransitionLabel().ID(0).getText();
-                final String output = label.monadIOTransitionLabel().ID(1).getText();
-                alphabetRecorder.add(input).add(output);
-                symbol = Tuples.twin(input, output);
-            }
+            final Pair<String, String> symbol;
+            final InOutTransitionLabelContext label = ctx.inOutTransitionLabel();
+            symbol = label.emptyLabel() != null
+                     ? TWIN_EPSILON_SYMBOL
+                     : Tuples.twin(label.slashedLabel().ID(0).getText(), label.slashedLabel().ID(1).getText());
 
-            impl.enterTransition(ctx.ID(), symbol);
+            alphabetRecorder.add(symbol.getOne()).add(symbol.getTwo());
+            listener.enterTransition(ctx.ID(), symbol);
         }
 
         @Override
         public void enterAcceptStates(AcceptStatesContext ctx)
         {
-            impl.enterAcceptStates(ctx.stateList().ID());
+            listener.enterAcceptStates(ctx.states().ID());
         }
     }
 }

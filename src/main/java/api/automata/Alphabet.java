@@ -19,6 +19,11 @@ public interface Alphabet<S>
         return asSet().difference(Sets.immutable.of(epsilon()));
     }
 
+    default boolean contains(S symbol)
+    {
+        return asSet().contains(symbol);
+    }
+
     @Override
     int hashCode();
 

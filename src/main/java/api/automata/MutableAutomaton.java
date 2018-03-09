@@ -2,8 +2,6 @@ package api.automata;
 
 import org.eclipse.collections.api.RichIterable;
 
-import java.util.function.Function;
-
 import static api.util.Constants.DISPLAY_STATE_NAME_PREFIX;
 import static common.util.Constants.*;
 
@@ -26,6 +24,11 @@ public interface MutableAutomaton<S> extends Automaton<S>
     }
 
     MutableState<S> newState();
+
+    default MutableState<S> newState(String name)
+    {
+        return newState().setName(name);
+    }
 
     MutableAutomaton<S> addState(MutableState<S> state);
 

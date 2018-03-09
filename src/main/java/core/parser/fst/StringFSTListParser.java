@@ -1,6 +1,6 @@
-package core.parser.fsa;
+package core.parser.fst;
 
-import api.automata.fsa.FSA;
+import api.automata.fst.FST;
 import api.parser.Parser;
 import common.util.Stopwatch;
 import core.parser.AbstractAntlrParser;
@@ -16,21 +16,21 @@ import org.eclipse.collections.api.list.ListIterable;
 
 import static api.parser.Parser.SymbolPolicy.SEPARATE;
 
-public class StringFSAListParser extends AbstractAntlrParser<FSA<String>> implements Parser<FSA<String>>
+public class StringFSTListParser extends AbstractAntlrParser<FST<String, String>> implements Parser<FST<String, String>>
 {
     private static final Logger LOGGER = LogManager.getLogger();
 
     private long profilingStartTime;
 
     @Override
-    protected ListIterable<FSA<String>> parse(CharStream charStream)
+    protected ListIterable<FST<String, String>> parse(CharStream charStream)
     {
         LOGGER.info("Invoke the Automata parsing at thread time {}ms.", //
                     () -> (profilingStartTime = Stopwatch.currentThreadCpuTimeInMs()));
 
         final TokenStream tokens = new CommonTokenStream(new AutomatonListLexer(charStream));
         final AutomatonListParser parseTreeHandler = new AutomatonListParser(tokens);
-        final StringFSAListListener collector = new StringFSAListListener(SEPARATE);
+        final StringFSTListListener collector = new StringFSTListListener(SEPARATE);
         final ParseTreeWalker parseTreeWalker = new ParseTreeWalker();
         parseTreeWalker.walk(collector, parseTreeHandler.automatonList());
 

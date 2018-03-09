@@ -177,7 +177,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
     @Override
     public MutableAutomaton.TransitionGraph<S> transitionGraph()
     {
-        return new TransitionGraphView();
+        return new TransitionGraph();
     }
 
     @Override
@@ -286,7 +286,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
         if (!states.containsAllArguments(dept, dest)) {
             throw new IllegalArgumentException(NONEXISTING_STATE);
         }
-        if (!alphabet.asSet().contains(symbol)) {
+        if (!alphabet.contains(symbol)) {
             throw new IllegalArgumentException("symbol given does not exist in the alphabet");
         }
 
@@ -302,15 +302,37 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
         return toString("", "");
     }
 
-    private class TransitionGraphView implements MutableAutomaton.TransitionGraph<S>
+    private class TransitionGraph implements MutableAutomaton.TransitionGraph<S>
     {
+        int size = -1;
+        SetIterable<S> referredArcLabels;
+
         @Override
         public Automaton<S> automaton()
         {
             return AbstractMutableAutomaton.this;
         }
-    }
 
+        @Override
+        public SetIterable<S> referredArcLabels()
+        {
+            if (!hasChanged && referredArcLabels != null) {
+                return referredArcLabels;
+            }
+
+            return (referredArcLabels = MutableAutomaton.TransitionGraph.super.referredArcLabels());
+        }
+
+        @Override
+        public int size()
+        {
+            if (!hasChanged && size != -1) {
+                return size;
+            }
+
+            return (size = MutableAutomaton.TransitionGraph.super.size());
+        }
+    }
 
     protected class ProductHandler<T, R>
     {

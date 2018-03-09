@@ -3,23 +3,23 @@ grammar Transducer;
 import Tokens, Automaton;
 
 transducer
-    : ID? '{' startStates transducerTransitions acceptStates '}'
+    : ID? '{' startStates inOutTransitions acceptStates '}'
     ;
 
-transducerTransitions
-    : (transducerTransition ';')*
+inOutTransitions
+    : (inOutTransition ';')*
     ;
 
-transducerTransition
-    : ID '->' ID '[' transducerTransitionLabel ']'
-    | ID '->' ID transducerTransitionLabel
+inOutTransition
+    : ID '->' ID '[' inOutTransitionLabel ']'
+    | ID '->' ID inOutTransitionLabel
     ;
 
-transducerTransitionLabel
-    : epsilonTransitionLabel
-    | monadIOTransitionLabel
+inOutTransitionLabel
+    : emptyLabel
+    | slashedLabel
     ;
 
-monadIOTransitionLabel
+slashedLabel
     : ID '/' ID
     ;

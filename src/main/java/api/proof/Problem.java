@@ -1,7 +1,7 @@
 package api.proof;
 
 import api.automata.fsa.FSA;
-import org.eclipse.collections.api.tuple.Twin;
+import api.automata.fst.FST;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
 
 public interface Problem<S>
@@ -10,13 +10,13 @@ public interface Problem<S>
 
     FSA<S> finalConfigs();
 
-    FSA<Twin<S>> scheduler();
+    FST<S, S> scheduler();
 
-    FSA<Twin<S>> process();
+    FST<S, S> process();
 
     FSA<S> invariant();
 
-    FSA<Twin<S>> order();
+    FST<S, S> order();
 
     IntIntPair invariantSizeBound();
 

@@ -2,11 +2,11 @@ package core.parser;
 
 import api.parser.Parser;
 import api.proof.Problem;
+import common.util.Stopwatch;
 import generated.ProblemLexer;
+import generated.ProblemParser;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.TokenStream;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,26 +16,22 @@ public class StringProblemParser extends AbstractAntlrParser<Problem<String>> im
 {
     private static final Logger LOGGER = LogManager.getLogger();
 
+    private long profilingStartTime;
+
     @Override
     protected ListIterable<Problem<String>> parse(CharStream charStream)
     {
-        LOGGER.info("Invoke the Problem instance parsing on a given source.");
-        final long startTime = System.currentTimeMillis();
+        LOGGER.info("Invoke the Problem parsing at thread time {}ms.", //
+                    () -> (profilingStartTime = Stopwatch.currentThreadCpuTimeInMs()));
 
-        // parse the source
-        final ProblemLexer lexer = new ProblemLexer(charStream);
-        final TokenStream tokens = new CommonTokenStream(lexer);
-        final generated.ProblemParser parser = new generated.ProblemParser(tokens);
-        final ParseTree tree = parser.problem();
-
-        // build from the parsed tree
-        final ParseTreeWalker walker = new ParseTreeWalker();
+        final ProblemParser parseTreeHandler = new ProblemParser(new CommonTokenStream(new ProblemLexer(charStream)));
+        final ParseTreeWalker parseTreeWalker = new ParseTreeWalker();
         final StringProblemListener collector = new StringProblemListener();
-        walker.walk(collector, tree);
+        parseTreeWalker.walk(collector, parseTreeHandler.problem());
 
-        final long endTime = System.currentTimeMillis();
-        LOGGER.info("Source parsed in {}ms.", endTime - startTime);
+        LOGGER.info("Problem parsed in {}ms.", //
+                    () -> Stopwatch.currentThreadCpuTimeInMs() - profilingStartTime);
 
-        return collector.getProblem();
+        return collector.result();
     }
 }

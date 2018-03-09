@@ -121,7 +121,6 @@ public interface Automaton<S>
 
     interface TransitionGraph<S> extends Digraph<State<S>, S>
     {
-
         Automaton<S> automaton();
 
         @Override
@@ -139,7 +138,9 @@ public interface Automaton<S>
         @Override
         default SetIterable<S> referredArcLabels()
         {
-            return automaton().alphabet().asSet();
+            final MutableSet<S> set = UnifiedSet.newSet(automaton().alphabet().size()); // almost sure upper bound
+
+            return automaton().states().flatCollect(State::enabledSymbols, set);
         }
 
         @Override

@@ -1,8 +1,10 @@
 package common;
 
 import org.eclipse.collections.api.RichIterable;
+import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 
 public interface Digraph<N, A>
 {
@@ -32,7 +34,9 @@ public interface Digraph<N, A>
 
     default SetIterable<N> directSuccessorsOf(SetIterable<N> nodes, A arcLabel)
     {
-        return nodes.flatCollect(state -> directSuccessorsOf(state, arcLabel)).toSet(); // one-off
+        final MutableSet<N> set = UnifiedSet.newSet(referredNodes().size()); // upper bound
+
+        return nodes.flatCollect(state -> directSuccessorsOf(state, arcLabel), set); // one-off
     }
 
     SetIterable<N> directPredecessorsOf(N node);
@@ -41,7 +45,9 @@ public interface Digraph<N, A>
 
     default SetIterable<N> directPredecessorsOf(SetIterable<N> nodes, A arcLabel)
     {
-        return nodes.flatCollect(state -> directPredecessorsOf(state, arcLabel)).toSet(); // one-off
+        final MutableSet<N> set = UnifiedSet.newSet(referredNodes().size()); // upper bound
+
+        return nodes.flatCollect(state -> directPredecessorsOf(state, arcLabel), set); // one-off
     }
 
     @Override

@@ -7,14 +7,14 @@ automaton
     ;
 
 startStates
-    : 'start' ':' stateList ';'
-    | 'init' ':' stateList ';'
+    : 'start' ':' states ';'
+    | 'init' ':' states ';'
     ;
 
 acceptStates
-    : 'accept' ':' stateList ';'
-    | 'acc' ':' stateList ';'
-    | 'accepting' ':' stateList ';'
+    : 'accept' ':' states ';'
+    | 'acc' ':' states ';'
+    | 'accepting' ':' states ';'
     ;
 
 transitions
@@ -27,23 +27,23 @@ transition
     ;
 
 transitionLabel
-    : epsilonTransitionLabel
-    | monadTransitionLabel
-    | pairTransitionLabel
+    : emptyLabel
+    | simpleLabel
+    | pairLabel
     ;
 
-epsilonTransitionLabel
+emptyLabel
     :
     ;
 
-monadTransitionLabel
+simpleLabel
     : ID
     ;
 
-pairTransitionLabel
+pairLabel
     : ID ',' ID
     ;
 
-stateList
+states
     : ID (',' ID)*
     ;

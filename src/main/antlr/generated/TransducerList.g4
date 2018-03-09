@@ -6,6 +6,6 @@ import Transducer;
 package generated;
 }
 
-transducers
+transducerList
     : transducer*
     ;
