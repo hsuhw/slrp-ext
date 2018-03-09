@@ -165,22 +165,22 @@ public class Sat4jSolverAdapter implements SatSolver
             return model != NONSOLUTION;
         }
 
-        LOGGER.info("Invoke a SAT solving on SAT4J at thread time {}ms.",
+        LOGGER.info("Invoke a SAT solving on SAT4J at thread time {}ms.", //
                     () -> (profilingStartTime = Stopwatch.currentThreadCpuTimeInMs()));
         try {
             if (solver.isSatisfiable()) {
-                LOGGER.info("SAT4J found a solution in {}ms.",
+                LOGGER.info("SAT4J found a solution in {}ms.", //
                             () -> Stopwatch.currentThreadCpuTimeInMs() - profilingStartTime);
                 model = IntSets.immutable.of(solver.model());
 
                 return true;
             }
         } catch (org.sat4j.specs.TimeoutException e) {
-            LOGGER.info("SAT4J failed to solve the problem within {}ms.",
+            LOGGER.info("SAT4J failed to solve the problem within {}ms.", //
                         () -> Stopwatch.currentThreadCpuTimeInMs() - profilingStartTime);
             throw new TimeoutException();
         }
-        LOGGER.info("SAT4J found it unsatisfiable in {}ms.",
+        LOGGER.info("SAT4J found it unsatisfiable in {}ms.", //
                     () -> Stopwatch.currentThreadCpuTimeInMs() - profilingStartTime);
         model = NONSOLUTION;
 
