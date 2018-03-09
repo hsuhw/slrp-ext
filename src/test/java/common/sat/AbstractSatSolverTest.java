@@ -271,19 +271,19 @@ public abstract class AbstractSatSolverTest
 
         });
 
-        describe("#markEachAsEquivalent(int...)", () -> {
+        describe("#markAllAsEquivalent(int...)", () -> {
 
             it("ensures the literals be assigned the same value (as true)", () -> {
                 // same as true
                 solver.addClause(-1, -2, -3);
-                solver.markEachAsEquivalent(1, 2, 3);
+                solver.markAllAsEquivalent(1, 2, 3);
                 solver.addClause(1);
                 expectNoModelExists();
             });
 
             it("ensures the literals be assigned the same value (as false)", () -> {
                 solver.addClause(1, 2, 3);
-                solver.markEachAsEquivalent(1, 2, 3);
+                solver.markAllAsEquivalent(1, 2, 3);
                 solver.addClause(-1);
                 expectNoModelExists();
             });
@@ -292,7 +292,7 @@ public abstract class AbstractSatSolverTest
                 solver.addClause(1);
                 solver.addClause(-2);
                 solver.addClause(3);
-                expect(() -> solver.markEachAsEquivalent(1, 2, 3)).toThrow(ContradictionException.class);
+                expect(() -> solver.markAllAsEquivalent(1, 2, 3)).toThrow(ContradictionException.class);
             });
 
         });

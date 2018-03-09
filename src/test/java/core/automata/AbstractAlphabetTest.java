@@ -34,7 +34,7 @@ public abstract class AbstractAlphabetTest
 
             it("meets a minimum expectation", () -> {
                 final Alphabet<Object> alphabet = newBuilder(3, e).add(a1).add(a2).build();
-                final Alphabet<Pair<Object, Object>> product = Alphabets.product(alphabet);
+                final Alphabet<Pair<Object, Object>> product = Alphabets.product(alphabet, alphabet);
                 expect(product.size()).toEqual(5);
                 expect(product.asSet().containsAllArguments(p1, p2, p3, p4)).toBeTrue();
             });
