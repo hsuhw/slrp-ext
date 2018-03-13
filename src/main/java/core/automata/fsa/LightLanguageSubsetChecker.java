@@ -9,6 +9,7 @@ import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.factory.Lists;
+import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.tuple.Tuples;
 
@@ -18,34 +19,34 @@ import java.util.Queue;
 import static common.util.Constants.DISPLAY_INDENT;
 import static common.util.Constants.DISPLAY_NEWLINE;
 
-public class LightLanguageSubsetChecker<S> implements LanguageSubsetChecker<S>
+public class LightLanguageSubsetChecker implements LanguageSubsetChecker
 {
     @Override
-    public Result test(FSA<S> subsumer, FSA<S> includer)
+    public <S> Result<S> test(FSA<S> subsumer, FSA<S> includer)
     {
         if (!subsumer.alphabet().epsilon().equals(includer.alphabet().epsilon())) {
             throw new IllegalArgumentException("incompatible two alphabet given");
         }
 
         if (subsumer.acceptsNone()) { // anyone includes empty
-            return new Result(true, null);
+            return new Result<>(true, null);
         }
         if (includer.acceptsNone()) { // empty includes nobody
-            return new Result(false, new Counterexample(subsumer.enumerateOneShortest()));
+            return new Result<>(false, new Counterexample<>(subsumer.enumerateOneShortest()));
         }
         final FSA<S> includerFixed = includer.determinize().complete();
         if (includerFixed.complement().acceptsNone()) { // universe includes anyone
-            return new Result(true, null);
+            return new Result<>(true, null);
         }
 
-        final ListIterable<S> divergentWitness = new DivergentWitnessBFS(subsumer, includerFixed).run();
+        final ListIterable<S> divergentWitness = new DivergentWitnessBFS<>(subsumer, includerFixed.minimize()).run();
 
         return divergentWitness == null
-               ? new Result(true, null)
-               : new Result(false, new Counterexample(divergentWitness));
+               ? new Result<>(true, null)
+               : new Result<>(false, new Counterexample<>(divergentWitness));
     }
 
-    private class DivergentWitnessBFS
+    private class DivergentWitnessBFS<S>
     {
         private final S epsilon;
         private final FSA<S> subsumer;
@@ -64,33 +65,28 @@ public class LightLanguageSubsetChecker<S> implements LanguageSubsetChecker<S>
             pendingChecks = new LinkedList<>();
         }
 
-        private void visit(Twin<State<S>> target, Twin<State<S>> fromPair, S withSymbol)
+        private void visit(Twin<State<S>> target, Twin<State<S>> from, S withSymbol)
         {
             visitRecord.computeIfAbsent(target, pair -> {
                 pendingChecks.add(pair);
-                return Tuples.pair(fromPair, withSymbol);
+                return Tuples.pair(from, withSymbol);
             });
-        }
-
-        private void handleEpsilonTransitions(Twin<State<S>> statePair)
-        {
-            final State<S> dept1 = statePair.getOne();
-            final State<S> dept2 = statePair.getOne();
-            dept1.successors(epsilon).forEach(dest -> visit(Tuples.twin(dest, dept2), statePair, epsilon));
-            if (dept2.enabledSymbols().contains(epsilon)) {
-                throw new IllegalStateException("includer should be deterministic");
-            }
         }
 
         private ListIterable<S> witnessFoundAt(Twin<State<S>> statePair, S breakingStep)
         {
-            final MutableList<S> witnessBacktrace = Lists.mutable.empty();
+            final MutableList<S> witnessBacktrace = FastList.newList();
 
-            witnessBacktrace.add(breakingStep);
+            if (breakingStep != epsilon) {
+                witnessBacktrace.add(breakingStep);
+            }
             Twin<State<S>> currStatePair = statePair;
+            S currSymbol;
             while (!currStatePair.equals(startStatePair)) {
                 final Pair<Twin<State<S>>, S> visitorAndSymbol = visitRecord.get(currStatePair);
-                witnessBacktrace.add(visitorAndSymbol.getTwo());
+                if (!(currSymbol = visitorAndSymbol.getTwo()).equals(epsilon)) {
+                    witnessBacktrace.add(currSymbol);
+                }
                 currStatePair = visitorAndSymbol.getOne();
             }
 
@@ -105,19 +101,19 @@ public class LightLanguageSubsetChecker<S> implements LanguageSubsetChecker<S>
 
             visit(startStatePair, null, null);
             Twin<State<S>> currStatePair;
-            boolean includerAcceptsHere;
+            State<S> dept1, dept2, dest2;
+            boolean includerAccepts;
             while ((currStatePair = pendingChecks.poll()) != null) {
-                handleEpsilonTransitions(currStatePair);
-                final State<S> dept1 = currStatePair.getOne();
-                final State<S> dept2 = currStatePair.getOne();
+                dept1 = currStatePair.getOne();
+                dept2 = currStatePair.getTwo();
+                if (dept2.enabledSymbols().contains(epsilon)) {
+                    throw new IllegalStateException("includer should be deterministic");
+                }
                 for (S symbol : dept1.enabledSymbols()) {
-                    if (symbol.equals(epsilon)) {
-                        continue; // already handled
-                    }
-                    final State<S> dest2 = dept2.successor(symbol); // includer should be deterministic
-                    includerAcceptsHere = includer.isAcceptState(dest2);
+                    dest2 = symbol.equals(epsilon) ? dept2 : dept2.successor(symbol);
+                    includerAccepts = includer.isAcceptState(dest2);
                     for (State<S> dest1 : dept1.successors(symbol)) {
-                        if (subsumer.isAcceptState(dest1) && !includerAcceptsHere) {
+                        if (subsumer.isAcceptState(dest1) && !includerAccepts) {
                             return witnessFoundAt(currStatePair, symbol);
                         }
                         visit(Tuples.twin(dest1, dest2), currStatePair, symbol);
@@ -129,12 +125,12 @@ public class LightLanguageSubsetChecker<S> implements LanguageSubsetChecker<S>
         }
     }
 
-    private class Result implements LanguageSubsetChecker.Result<S>
+    private class Result<S> implements LanguageSubsetChecker.Result<S>
     {
         private final boolean passed;
-        private final Counterexample counterexample;
+        private final Counterexample<S> counterexample;
 
-        private Result(boolean passed, Counterexample counterexample)
+        private Result(boolean passed, Counterexample<S> counterexample)
         {
             this.passed = passed;
             this.counterexample = counterexample;
@@ -147,7 +143,7 @@ public class LightLanguageSubsetChecker<S> implements LanguageSubsetChecker<S>
         }
 
         @Override
-        public Counterexample counterexample()
+        public Counterexample<S> counterexample()
         {
             return counterexample;
         }
@@ -159,7 +155,7 @@ public class LightLanguageSubsetChecker<S> implements LanguageSubsetChecker<S>
         }
     }
 
-    private class Counterexample implements LanguageSubsetChecker.Counterexample<S>
+    private class Counterexample<S> implements LanguageSubsetChecker.Counterexample<S>
     {
         private ListIterable<S> instance;
 
@@ -175,7 +171,7 @@ public class LightLanguageSubsetChecker<S> implements LanguageSubsetChecker<S>
         }
 
         @Override
-        public ListIterable<S> get()
+        public ListIterable<S> witness()
         {
             return instance;
         }
@@ -183,7 +179,7 @@ public class LightLanguageSubsetChecker<S> implements LanguageSubsetChecker<S>
         @Override
         public String toString()
         {
-            return "witness of nonincluded parts: " + get();
+            return "witness of nonincluded parts: " + witness();
         }
     }
 }

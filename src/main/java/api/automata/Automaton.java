@@ -275,6 +275,10 @@ public interface Automaton<S>
 
         default SetIterable<State<S>> epsilonClosureOf(SetIterable<State<S>> nodes, S arcLabel)
         {
+            if (automaton().isDeterministic()) {
+                throw new UnsupportedOperationException("only available on nondeterministic instances");
+            }
+
             MutableSet<State<S>> base = UnifiedSet.newSet(referredNodes().size()); // upper bound
             base.addAllIterable(nodes);
             while (true) {

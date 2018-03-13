@@ -1,25 +1,25 @@
 package core.proof;
 
 import api.automata.fsa.FSA;
+import api.automata.fst.FST;
 import api.proof.Problem;
-import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
 
 public class BasicProblem<S> implements Problem<S>
 {
     private final FSA<S> initialConfigs;
     private final FSA<S> finalConfigs;
-    private final FSA<Twin<S>> scheduler;
-    private final FSA<Twin<S>> process;
+    private final FST<S, S> scheduler;
+    private final FST<S, S> process;
     private final FSA<S> invariant;
-    private final FSA<Twin<S>> order;
+    private final FST<S, S> order;
     private final IntIntPair invariantSizeBound;
     private final IntIntPair orderSizeBound;
     private final boolean invariantEnclosesAllBehavior;
 
-    public BasicProblem(FSA<S> initialConfigs, FSA<S> finalConfigs, FSA<Twin<S>> scheduler, FSA<Twin<S>> process,
-                        FSA<S> invariant, FSA<Twin<S>> order, IntIntPair invariantSizeBound, IntIntPair orderSizeBound,
-                        boolean invariantEnclosesAll)
+    public BasicProblem(FSA<S> initialConfigs, FSA<S> finalConfigs, FST<S, S> scheduler, FST<S, S> process,
+        FSA<S> invariant, FST<S, S> order, IntIntPair invariantSizeBound, IntIntPair orderSizeBound,
+        boolean invariantEnclosesAll)
     {
         this.initialConfigs = initialConfigs;
         this.finalConfigs = finalConfigs;
@@ -45,13 +45,13 @@ public class BasicProblem<S> implements Problem<S>
     }
 
     @Override
-    public FSA<Twin<S>> scheduler()
+    public FST<S, S> scheduler()
     {
         return scheduler;
     }
 
     @Override
-    public FSA<Twin<S>> process()
+    public FST<S, S> process()
     {
         return process;
     }
@@ -63,7 +63,7 @@ public class BasicProblem<S> implements Problem<S>
     }
 
     @Override
-    public FSA<Twin<S>> order()
+    public FST<S, S> order()
     {
         return order;
     }

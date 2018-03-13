@@ -1,29 +1,28 @@
 package core.proof;
 
 import api.automata.fsa.FSA;
-import api.automata.fsa.FSAs;
 import api.automata.fsa.LanguageSubsetChecker;
+import api.automata.fst.FST;
 import api.proof.BehaviorEnclosureChecker;
-import org.eclipse.collections.api.list.ImmutableList;
-import org.eclipse.collections.api.set.ImmutableSet;
-import org.eclipse.collections.api.tuple.Twin;
+import org.eclipse.collections.api.RichIterable;
+import org.eclipse.collections.api.list.ListIterable;
 
-import static api.util.Values.DISPLAY_INDENT;
-import static api.util.Values.DISPLAY_NEWLINE;
+import static common.util.Constants.DISPLAY_INDENT;
+import static common.util.Constants.DISPLAY_NEWLINE;
 
 public class BasicBehaviorEnclosureChecker implements BehaviorEnclosureChecker
 {
     @Override
-    public <S> Result<S> test(FSA<Twin<S>> behavior, FSA<S> encloser)
+    public <S> Result<S> test(FST<S, S> behavior, FSA<S> encloser)
     {
-        final FSA<S> postBehavior = Transducers.postImage(behavior, encloser);
-        final LanguageSubsetChecker.Result<S> postBehaviorEnclosed = FSAs.checkSubset(postBehavior, encloser);
+        final FSA<S> postBehavior = behavior.postImage(encloser);
+        final LanguageSubsetChecker.Result<S> enclosureCheck = encloser.checkContaining(postBehavior);
 
-        if (postBehaviorEnclosed.passed()) {
+        if (enclosureCheck.passed()) {
             return new Result<>(true, null);
         }
 
-        return new Result<>(false, new Counterexample<>(behavior, postBehaviorEnclosed.counterexample().get()));
+        return new Result<>(false, new Counterexample<>(behavior, enclosureCheck.counterexample().witness()));
     }
 
     private class Result<S> implements BehaviorEnclosureChecker.Result<S>
@@ -58,36 +57,36 @@ public class BasicBehaviorEnclosureChecker implements BehaviorEnclosureChecker
 
     private class Counterexample<S> implements BehaviorEnclosureChecker.Counterexample<S>
     {
-        private ImmutableList<S> instance;
-        private final FSA<Twin<S>> behavior;
-        private ImmutableSet<ImmutableList<S>> causes;
+        private final ListIterable<S> invalidStep;
+        private final FST<S, S> behavior;
+        private RichIterable<ListIterable<S>> causes;
 
-        private Counterexample(FSA<Twin<S>> behavior, ImmutableList<S> instance)
+        private Counterexample(FST<S, S> behavior, ListIterable<S> instance)
         {
             this.behavior = behavior;
-            this.instance = instance;
+            this.invalidStep = instance;
         }
 
         @Override
-        public ImmutableSet<ImmutableList<S>> causes()
+        public RichIterable<ListIterable<S>> causes()
         {
             if (causes == null) {
-                causes = Transducers.preImage(behavior, get());
+                causes = behavior.preImage(invalidStep);
             }
 
             return causes;
         }
 
         @Override
-        public ImmutableList<S> get()
+        public ListIterable<S> invalidStep()
         {
-            return instance;
+            return invalidStep;
         }
 
         @Override
         public String toString()
         {
-            return "witness of nonenclosed parts: " + get() + " causes: " + causes().makeString();
+            return "witness of nonenclosed parts: " + invalidStep() + " causes: " + causes().makeString();
         }
     }
 }

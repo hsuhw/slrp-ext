@@ -1,8 +1,10 @@
 package api.automata.fst;
 
 import api.automata.*;
+import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.automata.fsa.MutableFSA;
+import api.util.Connectives;
 import core.automata.fst.BasicMutableFST;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.map.MutableMap;
@@ -12,6 +14,7 @@ import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 
 import java.util.function.Function;
 
+import static api.util.Connectives.AND;
 import static api.util.Constants.NONEXISTING_STATE;
 import static common.util.Constants.NOT_IMPLEMENTED_YET;
 
@@ -122,6 +125,13 @@ public interface MutableFST<S, T> extends MutableAutomaton<Pair<S, T>>, FST<S, T
     }
 
     @Override
+    default FST<S, T> intersect(FST<S, T> target)
+    {
+        return (FST<S, T>) product(target, alphabet(), Connectives.Labels.matched(),
+                                   Connectives.AcceptStates.select(this, target, AND)); // one-off
+    }
+
+    @Override
     default FST<S, T> union(FST<S, T> target)
     {
         if (!(target instanceof MutableFST<?, ?>) || !alphabet().equals(target.alphabet())) {
@@ -135,9 +145,15 @@ public interface MutableFST<S, T> extends MutableAutomaton<Pair<S, T>>, FST<S, T
         final MutableState<Pair<S, T>> newStart = result.newState();
         @SuppressWarnings("unchecked")
         final SetIterable<MutableState<Pair<S, T>>> targetStates = (SetIterable) target.states();
-        result.addEpsilonTransition(newStart, (MutableState<Pair<S, T>>) startState()).setAsStart(newStart) //
+        result.addEpsilonTransition(newStart, (MutableState<Pair<S, T>>) startState()).setAsStart(newStart)
               .addStates(targetStates).addEpsilonTransition(newStart, (MutableState<Pair<S, T>>) target.startState());
 
         return result; // shallow reference
+    }
+
+    @Override
+    default FSA<Pair<S, T>> asFSA()
+    {
+        return FSAs.castFrom(this);
     }
 }

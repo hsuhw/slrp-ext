@@ -2,9 +2,9 @@ package api.automata.fsa;
 
 import org.eclipse.collections.api.list.ListIterable;
 
-public interface LanguageSubsetChecker<S>
+public interface LanguageSubsetChecker
 {
-    Result<S> test(FSA<S> subsumer, FSA<S> includer);
+    <S> Result<S> test(FSA<S> subsumer, FSA<S> includer);
 
     interface Result<S>
     {
@@ -25,7 +25,7 @@ public interface LanguageSubsetChecker<S>
     {
         FSA<S> sourceImage();
 
-        default ListIterable<S> get()
+        default ListIterable<S> witness()
         {
             return sourceImage().enumerateOneShortest();
         }

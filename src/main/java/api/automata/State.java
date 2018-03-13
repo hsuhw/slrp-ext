@@ -27,7 +27,7 @@ public interface State<S>
 
     default State<S> successor(S transLabel)
     {
-        return successors().getOnly();
+        return successors(transLabel).getOnly();
     }
 
     MutableState<S> toMutable();

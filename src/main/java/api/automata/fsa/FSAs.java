@@ -1,10 +1,12 @@
 package api.automata.fsa;
 
 import api.automata.Alphabet;
+import api.automata.MutableAutomaton;
 import api.automata.MutableState;
+import core.automata.AbstractMutableAutomaton;
 import core.automata.fsa.BasicMutableFSA;
+import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.list.ListIterable;
-import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -46,14 +48,20 @@ public final class FSAs
         throw new UnsupportedOperationException(NO_IMPLEMENTATION_FOUND);
     }
 
+    public static <S> FSA<S> castFrom(MutableAutomaton<S> target)
+    {
+        if (target instanceof AbstractMutableAutomaton<?>) {
+            return new BasicMutableFSA<>((AbstractMutableAutomaton<S>) target);
+        }
+
+        throw new UnsupportedOperationException(NO_IMPLEMENTATION_FOUND);
+    }
+
     private static <S> FSA<S> createAcceptingNone(Alphabet<S> alphabet)
     {
         return create(alphabet, 1);
     }
 
-    /**
-     * Should use {@link ImmutableFSA} instead of just {@link FSA}.
-     */
     public static <S> FSA<S> acceptingNone(Alphabet<S> alphabet)
     {
         Pair<SoftReference<Alphabet>, FSA> cache = NONE_CACHE.get(alphabet);
@@ -73,15 +81,13 @@ public final class FSAs
     {
         final MutableFSA<S> result = create(alphabet, 1);
 
-        final MutableState<S> state = (MutableState<S>) result.startState();
-        alphabet.noEpsilonSet().forEach(symbol -> result.addTransition(state, state, symbol));
+        final MutableState<S> startState = (MutableState<S>) result.startState();
+        alphabet.noEpsilonSet().forEach(symbol -> result.addTransition(startState, startState, symbol));
+        result.setAsAccept(startState);
 
         return result;
     }
 
-    /**
-     * Should use {@link ImmutableFSA} instead of just {@link FSA}.
-     */
     public static <S> FSA<S> acceptingAll(Alphabet<S> alphabet)
     {
         Pair<SoftReference<Alphabet>, FSA> cache = ALL_CACHE.get(alphabet);
@@ -97,18 +103,12 @@ public final class FSAs
         return result;
     }
 
-    /**
-     * Should use {@link ImmutableFSA} instead of just {@link FSA}.
-     */
     public static <S> FSA<S> acceptingOnly(Alphabet<S> alphabet, ListIterable<S> word)
     {
         return acceptingOnly(alphabet, Sets.immutable.of(word));
     }
 
-    /**
-     * Should use {@link ImmutableFSA} instead of just {@link FSA}.
-     */
-    public static <S> FSA<S> acceptingOnly(Alphabet<S> alphabet, SetIterable<ListIterable<S>> words)
+    public static <S> FSA<S> acceptingOnly(Alphabet<S> alphabet, RichIterable<ListIterable<S>> words)
     {
         final int stateCapacity = (int) words.sumOfInt(ListIterable::size); // upper bound
         final MutableFSA<S> result = create(alphabet, stateCapacity);

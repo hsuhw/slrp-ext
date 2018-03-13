@@ -5,9 +5,9 @@ import api.automata.fst.FST;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.list.ListIterable;
 
-public interface BehaviorEnclosureChecker
+public interface FairnessProgressivityChecker
 {
-    <S> Result<S> test(FST<S, S> behavior, FSA<S> encloser);
+    <S> Result<S> test(FST<S, S> behavior, FSA<S> matteringConfigs, FSA<S> invariant, FST<S, S> order);
 
     interface Result<S>
     {
@@ -26,9 +26,9 @@ public interface BehaviorEnclosureChecker
 
     interface Counterexample<S>
     {
-        RichIterable<ListIterable<S>> causes();
+        RichIterable<ListIterable<S>> possibleProgressSteps();
 
-        ListIterable<S> invalidStep();
+        ListIterable<S> fruitlessStep();
 
         @Override
         String toString();

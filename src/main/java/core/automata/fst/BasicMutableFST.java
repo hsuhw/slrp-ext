@@ -5,6 +5,7 @@ import api.automata.Automaton;
 import api.automata.MutableAutomaton;
 import api.automata.MutableState;
 import api.automata.fst.MutableFST;
+import core.automata.AbstractMutableAutomaton;
 import core.automata.MapSetState;
 import core.automata.fsa.BasicMutableFSA;
 import org.eclipse.collections.api.tuple.Pair;
@@ -19,6 +20,11 @@ public class BasicMutableFST<S, T> extends AbstractMutableFST<S, T> implements M
     public BasicMutableFST(BasicMutableFST<S, T> toCopy, boolean deep)
     {
         super(toCopy, deep);
+    }
+
+    public BasicMutableFST(AbstractMutableAutomaton<Pair<S, T>> toCast)
+    {
+        super(toCast, false);
     }
 
     @Override

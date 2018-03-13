@@ -2,12 +2,12 @@ package api.proof;
 
 import api.automata.fsa.FSA;
 import api.automata.fst.FST;
-import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.list.ListIterable;
+import org.eclipse.collections.api.tuple.Twin;
 
-public interface BehaviorEnclosureChecker
+public interface AnySchedulerProgressivityChecker
 {
-    <S> Result<S> test(FST<S, S> behavior, FSA<S> encloser);
+    <S> Result<S> test(FST<S, S> scheduler, FST<S, S> process, FSA<S> invariant, FST<S, S> order);
 
     interface Result<S>
     {
@@ -26,9 +26,7 @@ public interface BehaviorEnclosureChecker
 
     interface Counterexample<S>
     {
-        RichIterable<ListIterable<S>> causes();
-
-        ListIterable<S> invalidStep();
+        ListIterable<Twin<S>> fruitlessStep();
 
         @Override
         String toString();

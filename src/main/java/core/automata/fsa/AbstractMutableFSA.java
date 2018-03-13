@@ -1,21 +1,66 @@
 package core.automata.fsa;
 
 import api.automata.Alphabet;
-import api.automata.MutableAutomaton;
 import api.automata.MutableState;
+import api.automata.fsa.FSA;
 import api.automata.fsa.MutableFSA;
 import core.automata.AbstractMutableAutomaton;
 
 public abstract class AbstractMutableFSA<S> extends AbstractMutableAutomaton<S> implements MutableFSA<S>
 {
+    private FSA<S> determinized;
+    private FSA<S> completed;
+    private FSA<S> minimized;
+    private FSA<S> complemented;
+
     public AbstractMutableFSA(Alphabet<S> alphabet, int stateCapacity)
     {
         super(alphabet, stateCapacity);
     }
 
-    public AbstractMutableFSA(AbstractMutableFSA<S> toCopy, boolean deep)
+    public AbstractMutableFSA(AbstractMutableAutomaton<S> toCopy, boolean deep)
     {
         super(toCopy, deep);
+    }
+
+    @Override
+    public FSA<S> determinize()
+    {
+        if (!hasChanged && determinized != null) {
+            return determinized;
+        }
+
+        return (determinized = MutableFSA.super.determinize());
+    }
+
+    @Override
+    public FSA<S> complete()
+    {
+        if (!hasChanged && completed != null) {
+            return completed;
+        }
+
+        return (completed = MutableFSA.super.complete());
+    }
+
+    @Override
+    public FSA<S> minimize()
+    {
+        if (!hasChanged && minimized != null) {
+            return minimized;
+        }
+
+        return (minimized = MutableFSA.super.minimize());
+    }
+
+    @Override
+    public FSA<S> complement()
+    {
+        if (!hasChanged && complemented != null) {
+            return complemented;
+        }
+
+        return (complemented = MutableFSA.super.complement());
     }
 
     @Override

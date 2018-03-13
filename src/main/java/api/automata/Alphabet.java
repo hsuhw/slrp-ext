@@ -12,6 +12,16 @@ public interface Alphabet<S>
 
     S epsilon();
 
+    default boolean isEpsilon(S symbol)
+    {
+        return symbol.equals(epsilon());
+    }
+
+    default boolean notEpsilon(S symbol)
+    {
+        return !isEpsilon(symbol);
+    }
+
     SetIterable<S> asSet();
 
     default SetIterable<S> noEpsilonSet()

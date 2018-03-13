@@ -2,7 +2,7 @@ package cli;
 
 import org.apache.commons.cli.*;
 
-import static api.util.Values.DISPLAY_NEWLINE;
+import static common.util.Constants.DISPLAY_NEWLINE;
 
 public final class CommandLineInterface
 {

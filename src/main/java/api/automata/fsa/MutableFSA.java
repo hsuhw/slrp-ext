@@ -13,7 +13,6 @@ import java.util.Queue;
 import java.util.function.Function;
 
 import static api.util.Connectives.*;
-import static api.util.Constants.NONEXISTING_STATE;
 import static common.util.Constants.NOT_IMPLEMENTED_YET;
 
 public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
@@ -117,7 +116,7 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
             return this;
         }
 
-        final TransitionGraph<S> delta = transitionGraph();
+        final Automaton.TransitionGraph<S> delta = transitionGraph();
         final int capacity = states().size() * states().size(); // heuristic
         final MutableFSA<S> result = FSAs.create(alphabet(), capacity);
         final MutableMap<SetIterable<State<S>>, MutableState<S>> stateMapping = UnifiedMap.newMap(capacity);
@@ -175,6 +174,9 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
         }
         if (acceptsNone()) {
             return FSAs.acceptingNone(alphabet());
+        }
+        if (complement().acceptsNone()) {
+            return FSAs.acceptingAll(alphabet());
         }
 
         final FSA<S> target = trimUnreachableStates().complete();
@@ -235,16 +237,16 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
         if (!(target instanceof MutableFSA<?>) || !alphabet().equals(target.alphabet())) {
             throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
         }
-        if (!states().containsAllIterable(target.states())) {
-            throw new IllegalArgumentException(NONEXISTING_STATE);
-        }
 
         final MutableFSA<S> result = FSAs.shallowCopy(this);
         final MutableState<S> newStart = result.newState();
         @SuppressWarnings("unchecked")
         final SetIterable<MutableState<S>> targetStates = (SetIterable) target.states();
+        @SuppressWarnings("unchecked")
+        final SetIterable<MutableState<S>> targetAccepts = (SetIterable) target.acceptStates();
         result.addEpsilonTransition(newStart, (MutableState<S>) startState()).setAsStart(newStart) //
-              .addStates(targetStates).addEpsilonTransition(newStart, (MutableState<S>) target.startState());
+              .addStates(targetStates).addEpsilonTransition(newStart, (MutableState<S>) target.startState()) //
+              .setAllAsAccept(targetAccepts);
 
         return result; // shallow reference
     }

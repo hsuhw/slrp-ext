@@ -1,13 +1,13 @@
 package api.proof;
 
-import api.automata.fsa.FSA;
-import org.eclipse.collections.api.list.ImmutableList;
-import org.eclipse.collections.api.set.ImmutableSet;
-import org.eclipse.collections.api.tuple.Twin;
+import api.automata.fst.FST;
+import org.eclipse.collections.api.RichIterable;
+import org.eclipse.collections.api.list.ListIterable;
+import org.eclipse.collections.api.tuple.Pair;
 
 public interface TransitivityChecker
 {
-    <S> Result<S> test(FSA<Twin<S>> target);
+    <S> Result<S> test(FST<S, S> target);
 
     interface Result<S>
     {
@@ -26,9 +26,9 @@ public interface TransitivityChecker
 
     interface Counterexample<S>
     {
-        ImmutableSet<Twin<ImmutableList<Twin<S>>>> causes();
+        RichIterable<ListIterable<S>> validMiddleSteps();
 
-        ImmutableList<Twin<S>> get();
+        ListIterable<Pair<S, S>> invalidStep();
 
         @Override
         String toString();

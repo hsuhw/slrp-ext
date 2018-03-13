@@ -119,7 +119,11 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
 
     default RichIterable<ListIterable<T>> postImage(ListIterable<S> word)
     {
-        return run(startState(), word, word.size()).collect(each -> (ListIterable<T>) each.toList());
+        final ListIterable<S> trimmedWord = word.allSatisfy(inputAlphabet()::notEpsilon)
+                                            ? word
+                                            : word.select(inputAlphabet()::notEpsilon);
+
+        return run(startState(), trimmedWord, trimmedWord.size()).collect(each -> (ListIterable<T>) each.toList());
     }
 
     default FSA<T> postImage(FSA<S> fsa)
@@ -129,9 +133,13 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
 
     default RichIterable<ListIterable<S>> preImage(ListIterable<T> word)
     {
+        final ListIterable<T> trimmedWord = word.allSatisfy(outputAlphabet()::notEpsilon)
+                                            ? word
+                                            : word.select(outputAlphabet()::notEpsilon);
         final FST<T, S> inv = inverse(); // should be cached
 
-        return inv.run(inv.startState(), word, word.size()).collect(each -> (ListIterable<S>) each.toList());
+        return inv.run(inv.startState(), trimmedWord, trimmedWord.size())
+                  .collect(each -> (ListIterable<S>) each.toList());
     }
 
     default FSA<S> preImage(FSA<T> fsa)
@@ -141,5 +149,9 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
         return (FSA<S>) inv.product(fsa, inputAlphabet(), Labels.transduced(), AcceptStates.select(inv, fsa, AND));
     }
 
+    FST<S, T> intersect(FST<S, T> target);
+
     FST<S, T> union(FST<S, T> target);
+
+    FSA<Pair<S, T>> asFSA();
 }

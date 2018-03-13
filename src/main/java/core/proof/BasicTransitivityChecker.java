@@ -1,34 +1,28 @@
 package core.proof;
 
-import api.automata.Alphabets;
-import api.automata.fsa.FSA;
-import api.automata.fsa.FSAs;
 import api.automata.fsa.LanguageSubsetChecker;
+import api.automata.fst.FST;
 import api.proof.TransitivityChecker;
-import org.eclipse.collections.api.list.ImmutableList;
-import org.eclipse.collections.api.set.ImmutableSet;
-import org.eclipse.collections.api.tuple.Twin;
-import org.eclipse.collections.impl.factory.Sets;
-import org.eclipse.collections.impl.tuple.Tuples;
+import org.eclipse.collections.api.RichIterable;
+import org.eclipse.collections.api.list.ListIterable;
+import org.eclipse.collections.api.tuple.Pair;
 
-import java.util.Set;
-
-import static api.util.Values.DISPLAY_INDENT;
-import static api.util.Values.DISPLAY_NEWLINE;
+import static common.util.Constants.DISPLAY_INDENT;
+import static common.util.Constants.DISPLAY_NEWLINE;
 
 public class BasicTransitivityChecker implements TransitivityChecker
 {
     @Override
-    public <S> Result<S> test(FSA<Twin<S>> target)
+    public <S> Result<S> test(FST<S, S> target)
     {
-        final FSA<Twin<S>> transitive = Transducers.compose(target, target, target.alphabet());
-
-        final LanguageSubsetChecker.Result<Twin<S>> targetBeTransitive = FSAs.checkSubset(transitive, target);
-        if (targetBeTransitive.passed()) {
+        final FST<S, S> transitive = target.compose(target, target.alphabet());
+        final LanguageSubsetChecker.Result<Pair<S, S>> transitivityCheck = target.asFSA()
+                                                                                 .checkContaining(transitive.asFSA());
+        if (transitivityCheck.passed()) {
             return new Result<>(true, null);
         }
 
-        return new Result<>(false, new Counterexample<>(target, targetBeTransitive.counterexample().get()));
+        return new Result<>(false, new Counterexample<>(target, transitivityCheck.counterexample().witness()));
     }
 
     private class Result<S> implements TransitivityChecker.Result<S>
@@ -63,43 +57,40 @@ public class BasicTransitivityChecker implements TransitivityChecker
 
     private class Counterexample<S> implements TransitivityChecker.Counterexample<S>
     {
-        private ImmutableList<Twin<S>> instance;
-        private final FSA<Twin<S>> relation;
-        private ImmutableSet<Twin<ImmutableList<Twin<S>>>> causes;
+        private final ListIterable<Pair<S, S>> invalidStep;
+        private final FST<S, S> relation;
+        private RichIterable<ListIterable<S>> validMiddleSteps;
 
-        private Counterexample(FSA<Twin<S>> relation, ImmutableList<Twin<S>> instance)
+        private Counterexample(FST<S, S> relation, ListIterable<Pair<S, S>> witness)
         {
-            this.instance = instance;
+            this.invalidStep = witness;
             this.relation = relation;
         }
 
         @Override
-        public ImmutableSet<Twin<ImmutableList<Twin<S>>>> causes()
+        public RichIterable<ListIterable<S>> validMiddleSteps()
         {
-            if (causes == null) {
-                // 'x -> z' is the witness; 'x -> { y1, y2, ... } -> z' are the causes
-                final ImmutableList<Twin<S>> witness = get();
-                final ImmutableList<S> x = witness.collect(Twin::getOne);
-                final ImmutableList<S> z = witness.collect(Twin::getTwo);
-                final Set<ImmutableList<S>> xPostImage = Transducers.postImage(relation, x).castToSet();
-                final Set<ImmutableList<S>> zPreImage = Transducers.preImage(relation, z).castToSet();
-                final ImmutableSet<ImmutableList<S>> ys = Sets.intersect(xPostImage, zPreImage).toImmutable();
-                causes = ys.collect(y -> Tuples.twin(Alphabets.twinWord(x, y), Alphabets.twinWord(y, z)));
+            if (validMiddleSteps == null) {
+                // 'x -> z' is the invalidStep; for 'x -> { y1, y2, ... } -> z', ys are the valid middle steps
+                final ListIterable<S> x = invalidStep.collect(Pair::getOne);
+                final ListIterable<S> z = invalidStep.collect(Pair::getTwo);
+                validMiddleSteps = relation.postImage(x).select(relation.preImage(z)::contains);
             }
 
-            return causes;
+            return validMiddleSteps;
         }
 
         @Override
-        public ImmutableList<Twin<S>> get()
+        public ListIterable<Pair<S, S>> invalidStep()
         {
-            return instance;
+            return invalidStep;
         }
 
         @Override
         public String toString()
         {
-            return "witness of intransitive parts: " + get() + " causes: " + causes().makeString();
+            return "witness of intransitive parts: " + invalidStep() + " valid middle steps: " +
+                validMiddleSteps().makeString();
         }
     }
 }

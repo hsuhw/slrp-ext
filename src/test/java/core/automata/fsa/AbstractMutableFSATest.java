@@ -16,8 +16,7 @@ import org.eclipse.collections.impl.tuple.Tuples;
 
 import static api.automata.Automaton.TransitionGraph;
 import static com.mscharhag.oleaster.matcher.Matchers.expect;
-import static com.mscharhag.oleaster.runner.StaticRunnerSupport.describe;
-import static com.mscharhag.oleaster.runner.StaticRunnerSupport.it;
+import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
 
 public abstract class AbstractMutableFSATest
 {
@@ -189,21 +188,21 @@ public abstract class AbstractMutableFSATest
                 expect(FSAs.acceptingAll(alphabet).enumerateOneShortest().isEmpty()).toBeTrue();
             });
 
-            it("meets a minimum expectation", () -> {
-                final FSA<Object> fsa1 = FSAs.acceptingOnly(alphabet, word1);
-                expect(fsa1.enumerateOneShortest()).toEqual(word1);
-                final FSA<Object> fsa2 = FSAs.acceptingOnly(alphabet, word2);
-                expect(fsa2.enumerateOneShortest()).toEqual(word2);
-                final FSA<Object> fsa3 = FSAs.acceptingOnly(alphabet, word3);
-                expect(fsa3.enumerateOneShortest()).toEqual(word3);
-                final FSA<Object> fsa4 = FSAs.acceptingOnly(alphabet, word4);
-                expect(fsa4.enumerateOneShortest()).toEqual(word4);
-                final FSA<Object> fsa5 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word1, word4));
-                expect(fsa5.enumerateOneShortest()).toEqual(word1);
-                final FSA<Object> fsa6 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word2, word4));
-                expect(fsa6.enumerateOneShortest()).toEqual(word2);
-                final FSA<Object> fsa7 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word3, word4));
-                expect(fsa7.enumerateOneShortest()).toEqual(word3);
+            fit("meets a minimum expectation", () -> {
+                final FSA<Object> dfa1 = FSAs.acceptingOnly(alphabet, word1);
+                expect(dfa1.enumerateOneShortest()).toEqual(word1);
+                final FSA<Object> dfa2 = FSAs.acceptingOnly(alphabet, word2);
+                expect(dfa2.enumerateOneShortest()).toEqual(word2);
+                final FSA<Object> dfa3 = FSAs.acceptingOnly(alphabet, word3);
+                expect(dfa3.enumerateOneShortest()).toEqual(word3);
+                final FSA<Object> dfa4 = FSAs.acceptingOnly(alphabet, word4);
+                expect(dfa4.enumerateOneShortest()).toEqual(word4);
+                final FSA<Object> dfa5 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word1, word4));
+                expect(dfa5.enumerateOneShortest()).toEqual(word1);
+                final FSA<Object> nfa1 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word2, word4));
+                expect(nfa1.enumerateOneShortest()).toEqual(word2);
+                final FSA<Object> nfa2 = FSAs.acceptingOnly(alphabet, Sets.immutable.of(word3, word4));
+                expect(nfa2.enumerateOneShortest()).toEqual(word3);
             });
 
         });
@@ -377,30 +376,30 @@ public abstract class AbstractMutableFSATest
                 expect(fsa1.checkContaining(none).passed()).toBeTrue();
                 expect(fsa1.checkContaining(fsa1).passed()).toBeTrue();
                 expect(fsa1.checkContaining(fsa2).passed()).toBeFalse();
-                expect(fsa1.checkContaining(fsa2).counterexample().get()).toEqual(input2);
+                expect(fsa1.checkContaining(fsa2).counterexample().witness()).toEqual(input2);
                 expect(fsa1.checkContaining(fsa3).passed()).toBeFalse();
-                expect(fsa1.checkContaining(fsa3).counterexample().get()).toEqual(input2);
+                expect(fsa1.checkContaining(fsa3).counterexample().witness()).toEqual(input2);
                 expect(fsa1.checkContaining(all).passed()).toBeFalse();
                 expect(fsa2.checkContaining(none).passed()).toBeTrue();
                 expect(fsa2.checkContaining(fsa1).passed()).toBeFalse();
-                expect(fsa2.checkContaining(fsa1).counterexample().get()).toEqual(input1);
+                expect(fsa2.checkContaining(fsa1).counterexample().witness()).toEqual(input1);
                 expect(fsa2.checkContaining(fsa2).passed()).toBeTrue();
                 expect(fsa2.checkContaining(fsa3).passed()).toBeFalse();
-                expect(fsa2.checkContaining(fsa3).counterexample().get()).toEqual(input3);
+                expect(fsa2.checkContaining(fsa3).counterexample().witness()).toEqual(input3);
                 expect(fsa2.checkContaining(all).passed()).toBeFalse();
                 expect(fsa3.checkContaining(none).passed()).toBeTrue();
                 expect(fsa3.checkContaining(fsa1).passed()).toBeFalse();
-                expect(fsa2.checkContaining(fsa1).counterexample().get()).toEqual(input1);
+                expect(fsa2.checkContaining(fsa1).counterexample().witness()).toEqual(input1);
                 expect(fsa3.checkContaining(fsa2).passed()).toBeTrue();
                 expect(fsa3.checkContaining(fsa3).passed()).toBeTrue();
                 expect(fsa3.checkContaining(all).passed()).toBeFalse();
                 expect(none.checkContaining(none).passed()).toBeTrue();
                 expect(none.checkContaining(fsa1).passed()).toBeFalse();
-                expect(none.checkContaining(fsa1).counterexample().get()).toEqual(input1);
+                expect(none.checkContaining(fsa1).counterexample().witness()).toEqual(input1);
                 expect(none.checkContaining(fsa2).passed()).toBeFalse();
-                expect(none.checkContaining(fsa2).counterexample().get()).toEqual(input2);
+                expect(none.checkContaining(fsa2).counterexample().witness()).toEqual(input2);
                 expect(none.checkContaining(fsa3).passed()).toBeFalse();
-                expect(none.checkContaining(fsa3).counterexample().get()).toEqual(input2);
+                expect(none.checkContaining(fsa3).counterexample().witness()).toEqual(input2);
                 expect(none.checkContaining(all).passed()).toBeFalse();
                 expect(all.checkContaining(none).passed()).toBeTrue();
                 expect(all.checkContaining(fsa1).passed()).toBeTrue();
@@ -580,13 +579,13 @@ public abstract class AbstractMutableFSATest
 
                 describe("#directSuccessorOf(node, label)", () -> {
 
-                    it("complains", () -> {
-                        expect(() -> graph.directSuccessorOf(n1, a1)).toThrow(UnsupportedOperationException.class);
+                    it("complains with multiple successors", () -> {
+                        expect(() -> graph.directSuccessorOf(n1, a1)).toThrow(IllegalStateException.class);
                     });
 
                 });
 
-                describe("#directPredecessorsOf(node)", () -> {
+                xdescribe("#directPredecessorsOf(node)", () -> {
 
                     it("returns the predecessors", () -> {
                         final SetIterable<State<Object>> preds1 = graph.directPredecessorsOf(n1);
@@ -603,7 +602,7 @@ public abstract class AbstractMutableFSATest
 
                 });
 
-                describe("#directPredecessorsOf(node, label)", () -> {
+                xdescribe("#directPredecessorsOf(node, label)", () -> {
 
                     it("returns the predecessors", () -> {
                         final SetIterable<State<Object>> n1preds1 = graph.directPredecessorsOf(n1, e);
@@ -626,7 +625,7 @@ public abstract class AbstractMutableFSATest
 
                 });
 
-                describe("#directPredecessorsOf(nodes, label)", () -> {
+                xdescribe("#directPredecessorsOf(nodes, label)", () -> {
 
                     it("returns the predecessors", () -> {
                         final SetIterable<State<Object>> set1 = Sets.immutable.of(n1, n3);

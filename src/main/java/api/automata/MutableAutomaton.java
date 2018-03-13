@@ -79,7 +79,7 @@ public interface MutableAutomaton<S> extends Automaton<S>
         if (states().anySatisfy(that -> that.name() == null)) {
             int i = 0;
             for (State<S> state : states()) {
-                ((MutableState<S>) state).setName(DISPLAY_STATE_NAME_PREFIX + i);
+                ((MutableState<S>) state).setName(DISPLAY_STATE_NAME_PREFIX + i++);
             }
         }
 
@@ -87,7 +87,7 @@ public interface MutableAutomaton<S> extends Automaton<S>
         final String startState = startState().name();
         final String acceptStates = acceptStates().collect(State::name).makeString();
         final StringBuilder result = new StringBuilder();
-        result.append(indent).append(nameTag).append(" {").append(DISPLAY_NEWLINE);
+        result.append(indent).append(nameTag).append(nameTag.equals("") ? "{" : " {").append(DISPLAY_NEWLINE);
         result.append(innerIndent).append("start: ").append(startState).append(";").append(DISPLAY_NEWLINE);
         states().forEach(state -> result.append(state.toString(innerIndent)));
         result.append(innerIndent).append("accept: ").append(acceptStates).append(";").append(DISPLAY_NEWLINE);

@@ -2,11 +2,12 @@ package api.automata;
 
 import core.automata.SetAlphabet;
 import core.automata.SetAlphabetBuilder;
-import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.tuple.Tuples;
 
@@ -62,7 +63,7 @@ public final class Alphabets
         return create(product, epsilon);
     }
 
-    public static <S, T> ImmutableList<Pair<S, T>> pairWord(ImmutableList<S> one, ImmutableList<T> two)
+    public static <S, T> ListIterable<Pair<S, T>> pairWord(ListIterable<S> one, ListIterable<T> two)
     {
         if (one.size() != two.size()) {
             throw new IllegalArgumentException("size-unmatched word pair given");

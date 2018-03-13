@@ -1,26 +1,26 @@
 package core.proof;
 
-import api.automata.*;
+import api.automata.Alphabet;
+import api.automata.AlphabetIntEncoder;
+import api.automata.MutableState;
+import api.automata.State;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
+import api.automata.fsa.MutableFSA;
 import api.proof.FSAEncoding;
 import common.sat.SatSolver;
 import common.util.Assert;
-import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
-import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
+import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
 import org.eclipse.collections.impl.map.mutable.primitive.ObjectIntHashMap;
 import org.eclipse.collections.impl.set.mutable.primitive.IntHashSet;
-
-import static api.util.Values.Direction;
-import static api.util.Values.Direction.BACKWARD;
-import static api.util.Values.Direction.FORWARD;
 
 public class BasicFSAEncoding<S> implements FSAEncoding<S>
 {
@@ -100,7 +100,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     }
 
     public BasicFSAEncoding(SatSolver solver, int stateNumber, AlphabetIntEncoder<S> intAlphabet,
-                            boolean restrictsShape)
+        boolean restrictsShape)
     {
         Assert.argumentNotNull(solver, intAlphabet);
 
@@ -136,7 +136,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     }
 
     private void encodePossibleDistByTransIf(int required, int currState, ImmutableIntList[] distanceIndicators,
-                                             Direction direction)
+        TransitionSelector transitionSelector)
     {
         final int symbolNumber = intAlphabet.size();
         final ImmutableIntList[][] possibleDistByTrans = new ImmutableIntList[stateNumber][symbolNumber];
@@ -147,9 +147,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
                 solver.setLiteralFalsy(transCanCauseNoDist);
                 for (int distNum = 1; distNum < stateNumber; distNum++) {
                     final int transCauseDistNum = possibleDistByTrans[prevState][symbol].get(distNum);
-                    final int transBeAvailable = direction == Direction.FORWARD
-                                                 ? transitionIndicators[prevState][symbol].get(currState)
-                                                 : transitionIndicators[currState][symbol].get(prevState);
+                    final int transBeAvailable = transitionSelector.take(prevState, currState, symbol);
                     final int prevBeNumMinusOne = distanceIndicators[prevState].get(distNum - 1);
                     final int currBeNum = distanceIndicators[currState].get(distNum);
 
@@ -180,7 +178,8 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
         for (int state = 1; state < stateNumber; state++) { // skip the start state
             final int distCanBeZero = distFromStartIndicators[state].get(0);
             solver.setLiteralFalsy(distCanBeZero);
-            encodePossibleDistByTransIf(notStartState, state, distFromStartIndicators, FORWARD);
+            encodePossibleDistByTransIf(notStartState, state, distFromStartIndicators,
+                                        (dept, dest, symbol) -> transitionIndicators[dept][symbol].get(dest));
         }
 
         noUnreachableStateEnsured = true;
@@ -198,16 +197,17 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
             final int takenAsAcceptState = acceptStateIndicators.get(state);
             final int distBeZero = distFromAcceptIndicators[state].get(0);
             solver.markAsEquivalent(takenAsAcceptState, distBeZero);
-            encodePossibleDistByTransIf(-takenAsAcceptState, state, distFromAcceptIndicators, BACKWARD);
+            encodePossibleDistByTransIf(-takenAsAcceptState, state, distFromAcceptIndicators,
+                                        (dept, dest, symbol) -> transitionIndicators[dest][symbol].get(dept));
         }
 
         noDeadEndStateEnsured = true;
     }
 
-    private CertainWord makeWord(ImmutableList<S> definition)
+    private CertainWord makeWord(ListIterable<S> definition)
     {
         final S epsilon = intAlphabet.originEpsilon();
-        final ImmutableList<S> givenWord = definition.select(symbol -> symbol != epsilon);
+        final ListIterable<S> givenWord = definition.select(symbol -> symbol != epsilon);
         final CertainWord word = new CertainWord(givenWord.size());
         givenWord.forEachWithIndex((symbol, pos) -> word.setCharacterAt(pos, symbol));
 
@@ -252,7 +252,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     }
 
     @Override
-    public void ensureAccepting(ImmutableList<S> word)
+    public void ensureAccepting(ListIterable<S> word)
     {
         final int activated = solver.newFreeVariable();
         ensureAcceptingIf(activated, makeWord(word));
@@ -322,7 +322,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     }
 
     @Override
-    public void ensureNoAccepting(ImmutableList<S> word)
+    public void ensureNoAccepting(ListIterable<S> word)
     {
         final int activated = solver.newFreeVariable();
         ensureNotAcceptWordIf(activated, makeWord(word));
@@ -330,7 +330,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     }
 
     @Override
-    public void ensureAcceptingIfOnlyIf(int indicator, ImmutableList<S> word)
+    public void ensureAcceptingIfOnlyIf(int indicator, ListIterable<S> word)
     {
         final CertainWord encodedWord = makeWord(word);
         ensureAcceptingIf(indicator, encodedWord);
@@ -347,7 +347,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     }
 
     @Override
-    public void ensureNoWordPurelyMadeOf(ImmutableSet<S> symbols)
+    public void ensureNoWordPurelyMadeOf(SetIterable<S> symbols)
     {
         final ImmutableIntList encodedSymbols = intAlphabet.encode(symbols.toList().toImmutable());
 
@@ -408,15 +408,15 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
 
         // decode states
         final ImmutableIntSet truthyIndicators = solver.getModelTruthyVariables();
-        final FSA.Builder<S> builder = FSAs.builder(stateNumber, intAlphabet.size(), intAlphabet.originEpsilon());
-        final State[] states = new State[stateNumber];
-        for (int i = 0; i < stateNumber; i++) {
-            states[i] = States.create("s" + i);
+        final MutableFSA<S> result = FSAs.create(intAlphabet.originAlphabet(), stateNumber);
+        final MutableList<MutableState<S>> states = FastList.newList(stateNumber);
+        states.add(START_STATE_INDEX, (MutableState<S>) result.startState());
+        for (int i = 1; i < stateNumber; i++) {
+            states.add(i, result.newState("s" + i));
         }
-        builder.addStartState(states[START_STATE_INDEX]);
         acceptStateIndicators.forEachWithIndex((indicator, stateIndex) -> {
             if (truthyIndicators.contains(indicator)) {
-                builder.addAcceptState(states[stateIndex]);
+                result.setAsAccept(states.get(stateIndex));
             }
         });
 
@@ -425,13 +425,20 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
             for (int qj = 0; qj < stateNumber; qj++) {
                 for (int s = 0; s < intAlphabet.size(); s++) {
                     if (truthyIndicators.contains(transitionIndicators[qi][s].get(qj))) {
-                        builder.addTransition(states[qi], states[qj], intAlphabet.decode(s));
+                        result.addTransition(states.get(qi), states.get(qj), intAlphabet.decode(s));
                     }
                 }
             }
         }
 
-        return builder.buildWith(intAlphabet.originAlphabet());
+        return result;
+    }
+
+
+    @FunctionalInterface
+    private interface TransitionSelector
+    {
+        int take(int dept, int dest, int symbol);
     }
 
     private class CertainWord implements FSAEncoding.CertainWord<S>
@@ -495,12 +502,11 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
         @Override
         public void ensureAcceptedBy(FSA<S> fsa)
         {
-            final FSA<S> dfa = FSAs.determinize(fsa);
+            final FSA<S> dfa = fsa.determinize();
             final int stateNumber = dfa.states().size();
-            final MutableList<State> stateDecoder = dfa.states().toList();
-            final MutableObjectIntMap<State> stateEncoder = new ObjectIntHashMap<>(stateNumber);
+            final MutableList<State<S>> stateDecoder = dfa.states().toList();
+            final MutableObjectIntMap<State<S>> stateEncoder = new ObjectIntHashMap<>(stateNumber);
             stateDecoder.forEachWithIndex(stateEncoder::put);
-            final TransitionGraph<State, S> delta = dfa.transitionGraph();
 
             // define each possible step over the DFA's states with each character of the word
             final ImmutableIntList[] stepIndicators = new ImmutableIntList[length + 1];
@@ -513,17 +519,21 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
             solver.setLiteralTruthy(initialStepBeStartState);
 
             // make the taken steps represent the word
+            final SetIterable<S> symbols = alphabet().asSet();
             for (int pos = 0; pos < length; pos++) {
                 final ImmutableIntList possibleSymbol = characterIndicators[pos];
                 for (int qi = 0; qi < stateNumber; qi++) {
                     final int takenQiAsCurr = stepIndicators[pos].get(qi);
-                    final State stateQi = stateDecoder.get(qi);
+                    final State<S> stateQi = stateDecoder.get(qi);
                     for (int qj = 0; qj < stateNumber; qj++) {
                         final int takenQjAsNext = stepIndicators[pos + 1].get(qj);
-                        final State stateQj = stateDecoder.get(qj);
-                        final SetIterable<S> enabledQiToQjArc = delta.arcLabelsOn(stateQi, stateQj);
-                        for (S disableSymbol : alphabet().asSet().newWithoutAll(enabledQiToQjArc)) {
-                            final int posBeDisableSymbol = possibleSymbol.get(intAlphabet.encode(disableSymbol));
+                        final State<S> stateQj = stateDecoder.get(qj);
+                        final SetIterable<S> enabledQiToQjArc = stateQi.enabledSymbolsTo(stateQj);
+                        for (S symbol : symbols) {
+                            if (enabledQiToQjArc.contains(symbol)) { // consider the disabled symbols
+                                continue;
+                            }
+                            final int posBeDisableSymbol = possibleSymbol.get(intAlphabet.encode(symbol));
                             solver.addClause(-takenQiAsCurr, -takenQjAsNext, -posBeDisableSymbol);
                         }
                     }
@@ -532,7 +542,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
 
             // make the taken steps form an accepting path
             final ImmutableIntList possibleLastStep = stepIndicators[length];
-            for (State nonAcceptState : dfa.nonAcceptStates()) {
+            for (State<S> nonAcceptState : dfa.nonAcceptStates()) {
                 final int finalStepBeNonAccept = possibleLastStep.get(stateEncoder.get(nonAcceptState));
                 solver.setLiteralFalsy(finalStepBeNonAccept);
             }

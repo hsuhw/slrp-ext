@@ -40,7 +40,7 @@ public abstract class AbstractMutableStateTest
                 state.setName(name2);
                 expect(state.name()).toEqual(name2);
 
-                expect(() -> state.setName(nullString)).toThrow(IllegalArgumentException.class);
+                expect(() -> state.setName(nullString)).toThrow(NullPointerException.class);
             });
 
         });
@@ -75,7 +75,7 @@ public abstract class AbstractMutableStateTest
             });
 
             it("will not show labels with null given", () -> {
-                expect(() -> state.enabledSymbolsTo(nullState)).toThrow(IllegalArgumentException.class);
+                expect(state.enabledSymbolsTo(nullState).isEmpty()).toBeTrue();
             });
 
             it("can show transition existences", () -> {
@@ -91,14 +91,14 @@ public abstract class AbstractMutableStateTest
             });
 
             it("will not show existences with null given", () -> {
-                expect(() -> state.transitionExists(nullSymbol)).toThrow(IllegalArgumentException.class);
-                expect(() -> state.transitionExists(nullState)).toThrow(IllegalArgumentException.class);
+                expect(state.transitionExists(nullSymbol)).toBeFalse();
+                expect(state.transitionExists(nullState)).toBeFalse();
             });
 
             it("will not add with null given", () -> {
-                expect(() -> state.addTransition(nullSymbol, state)).toThrow(IllegalArgumentException.class);
-                expect(() -> state.addTransition(nullSymbol, nullState)).toThrow(IllegalArgumentException.class);
-                expect(() -> state.addTransition(a1, nullState)).toThrow(IllegalArgumentException.class);
+                expect(() -> state.addTransition(nullSymbol, state)).toThrow(NullPointerException.class);
+                expect(() -> state.addTransition(nullSymbol, nullState)).toThrow(NullPointerException.class);
+                expect(() -> state.addTransition(a1, nullState)).toThrow(NullPointerException.class);
             });
 
             it("can remove certain transitions", () -> {
@@ -114,7 +114,7 @@ public abstract class AbstractMutableStateTest
             });
 
             it("will not remove with null given", () -> {
-                expect(() -> state.removeTransitionsTo(nullState)).toThrow(IllegalArgumentException.class);
+                expect(() -> state.removeTransitionsTo(nullState)).toThrow(NullPointerException.class);
             });
 
         });
@@ -147,7 +147,7 @@ public abstract class AbstractMutableStateTest
             });
 
             it("will not show successors with null given", () -> {
-                expect(() -> state.successors(nullSymbol)).toThrow(IllegalArgumentException.class);
+                expect(state.successors(nullSymbol).isEmpty()).toBeTrue();
             });
 
         });

@@ -23,10 +23,12 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
 {
     protected final MutableSet<State<S>> states;
     protected final MutableSet<State<S>> acceptStates;
+    protected final TransitionGraph transitionGraph;
     private Alphabet<S> alphabet;
     private State<S> startState;
 
     protected boolean hasChanged;
+    private SetIterable<State<S>> nonAcceptStates;
     private SetIterable<State<S>> reachableStates;
     private SetIterable<State<S>> unreachableStates;
     private MapIterable<State<S>, SetIterable<State<S>>> predecessorRelation;
@@ -39,6 +41,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
         this.alphabet = alphabet;
         states = UnifiedSet.newSet(stateCapacity);
         acceptStates = UnifiedSet.newSet(stateCapacity);
+        transitionGraph = new TransitionGraph();
         startState = newState();
     }
 
@@ -50,6 +53,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
 
             alphabet = toCopy.alphabet;
             states = UnifiedSet.newSet(capacity);
+            transitionGraph = new TransitionGraph();
             startState = newState();
 
             toCopy.states.forEach(stateToCopy -> {
@@ -65,6 +69,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
             alphabet = toCopy.alphabet;
             states = UnifiedSet.newSet(capacity);
             states.addAllIterable(toCopy.states);
+            transitionGraph = new TransitionGraph();
             acceptStates = UnifiedSet.newSet(toCopy.states.size());
             acceptStates.addAllIterable(toCopy.acceptStates);
             startState = toCopy.startState;
@@ -98,7 +103,11 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
     @Override
     public SetIterable<State<S>> nonAcceptStates()
     {
-        return states.difference(acceptStates);
+        if (!hasChanged && nonAcceptStates != null) {
+            return nonAcceptStates;
+        }
+
+        return (nonAcceptStates = states.difference(acceptStates));
     }
 
     @Override
@@ -108,7 +117,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
             return reachableStates;
         }
 
-        return (reachableStates = MutableAutomaton.super.unreachableStates());
+        return (reachableStates = MutableAutomaton.super.reachableStates());
     }
 
     @Override
@@ -141,14 +150,17 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
         final MutableSet<State<S>> result = UnifiedSet.newSet(states().size()); // upper bound
         final MapIterable<State<S>, SetIterable<State<S>>> predecessors = predecessorRelation();
         final Queue<State<S>> pendingChecks = new LinkedList<>(acceptStates);
+        result.addAllIterable(acceptStates);
 
         State<S> currLiving;
         while ((currLiving = pendingChecks.poll()) != null) {
-            predecessors.get(currLiving).forEach(alsoLiving -> {
-                if (result.add(alsoLiving)) {
-                    pendingChecks.add(alsoLiving);
-                }
-            });
+            if (predecessors.containsKey(currLiving)) {
+                predecessors.get(currLiving).forEach(alsoLiving -> {
+                    if (result.add(alsoLiving)) {
+                        pendingChecks.add(alsoLiving);
+                    }
+                });
+            }
         }
 
         return (liveStates = result);
@@ -171,19 +183,20 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
             return danglingStates;
         }
 
-        return (danglingStates = MutableAutomaton.super.deadEndStates());
+        return (danglingStates = MutableAutomaton.super.danglingStates());
     }
 
     @Override
     public MutableAutomaton.TransitionGraph<S> transitionGraph()
     {
-        return new TransitionGraph();
+        return transitionGraph;
     }
 
     @Override
     public MutableAutomaton<S> setAlphabet(Alphabet<S> alphabet)
     {
-        if (states.anySatisfy(that -> !alphabet.asSet().containsAllIterable(that.enabledSymbols()))) {
+        final SetIterable<S> givenAlphabet = alphabet.asSet();
+        if (!states.allSatisfy(that -> givenAlphabet.containsAllIterable(that.enabledSymbols()))) {
             throw new IllegalArgumentException("given alphabet does not contain all used symbols");
         }
 
@@ -366,24 +379,18 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
             return takeState(Tuples.pair(one, two));
         }
 
-        private void handleEpsilonTransitions(Pair<State<S>, State<T>> statePair)
-        {
-            final MutableState<R> deptP = takeState(statePair);
-            final State<S> dept1 = statePair.getOne();
-            final State<T> dept2 = statePair.getTwo();
-            dept1.successors(epsilon1).forEach(dest -> result.addEpsilonTransition(deptP, takeState(dest, dept2)));
-            dept2.successors(epsilon2).forEach(dest -> result.addEpsilonTransition(deptP, takeState(dept1, dest)));
-        }
-
         public ProductHandler<T, R> makeProduct(StepMaker<S, T, R> stepMaker)
         {
-            takeState(startState(), target.startState());
+            final MutableState<R> dummyStart = (MutableState<R>) result.startState();
+            result.setAsStart(takeState(startState(), target.startState()));
+            result.removeState(dummyStart);
             Pair<State<S>, State<T>> currStatePair;
             while ((currStatePair = pendingChecks.poll()) != null) {
                 final MutableState<R> deptP = stateMapping.get(currStatePair);
-                handleEpsilonTransitions(currStatePair);
                 final State<S> dept1 = currStatePair.getOne();
                 final State<T> dept2 = currStatePair.getTwo();
+                dept1.successors(epsilon1).forEach(dest -> result.addEpsilonTransition(deptP, takeState(dest, dept2)));
+                dept2.successors(epsilon2).forEach(dest -> result.addEpsilonTransition(deptP, takeState(dept1, dest)));
                 for (S symbol1 : dept1.enabledSymbols()) {
                     if (symbol1.equals(epsilon1)) {
                         continue; // already handled
@@ -396,9 +403,8 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
                         if (symbolP == null) {
                             continue; // no step should be made
                         }
-                        dept1.successors(symbol1).forEach(dest1 -> dept2.successors(symbol2).forEach(dest2 -> {
-                            result.addTransition(deptP, takeState(dest1, dest2), symbolP);
-                        }));
+                        dept1.successors(symbol1).forEach(dest1 -> dept2.successors(symbol2).forEach(
+                            dest2 -> result.addTransition(deptP, takeState(dest1, dest2), symbolP)));
                     }
                 }
             }

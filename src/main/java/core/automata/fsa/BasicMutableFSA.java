@@ -4,18 +4,19 @@ import api.automata.*;
 import api.automata.fsa.FSA;
 import api.automata.fsa.LanguageSubsetChecker;
 import api.automata.fsa.MutableFSA;
+import core.automata.AbstractMutableAutomaton;
 import core.automata.MapSetState;
 import org.eclipse.collections.api.RichIterable;
 
 public class BasicMutableFSA<S> extends AbstractMutableFSA<S> implements MutableFSA<S>
 {
-    private LanguageSubsetChecker<S> languageSubsetChecker;
+    private LanguageSubsetChecker languageSubsetChecker;
 
     public BasicMutableFSA(Alphabet<S> alphabet, int stateCapacity)
     {
         super(alphabet, stateCapacity);
 
-        languageSubsetChecker = new LightLanguageSubsetChecker<>();
+        languageSubsetChecker = new LightLanguageSubsetChecker();
     }
 
     public BasicMutableFSA(BasicMutableFSA<S> toCopy, boolean deep)
@@ -23,6 +24,13 @@ public class BasicMutableFSA<S> extends AbstractMutableFSA<S> implements Mutable
         super(toCopy, deep);
 
         languageSubsetChecker = toCopy.languageSubsetChecker;
+    }
+
+    public BasicMutableFSA(AbstractMutableAutomaton<S> toCast)
+    {
+        super(toCast, false);
+
+        languageSubsetChecker = new LightLanguageSubsetChecker();
     }
 
     @Override

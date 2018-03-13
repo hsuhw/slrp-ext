@@ -13,7 +13,6 @@ import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.eclipse.collections.impl.tuple.Tuples;
 
-import static api.util.Constants.DISPLAY_DUMMY_STATE_NAME_PREFIX;
 import static core.Parameters.NONDETERMINISTIC_TRANSITION_CAPACITY;
 
 public class MapSetState<S> implements MutableState<S>
@@ -86,6 +85,7 @@ public class MapSetState<S> implements MutableState<S>
             final MutableSet<State<S>> result = (MutableSet) transitions.get(transLabel);
             return result.asUnmodifiable();
         }
+
         return Sets.immutable.empty();
     }
 
@@ -110,6 +110,8 @@ public class MapSetState<S> implements MutableState<S>
     @Override
     public MutableState<S> removeTransitionsTo(MutableState<S> state)
     {
+        Assert.argumentNotNull(state);
+
         transitions.forEach((transLabel, dests) -> {
             if (dests.remove(state) && dests.isEmpty()) {
                 transitions.remove(transLabel);
@@ -117,13 +119,5 @@ public class MapSetState<S> implements MutableState<S>
         });
 
         return this;
-    }
-
-    @Override
-    public String toString()
-    {
-        final String nameTag = name != null ? name : DISPLAY_DUMMY_STATE_NAME_PREFIX + 0;
-
-        return toString("", nameTag);
     }
 }

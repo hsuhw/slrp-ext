@@ -3,7 +3,9 @@ package api.proof;
 import api.automata.Alphabet;
 import api.automata.fsa.FSA;
 import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.set.SetIterable;
 
 public interface FSAEncoding<S>
 {
@@ -17,15 +19,15 @@ public interface FSAEncoding<S>
         ensureNoDeadEndState();
     }
 
-    void ensureAccepting(ImmutableList<S> word);
+    void ensureAccepting(ListIterable<S> word);
 
-    void ensureNoAccepting(ImmutableList<S> word);
+    void ensureNoAccepting(ListIterable<S> word);
 
-    void ensureAcceptingIfOnlyIf(int indicator, ImmutableList<S> word);
+    void ensureAcceptingIfOnlyIf(int indicator, ListIterable<S> word);
 
     CertainWord<S> ensureAcceptingCertainWordIf(int indicator, int length);
 
-    void ensureNoWordPurelyMadeOf(ImmutableSet<S> symbols);
+    void ensureNoWordPurelyMadeOf(SetIterable<S> symbols);
 
     void blockCurrentInstance();
 

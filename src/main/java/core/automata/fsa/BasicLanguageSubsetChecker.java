@@ -8,39 +8,39 @@ import org.eclipse.collections.api.list.ListIterable;
 import static common.util.Constants.DISPLAY_INDENT;
 import static common.util.Constants.DISPLAY_NEWLINE;
 
-public class BasicLanguageSubsetChecker<S> implements LanguageSubsetChecker<S>
+public class BasicLanguageSubsetChecker implements LanguageSubsetChecker
 {
     @Override
-    public Result test(FSA<S> subsumer, FSA<S> includer)
+    public <S> Result<S> test(FSA<S> subsumer, FSA<S> includer)
     {
         if (!subsumer.alphabet().epsilon().equals(includer.alphabet().epsilon())) {
             throw new IllegalArgumentException("incompatible two alphabet given");
         }
 
         if (subsumer.acceptsNone()) { // anyone includes empty
-            return new Result(true, null);
+            return new Result<>(true, null);
         }
         if (includer.acceptsNone()) { // empty includes nobody
-            return new Result(false, new Counterexample(subsumer));
+            return new Result<>(false, new Counterexample<>(subsumer));
         }
         final FSA<S> includerBar = includer.complement();
         if (includerBar.acceptsNone()) { // universe includes anyone
-            return new Result(true, null);
+            return new Result<>(true, null);
         }
 
         final FSA<S> divergentImage = includerBar.intersect(subsumer);
 
         return divergentImage.acceptsNone()
-               ? new Result(true, null)
-               : new Result(false, new Counterexample(divergentImage));
+               ? new Result<>(true, null)
+               : new Result<>(false, new Counterexample<>(divergentImage));
     }
 
-    private class Result implements LanguageSubsetChecker.Result<S>
+    private class Result<S> implements LanguageSubsetChecker.Result<S>
     {
         private final boolean passed;
-        private final Counterexample counterexample;
+        private final Counterexample<S> counterexample;
 
-        private Result(boolean passed, Counterexample counterexample)
+        private Result(boolean passed, Counterexample<S> counterexample)
         {
             this.passed = passed;
             this.counterexample = counterexample;
@@ -53,7 +53,7 @@ public class BasicLanguageSubsetChecker<S> implements LanguageSubsetChecker<S>
         }
 
         @Override
-        public Counterexample counterexample()
+        public Counterexample<S> counterexample()
         {
             return counterexample;
         }
@@ -65,7 +65,7 @@ public class BasicLanguageSubsetChecker<S> implements LanguageSubsetChecker<S>
         }
     }
 
-    private class Counterexample implements LanguageSubsetChecker.Counterexample<S>
+    private class Counterexample<S> implements LanguageSubsetChecker.Counterexample<S>
     {
         private final FSA<S> sourceImage;
         private ListIterable<S> instance;
@@ -82,10 +82,10 @@ public class BasicLanguageSubsetChecker<S> implements LanguageSubsetChecker<S>
         }
 
         @Override
-        public ListIterable<S> get()
+        public ListIterable<S> witness()
         {
             if (instance == null) {
-                instance = LanguageSubsetChecker.Counterexample.super.get();
+                instance = LanguageSubsetChecker.Counterexample.super.witness();
                 Assert.referenceNotNull(instance); // a counterexample will always have a witness
             }
 
@@ -95,7 +95,7 @@ public class BasicLanguageSubsetChecker<S> implements LanguageSubsetChecker<S>
         @Override
         public String toString()
         {
-            return "witness of nonincluded parts: " + get();
+            return "witness of nonincluded parts: " + witness();
         }
     }
 }

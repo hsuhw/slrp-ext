@@ -5,16 +5,18 @@ import api.automata.Alphabets;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.automata.fsa.LanguageSubsetChecker;
+import api.automata.fst.FST;
 import api.proof.Problem;
 import api.proof.Prover;
 import common.sat.Sat4jSolverAdapter;
 import common.sat.SatSolver;
+import common.util.Stopwatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.block.function.primitive.IntIntToObjectFunction;
-import org.eclipse.collections.api.set.ImmutableSet;
+import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.api.tuple.primitive.IntIntPair;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -23,46 +25,46 @@ public abstract class AbstractProver<S> implements Prover
 {
     private static final Logger LOGGER = LogManager.getLogger();
 
-    protected final FSA<S> initialConfigs;
-    protected final FSA<S> finalConfigs;
-    protected final FSA<S> nonfinalConfigs;
-    protected final FSA<S> schedulerDomain;
-    protected final FSA<S> processRange;
-    protected final FSA<Twin<S>> scheduler;
-    protected final FSA<Twin<S>> process;
-    protected final FSA<S> givenInvariant;
-    protected final FSA<Twin<S>> givenOrder;
-    protected final Alphabet<S> wholeAlphabet;
-    protected final Alphabet<S> roundAlphabet;
-    protected final Alphabet<Twin<S>> orderAlphabet;
-    protected final ImmutableSet<Twin<S>> orderReflexiveSymbols;
+    final FSA<S> initialConfigs;
+    final FSA<S> nonfinalConfigs;
+    final FST<S, S> scheduler;
+    private final FSA<S> schedulerDomain;
+    final FST<S, S> process;
+    private final FSA<S> processRange;
+    final FSA<S> givenInvariant;
+    final FST<S, S> givenOrder;
+    final Alphabet<S> wholeAlphabet;
+    final Alphabet<S> roundAlphabet;
+    final Alphabet<Pair<S, S>> orderAlphabet;
+    final SetIterable<Pair<S, S>> orderReflexiveSymbols;
 
-    protected int invariantSizeBegin;
-    protected final int invariantSizeEnd;
-    protected int orderSizeBegin;
-    protected final int orderSizeEnd;
-    protected final boolean loosenInvariant;
-    protected final boolean shapeInvariant;
-    protected final boolean shapeOrder;
+    int invariantSizeBegin;
+    private final int invariantSizeEnd;
+    int orderSizeBegin;
+    private final int orderSizeEnd;
+    final boolean loosenInvariant;
+    final boolean shapeInvariant;
+    final boolean shapeOrder;
 
     protected final SatSolver solver;
 
-    public AbstractProver(Problem<S> problem, boolean shapeInvariant, boolean shapeOrder, boolean loosenInvariant)
+    AbstractProver(Problem<S> problem, boolean shapeInvariant, boolean shapeOrder, boolean loosenInvariant)
     {
-        initialConfigs = FSAs.minimize(FSAs.determinize(problem.initialConfigs()));
-        finalConfigs = FSAs.minimize(FSAs.determinize(problem.finalConfigs()));
-        nonfinalConfigs = FSAs.complement(finalConfigs);
+        initialConfigs = problem.initialConfigs().determinize().minimize();
+        nonfinalConfigs = problem.finalConfigs().determinize().minimize().complement();
         scheduler = problem.scheduler();
         process = problem.process();
+        schedulerDomain = scheduler.domain().determinize().minimize();
+        processRange = process.range().determinize().minimize();
         givenInvariant = problem.invariant();
         givenOrder = problem.order();
 
         wholeAlphabet = initialConfigs.alphabet(); // relying on current parsing behavior
-        final ImmutableSet<S> roundSymbols = problem.process().transitionGraph().referredArcLabels()
-                                                    .collect(Twin::getTwo);
-        roundAlphabet = Alphabets.create(roundSymbols.newWith(wholeAlphabet.epsilon()), wholeAlphabet.epsilon());
-        orderAlphabet = Alphabets.product(roundAlphabet);
-        orderReflexiveSymbols = roundAlphabet.asSet().collect(s -> Tuples.twin(s, s));
+        final MutableSet<S> roundSymbols = process.transitionGraph().referredArcLabels().collect(Pair::getTwo).toSet();
+        roundSymbols.add(wholeAlphabet.epsilon());
+        roundAlphabet = Alphabets.create(roundSymbols, wholeAlphabet.epsilon());
+        orderAlphabet = Alphabets.product(roundAlphabet, roundAlphabet);
+        orderReflexiveSymbols = roundAlphabet.asSet().collect(s -> Tuples.pair(s, s)).toSet();
 
         final IntIntPair invSizeBound = problem.invariantSizeBound();
         final IntIntPair ordSizeBound = problem.orderSizeBound();
@@ -75,37 +77,34 @@ public abstract class AbstractProver<S> implements Prover
         this.shapeOrder = shapeOrder;
 
         solver = new Sat4jSolverAdapter();
-
-        schedulerDomain = FSAs.project(scheduler, wholeAlphabet, Twin::getOne);
-        processRange = FSAs.minimize(FSAs.determinize(FSAs.project(process, wholeAlphabet, Twin::getTwo)));
     }
 
     private LanguageSubsetChecker.Result<S> schedulerOperatesOnAllNonfinals()
     {
-        final FSA<S> nonEmptyConfigs = FSAs.complement(FSAs.thatAcceptsOnly(wholeAlphabet, Lists.immutable.empty()));
-        final FSA<S> nonEmptyNonfinalConfigs = FSAs.intersect(nonEmptyConfigs, nonfinalConfigs);
+        final FSA<S> nonEmptyConfigs = FSAs.acceptingOnly(wholeAlphabet, Lists.immutable.of(Lists.immutable.empty()));
+        final FSA<S> nonEmptyNonfinalConfigs = nonEmptyConfigs.intersect(nonfinalConfigs);
 
-        return FSAs.checkSubset(nonEmptyNonfinalConfigs, schedulerDomain);
+        return schedulerDomain.checkContaining(nonEmptyNonfinalConfigs);
     }
 
     private LanguageSubsetChecker.Result<S> schedulerRespondsToAllProcesses()
     {
-        return FSAs.checkSubset(FSAs.intersect(processRange, nonfinalConfigs), schedulerDomain);
+        return schedulerDomain.checkContaining(processRange.intersect(nonfinalConfigs));
     }
 
-    protected LanguageSubsetChecker.Result<S> schedulerOperatesOnAllNonfinalInvariants(FSA<S> invariant)
+    LanguageSubsetChecker.Result<S> schedulerOperatesOnAllNonfinalInvariants(FSA<S> invariant)
     {
-        return FSAs.checkSubset(FSAs.intersect(invariant, nonfinalConfigs), schedulerDomain);
+        return schedulerDomain.checkContaining(invariant.intersect(nonfinalConfigs));
     }
 
-    protected void search(IntIntToObjectFunction<Pair<FSA<S>, FSA<Twin<S>>>> resultSupplier)
+    void search(IntIntToObjectFunction<Pair<FSA<S>, FST<S, S>>> resultSupplier)
     {
         LOGGER.info("Scheduler operates on all nonfinals: {}", this::schedulerOperatesOnAllNonfinals);
         LOGGER.info("Scheduler responds to all process nonfinals: {}", this::schedulerRespondsToAllProcesses);
 
-        Pair<FSA<S>, FSA<Twin<S>>> result;
+        Pair<FSA<S>, FST<S, S>> result;
         final int stabilizerBound = invariantSizeEnd * invariantSizeEnd + orderSizeEnd * orderSizeEnd;
-        final long startTime = System.currentTimeMillis();
+        final long startTime = Stopwatch.currentThreadCpuTimeInMs();
         for (int stabilizer = 1; stabilizer <= stabilizerBound; stabilizer++) {
             for (int invSize = invariantSizeBegin; invSize <= invariantSizeEnd; invSize++) {
                 for (int ordSize = orderSizeBegin; ordSize <= orderSizeEnd; ordSize++) {
@@ -114,7 +113,7 @@ public abstract class AbstractProver<S> implements Prover
                         continue;
                     }
                     if ((result = resultSupplier.value(invSize, ordSize)) != null) {
-                        final long endTime = System.currentTimeMillis();
+                        final long endTime = Stopwatch.currentThreadCpuTimeInMs();
                         final long timeSpent = endTime - startTime;
                         System.out.println("A proof found under the search bound in " + timeSpent + "ms.");
                         System.out.println();
@@ -125,7 +124,7 @@ public abstract class AbstractProver<S> implements Prover
                 }
             }
         }
-        final long endTime = System.currentTimeMillis();
+        final long endTime = Stopwatch.currentThreadCpuTimeInMs();
         final long timeSpent = endTime - startTime;
         System.out.println("No proof found under the search bound.  " + timeSpent + "ms spent.");
     }

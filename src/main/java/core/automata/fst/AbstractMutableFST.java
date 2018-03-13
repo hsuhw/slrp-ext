@@ -2,6 +2,7 @@ package core.automata.fst;
 
 import api.automata.Alphabet;
 import api.automata.MutableState;
+import api.automata.fsa.FSA;
 import api.automata.fst.FST;
 import api.automata.fst.MutableFST;
 import core.automata.AbstractMutableAutomaton;
@@ -12,15 +13,26 @@ public abstract class AbstractMutableFST<S, T> extends AbstractMutableAutomaton<
     private Alphabet<S> inputAlphabet;
     private Alphabet<T> outputAlphabet;
     private FST<T, S> inverse;
+    private FSA<Pair<S, T>> fsaForm;
 
     public AbstractMutableFST(Alphabet<Pair<S, T>> alphabet, int stateCapacity)
     {
         super(alphabet, stateCapacity);
     }
 
-    public AbstractMutableFST(AbstractMutableFST<S, T> toCopy, boolean deep)
+    public AbstractMutableFST(AbstractMutableAutomaton<Pair<S, T>> toCopy, boolean deep)
     {
         super(toCopy, deep);
+    }
+
+    @Override
+    public FSA<Pair<S, T>> asFSA()
+    {
+        if (!hasChanged && fsaForm != null) {
+            return fsaForm;
+        }
+
+        return (fsaForm = MutableFST.super.asFSA());
     }
 
     @Override
