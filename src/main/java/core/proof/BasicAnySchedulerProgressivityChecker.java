@@ -39,7 +39,7 @@ public class BasicAnySchedulerProgressivityChecker implements AnySchedulerProgre
             };
 
         final FST<S, S> smallerAvailSchedulerMoves = //
-            (FST<S, S>) processInvariantMoves.product(order, process.alphabet(), smallerAvailSchedulerPair,
+            (FST<S, S>) processInvariantMoves.product(order, nonfinalScheduler.alphabet(), smallerAvailSchedulerPair,
                                                       AcceptStates.select(processInvariantMoves, order, AND));
 
         final ListIterable<Twin<S>> witness = new CounterexampleBFS<>(nonfinalScheduler.asFSA(), invariant,
@@ -167,12 +167,14 @@ public class BasicAnySchedulerProgressivityChecker implements AnySchedulerProgre
 
         private CounterexampleBFS(FSA<Pair<S, S>> nonfinalSched, FSA<S> invariant, FSA<Pair<S, S>> rhs)
         {
+
             epsilon = invariant.alphabet().epsilon();
             epsilonPair = nonfinalSched.alphabet().epsilon();
-            this.nonfinalScheduler = nonfinalSched;
+            nonfinalScheduler = nonfinalSched;
             this.invariant = invariant;
             this.rhs = rhs.determinize().complete();
-            startStateTuple = new StateTuple<>(nonfinalSched.startState(), invariant.startState(), rhs.startState());
+            startStateTuple = new StateTuple<>(nonfinalSched.startState(), invariant.startState(),
+                                               this.rhs.startState());
             visitRecord = UnifiedMap.newMap(nonfinalSched.states().size() * rhs.states().size()); // heuristic
             pendingChecks = new LinkedList<>();
         }
@@ -188,10 +190,7 @@ public class BasicAnySchedulerProgressivityChecker implements AnySchedulerProgre
         private ListIterable<Twin<S>> witnessFoundAt(StateTuple<S> stateTuple, Twin<S> breakingStep)
         {
             final MutableList<Twin<S>> witnessBacktrace = FastList.newList();
-
-            if (breakingStep != epsilon) {
-                witnessBacktrace.add(breakingStep);
-            }
+            witnessBacktrace.add(breakingStep);
             StateTuple<S> currStateTuple = stateTuple;
             Twin<S> currSymbol;
             while (!currStateTuple.equals(startStateTuple)) {
@@ -202,7 +201,7 @@ public class BasicAnySchedulerProgressivityChecker implements AnySchedulerProgre
                 currStateTuple = visitorAndSymbol.getOne();
             }
 
-            return witnessBacktrace.reverseThis();
+            return witnessBacktrace.reverseThis().select(nonfinalScheduler.alphabet()::notEpsilon);
         }
 
         private ListIterable<Twin<S>> run()
@@ -226,12 +225,19 @@ public class BasicAnySchedulerProgressivityChecker implements AnySchedulerProgre
                     throw new IllegalStateException("RHS should be deterministic");
                 }
                 for (Pair<S, S> symbol : schedDept.enabledSymbols()) {
-                    if (!invDept.transitionExists(symbol.getOne())) {
-                        continue;
+                    if (symbol.equals(epsilonPair)) {
+                        invDest = invDept;
+                        rhsDest = rhsDept;
+                    } else {
+                        final S xSymbol = symbol.getOne();
+                        if (!invDept.transitionExists(xSymbol)) {
+                            continue;
+                        }
+                        invDest = invDept.successor(xSymbol);
+                        rhsDest = rhsDept.successor(symbol);
                     }
-                    invDest = symbol.equals(epsilonPair) ? invDept : invDept.successor(symbol.getOne());
-                    rhsDest = symbol.equals(epsilonPair) ? rhsDept : rhsDept.successor(symbol);
-                    rhsAccepts = !rhs.isAcceptState(rhsDest);
+                    invAccepts = invariant.isAcceptState(invDest);
+                    rhsAccepts = rhs.isAcceptState(rhsDest);
                     for (State<Pair<S, S>> schedDest : schedDept.successors(symbol)) {
                         if (nonfinalScheduler.isAcceptState(schedDest) && invAccepts && !rhsAccepts) {
                             return witnessFoundAt(currStateTuple, (Twin<S>) symbol);

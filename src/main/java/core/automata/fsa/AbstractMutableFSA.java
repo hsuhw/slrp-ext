@@ -8,6 +8,8 @@ import core.automata.AbstractMutableAutomaton;
 
 public abstract class AbstractMutableFSA<S> extends AbstractMutableAutomaton<S> implements MutableFSA<S>
 {
+    private Boolean isDeterministic;
+    private FSA<S> unreachableTrimmed;
     private FSA<S> determinized;
     private FSA<S> completed;
     private FSA<S> minimized;
@@ -21,6 +23,26 @@ public abstract class AbstractMutableFSA<S> extends AbstractMutableAutomaton<S> 
     public AbstractMutableFSA(AbstractMutableAutomaton<S> toCopy, boolean deep)
     {
         super(toCopy, deep);
+    }
+
+    @Override
+    public FSA<S> trimUnreachableStates()
+    {
+        if (!hasChanged && unreachableTrimmed != null) {
+            return unreachableTrimmed;
+        }
+
+        return (unreachableTrimmed = MutableFSA.super.trimUnreachableStates());
+    }
+
+    @Override
+    public boolean isDeterministic()
+    {
+        if (!hasChanged && isDeterministic != null) {
+            return isDeterministic;
+        }
+
+        return (isDeterministic = MutableFSA.super.isDeterministic());
     }
 
     @Override
@@ -39,6 +61,7 @@ public abstract class AbstractMutableFSA<S> extends AbstractMutableAutomaton<S> 
         if (!hasChanged && completed != null) {
             return completed;
         }
+
 
         return (completed = MutableFSA.super.complete());
     }

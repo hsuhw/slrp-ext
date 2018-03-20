@@ -121,7 +121,7 @@ public interface FSA<S> extends Automaton<S>
 
     default boolean acceptsNone()
     {
-        return !liveStates().anySatisfy(this::isAcceptState);
+        return !reachableStates().anySatisfy(this::isAcceptState);
     }
 
     private ListIterable<S> getOneShortestWordDeterminedly()

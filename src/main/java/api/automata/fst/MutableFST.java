@@ -4,7 +4,6 @@ import api.automata.*;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.automata.fsa.MutableFSA;
-import api.util.Connectives;
 import core.automata.fst.BasicMutableFST;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.map.MutableMap;
@@ -14,7 +13,7 @@ import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 
 import java.util.function.Function;
 
-import static api.util.Connectives.AND;
+import static api.util.Connectives.*;
 import static api.util.Constants.NONEXISTING_STATE;
 import static common.util.Constants.NOT_IMPLEMENTED_YET;
 
@@ -127,8 +126,7 @@ public interface MutableFST<S, T> extends MutableAutomaton<Pair<S, T>>, FST<S, T
     @Override
     default FST<S, T> intersect(FST<S, T> target)
     {
-        return (FST<S, T>) product(target, alphabet(), Connectives.Labels.matched(),
-                                   Connectives.AcceptStates.select(this, target, AND)); // one-off
+        return (FST<S, T>) product(target, alphabet(), Labels.matched(), AcceptStates.select(this, target, AND));
     }
 
     @Override

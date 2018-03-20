@@ -36,7 +36,6 @@ F {
 
     s1 -> s1 I;
     s1 -> s1 W;
-    s1 -> s1 C;
 
     accepting: s1;
 }

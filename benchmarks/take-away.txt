@@ -48,8 +48,13 @@ P1 {
     s2 -> s1 C/N; // takes three `i`
 
     sf -> sf N/N;
+    sf -> ss win1/win1;
 
-    accepting: sf;
+    ss -> ss N/N;
+    ss -> ss C/C;
+    ss -> ss win1/win1;
+
+    accepting: sf, ss;
 }
 
 P2 {

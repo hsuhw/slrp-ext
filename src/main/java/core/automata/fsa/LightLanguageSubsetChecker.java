@@ -24,7 +24,7 @@ public class LightLanguageSubsetChecker implements LanguageSubsetChecker
     @Override
     public <S> Result<S> test(FSA<S> subsumer, FSA<S> includer)
     {
-        if (!subsumer.alphabet().epsilon().equals(includer.alphabet().epsilon())) {
+        if (!includer.alphabet().asSet().containsAllIterable(subsumer.alphabet().asSet())) {
             throw new IllegalArgumentException("incompatible two alphabet given");
         }
 

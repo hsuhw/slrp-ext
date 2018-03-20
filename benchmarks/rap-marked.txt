@@ -11,11 +11,12 @@
 // C - critical
 //
 
-// any positive number of clients; one marked
+// any positive number of clients; one is marked
 I0 {
     init: s0;
 
     s0 -> s1 I;
+    s1 -> s1 I;
     s1 -> s2 Im;
     s2 -> s2 I;
 
@@ -35,7 +36,6 @@ F {
     s1 -> s1 I;
     s1 -> s1 R;
 
-    // one process in the critical section
     s1 -> s2 Cm;
 
     // followed by any I/R
@@ -114,7 +114,6 @@ P1 {
     q2 -> q2 Im/Im;
     q2 -> q2 Rm/Rm;
     q2 -> q2 Cm/Cm;
-
 
     accepting: r2, p2, q2;
 }

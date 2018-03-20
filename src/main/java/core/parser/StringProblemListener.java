@@ -26,28 +26,25 @@ public class StringProblemListener extends ProblemBaseListener
     private static final String EPSILON_SYMBOL = DISPLAY_EPSILON_SYMBOL;
     private static final Twin<String> TWIN_EPSILON_SYMBOL = Tuples.twin(EPSILON_SYMBOL, EPSILON_SYMBOL);
 
-    private final FSAListener fsaListener;
-    private final FSTListener fstListener;
+    private FSAListener fsaListener;
+    private FSTListener fstListener;
     private int commonCapacity;
-    private Alphabet.Builder<String> alphabetRecorder;
     private IntIntPair invSize;
     private IntIntPair ordSize;
     private boolean invEnclosesAll;
 
     public StringProblemListener()
     {
-        fsaListener = new FSAListener();
-        fstListener = new FSTListener();
     }
 
     public ListIterable<Problem<String>> result()
     {
         final FSA<String> init = fsaListener.result().get(0);
         final FSA<String> fin = fsaListener.result().get(1);
-        final FSA<String> inv = fsaListener.result().getLastOptional().orElse(null);
+        final FSA<String> inv = fsaListener.result().size() == 2 ? null : fsaListener.result().getLast();
         final FST<String, String> sched = fstListener.result().get(0);
         final FST<String, String> proc = fstListener.result().get(1);
-        final FST<String, String> ord = fstListener.result().getLastOptional().orElse(null);
+        final FST<String, String> ord = fstListener.result().size() == 2 ? null : fstListener.result().getLast();
         final Problem<String> problem = new BasicProblem<>(init, fin, sched, proc, inv, ord, invSize, ordSize,
                                                            invEnclosesAll);
 
@@ -58,7 +55,9 @@ public class StringProblemListener extends ProblemBaseListener
     public void enterProblem(ProblemContext ctx)
     {
         commonCapacity = (ctx.getStop().getLine() - ctx.getStart().getLine()) / 4; // loose upper bound
-        alphabetRecorder = Alphabets.builder(commonCapacity, EPSILON_SYMBOL);
+        final Alphabet.Builder<String> alphabetRecorder = Alphabets.builder(commonCapacity, EPSILON_SYMBOL);
+        fsaListener = new FSAListener(alphabetRecorder);
+        fstListener = new FSTListener(alphabetRecorder);
     }
 
     @Override
@@ -134,7 +133,7 @@ public class StringProblemListener extends ProblemBaseListener
     {
         private final AbstractAutomatonListListener<String> listener;
 
-        private FSAListener()
+        private FSAListener(Alphabet.Builder<String> alphabetRecorder)
         {
             listener = new AbstractAutomatonListListener<>(alphabetRecorder)
             {
@@ -194,8 +193,9 @@ public class StringProblemListener extends ProblemBaseListener
     private class FSTListener extends ProblemBaseListener
     {
         private final AbstractAutomatonListListener<Pair<String, String>> listener;
+        private Alphabet.Builder<String> alphabetRecorder;
 
-        private FSTListener()
+        private FSTListener(Alphabet.Builder<String> alphabetRecorder)
         {
             listener = new AbstractAutomatonListListener<>(Alphabets.builder(commonCapacity, TWIN_EPSILON_SYMBOL))
             {
@@ -206,6 +206,7 @@ public class StringProblemListener extends ProblemBaseListener
                     return FSTs.create(dummyAlphabet, stateCapacity);
                 }
             };
+            this.alphabetRecorder = alphabetRecorder;
         }
 
         private ListIterable<FST<String, String>> result()

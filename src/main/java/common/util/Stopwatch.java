@@ -33,11 +33,11 @@ public final class Stopwatch
 
     public static long currentThreadCpuTimeInMs()
     {
-        return currentThreadCpuTimeInNs() / 1000L;
+        return currentThreadCpuTimeInNs() / 1000000L;
     }
 
     public static long currentThreadCpuTimeInSec()
     {
-        return currentThreadCpuTimeInNs() / 1000000L;
+        return currentThreadCpuTimeInNs() / 1000000000L;
     }
 }

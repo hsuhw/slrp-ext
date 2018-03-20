@@ -164,6 +164,10 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         List<TransitivityChecker.Counterexample<S>> l3KnownViolations,
         List<AnySchedulerProgressivityChecker.Counterexample<S>> l4KnownViolations)
     {
+        LOGGER.debug("Adding learned constraints: {}, {}, {}, {} ..", //
+                     l1KnownViolations::size, l2KnownViolations::size, l3KnownViolations::size,
+                     l4KnownViolations::size);
+
         l1KnownViolations.forEach(v -> refineInitConfigsEncloser(invariantEncoding, v));
         l2KnownViolations.forEach(v -> refineBehaviorEncloser(solver, invariantEncoding, v));
         l3KnownViolations.forEach(v -> refineTransitivity(solver, orderEncoding, v));
@@ -198,7 +202,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
                 addLearnedConstraints(invEnc, ordEnc, l1KnownViolations, l2KnownViolations, l3KnownViolations,
                                       l4KnownViolations);
             } catch (ContradictionException e) {
-                LOGGER.info("Trivial contradiction found");
+                LOGGER.info("Trivial contradiction found when applying learned constraints.");
                 contradiction = true;
             }
 
@@ -245,7 +249,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
                     try {
                         refineProgressivity(solver, invEnc, ordEnc, process, roundAlphabet, l4.counterexample());
                     } catch (ContradictionException e) {
-                        LOGGER.info("Trivial contradiction found");
+                        LOGGER.info("Trivial contradiction found when applying CE4.");
                         contradiction = true;
                     }
                 }

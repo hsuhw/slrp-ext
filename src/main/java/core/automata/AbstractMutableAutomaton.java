@@ -55,6 +55,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
             states = UnifiedSet.newSet(capacity);
             transitionGraph = new TransitionGraph();
             startState = newState();
+            stateMapping.put(toCopy.startState, (MutableState<S>) startState);
 
             toCopy.states.forEach(stateToCopy -> {
                 final MutableState<S> newState = stateMapping.computeIfAbsent(stateToCopy, __ -> newState());
@@ -201,6 +202,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
         }
 
         this.alphabet = alphabet;
+        hasChanged = true;
 
         return this;
     }
@@ -298,9 +300,6 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
     {
         if (!states.containsAllArguments(dept, dest)) {
             throw new IllegalArgumentException(NONEXISTING_STATE);
-        }
-        if (!alphabet.contains(symbol)) {
-            throw new IllegalArgumentException("symbol given does not exist in the alphabet");
         }
 
         dept.addTransition(symbol, dest);

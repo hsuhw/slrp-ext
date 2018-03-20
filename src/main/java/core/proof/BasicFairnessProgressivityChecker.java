@@ -73,7 +73,7 @@ public class BasicFairnessProgressivityChecker implements FairnessProgressivityC
         public RichIterable<ListIterable<S>> possibleProgressSteps()
         {
             if (possibleProgressCandidates == null) {
-                possibleProgressCandidates = behavior.preImage(fruitlessStep());
+                possibleProgressCandidates = behavior.postImage(fruitlessStep());
             }
 
             return possibleProgressCandidates;

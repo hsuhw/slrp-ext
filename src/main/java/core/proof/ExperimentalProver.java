@@ -57,10 +57,16 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
         FSAEncoding<Pair<S, S>> orderEncoding, FairnessProgressivityChecker.Counterexample<S> counterexample)
     {
         final ListIterable<S> x = counterexample.fruitlessStep();
+        final RichIterable<ListIterable<S>> possibleY = counterexample.possibleProgressSteps();
+        if (possibleY.isEmpty()) {
+            LOGGER.debug("Blocking {}", x);
+            invariantEncoding.ensureNoAccepting(x);
+            return;
+        }
+
         final int takenX = solver.newFreeVariable();
         invariantEncoding.ensureAcceptingIfOnlyIf(takenX, x);
-        final RichIterable<ListIterable<S>> ys = counterexample.possibleProgressSteps();
-        final IntIterable takenAtLeastOneXY = ys.collectInt(y -> {
+        final IntIterable takenAtLeastOneXY = possibleY.collectInt(y -> {
             final int takenXY = solver.newFreeVariable();
             orderEncoding.ensureAcceptingIfOnlyIf(takenXY, Alphabets.pairWord(x, y));
             return takenXY;
@@ -74,6 +80,10 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
         List<TransitivityChecker.Counterexample<S>> l3KnownViolations,
         List<FairnessProgressivityChecker.Counterexample<S>> l4KnownViolations)
     {
+        LOGGER.debug("Adding learned constraints: {}, {}, {}, {} ..", //
+                     l1KnownViolations::size, l2KnownViolations::size, l3KnownViolations::size,
+                     l4KnownViolations::size);
+
         l1KnownViolations.forEach(violation -> refineInitConfigsEncloser(invEnc, violation));
         l2KnownViolations.forEach(violation -> refineBehaviorEncloser(solver, invEnc, violation));
         l3KnownViolations.forEach(violation -> refineTransitivity(solver, ordEnc, violation));
@@ -107,7 +117,7 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
                 addLearnedConstraints(invEnc, ordEnc, l1KnownViolations, l2KnownViolations, l3KnownViolations,
                                       l4KnownViolations);
             } catch (ContradictionException e) {
-                LOGGER.info("Trivial contradiction found");
+                LOGGER.info("Trivial contradiction found when applying learned constraints.");
                 contradiction = true;
             }
 
@@ -153,7 +163,7 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
                     try {
                         refineProgressivity(solver, invEnc, ordEnc, l4.counterexample());
                     } catch (ContradictionException e) {
-                        LOGGER.info("Trivial contradiction found");
+                        LOGGER.info("Trivial contradiction found when applying CE4.");
                         contradiction = true;
                     }
                 }

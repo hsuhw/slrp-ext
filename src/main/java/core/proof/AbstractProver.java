@@ -5,6 +5,7 @@ import api.automata.Alphabets;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.automata.fsa.LanguageSubsetChecker;
+import api.automata.fsa.MutableFSA;
 import api.automata.fst.FST;
 import api.proof.Problem;
 import api.proof.Prover;
@@ -54,12 +55,12 @@ public abstract class AbstractProver<S> implements Prover
         nonfinalConfigs = problem.finalConfigs().determinize().minimize().complement();
         scheduler = problem.scheduler();
         process = problem.process();
-        schedulerDomain = scheduler.domain().determinize().minimize();
-        processRange = process.range().determinize().minimize();
+        wholeAlphabet = initialConfigs.alphabet(); // relying on current parsing behavior
+        schedulerDomain = ((MutableFSA<S>) scheduler.domain()).setAlphabet(wholeAlphabet).determinize();
+        processRange = ((MutableFSA<S>) process.range()).setAlphabet(wholeAlphabet).determinize().minimize();
         givenInvariant = problem.invariant();
         givenOrder = problem.order();
 
-        wholeAlphabet = initialConfigs.alphabet(); // relying on current parsing behavior
         final MutableSet<S> roundSymbols = process.transitionGraph().referredArcLabels().collect(Pair::getTwo).toSet();
         roundSymbols.add(wholeAlphabet.epsilon());
         roundAlphabet = Alphabets.create(roundSymbols, wholeAlphabet.epsilon());

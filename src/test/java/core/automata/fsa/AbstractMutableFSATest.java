@@ -215,9 +215,8 @@ public abstract class AbstractMutableFSATest
                 final MutableState<Object> s2 = fsa.newState();
                 final MutableState<Object> s3 = fsa.newState();
                 fsa.addTransition(s1, s2, a1).setAsStart(s2).addTransition(s2, s3, a1);
-                final SetIterable<? extends State<Object>> states = fsa.trimUnreachableStates().states();
-                expect(states.contains(s1)).toBeFalse();
-                expect(states.containsAllArguments(s2, s3)).toBeTrue();
+                expect(fsa.unreachableStates().size()).toBeGreaterThan(0);
+                expect(fsa.trimUnreachableStates().unreachableStates().isEmpty()).toBeTrue();
             });
 
         });

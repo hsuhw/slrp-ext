@@ -20,9 +20,15 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
     @Override
     default FSA<S> trimUnreachableStates()
     {
+        if (unreachableStates().isEmpty()) {
+            return this; // in-place reference
+        }
+
+        final MutableFSA<S> result = FSAs.deepCopy(this);
         @SuppressWarnings("unchecked")
-        final SetIterable<MutableState<S>> unreachableStates = (SetIterable) unreachableStates();
-        return FSAs.deepCopy(this).removeStates(unreachableStates);
+        final SetIterable<MutableState<S>> unreachableStates = (SetIterable) result.unreachableStates();
+
+        return result.removeStates(unreachableStates); // one-off
     }
 
     @Override
@@ -113,7 +119,7 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
     default FSA<S> determinize()
     {
         if (isDeterministic()) {
-            return this;
+            return this; // in-place reference
         }
 
         final Automaton.TransitionGraph<S> delta = transitionGraph();
@@ -142,7 +148,7 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
             }
         }
 
-        return result; // in-place or one-off
+        return result; // one-off
     }
 
     @Override
@@ -151,19 +157,20 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
         if (!this.isDeterministic()) {
             throw new UnsupportedOperationException("only available on deterministic instances");
         }
-
-        final SetIterable<State<S>> incomplete = incompleteStates();
-        final SetIterable<S> completeAlphabet = alphabet().noEpsilonSet();
-        if (incomplete.isEmpty()) {
-            return this;
+        if (incompleteStates().isEmpty()) {
+            return this; // in-place reference
         }
 
-        final MutableState<S> sink = newState();
-        completeAlphabet.forEach(symbol -> addTransition(sink, sink, symbol));
-        incomplete.forEach(state -> completeAlphabet.reject(state.enabledSymbols()::contains).forEach(
-            nonTrans -> addTransition((MutableState<S>) state, sink, nonTrans)));
+        final MutableFSA<S> result = FSAs.deepCopy(this);
+        final SetIterable<S> completeAlphabet = alphabet().noEpsilonSet();
+        final SetIterable<State<S>> incomplete = result.incompleteStates();
 
-        return this; // in-place reference
+        final MutableState<S> sink = result.newState();
+        completeAlphabet.forEach(symbol -> result.addTransition(sink, sink, symbol));
+        incomplete.forEach(state -> completeAlphabet.reject(state.enabledSymbols()::contains).forEach(
+            nonTrans -> result.addTransition((MutableState<S>) state, sink, nonTrans)));
+
+        return result; // one-off
     }
 
     @Override
@@ -173,10 +180,10 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
             throw new UnsupportedOperationException("only available on deterministic instances");
         }
         if (acceptsNone()) {
-            return FSAs.acceptingNone(alphabet());
+            return FSAs.acceptingNone(alphabet()); // shared reference
         }
         if (complement().acceptsNone()) {
-            return FSAs.acceptingAll(alphabet());
+            return FSAs.acceptingAll(alphabet()); // shared reference
         }
 
         final FSA<S> target = trimUnreachableStates().complete();
@@ -194,14 +201,15 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
         final MutableMap<State<S>, MutableState<S>> stateMapping = UnifiedMap.newMap(target.states().size());
         statePartition.forEach(part -> part.forEach(state -> stateMapping.put(state, partitionMapping.get(part))));
 
+        final State<S> originalStart = target.startState();
         statePartition.forEach(part -> {
             final MutableState<S> newState = partitionMapping.get(part);
-            if (part.contains(startState())) {
+            if (part.contains(originalStart)) {
                 final State<S> dummyStart = result.startState();
                 result.setAsStart(newState);
                 result.removeState((MutableState<S>) dummyStart);
             }
-            if (part.anySatisfy(this::isAcceptState)) {
+            if (part.anySatisfy(target::isAcceptState)) {
                 result.setAsAccept(newState);
             }
             symbols.forEach(symbol -> {
@@ -216,9 +224,10 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
     @Override
     default FSA<S> complement()
     {
-        final MutableFSA<S> result = FSAs.shallowCopy((MutableFSA<S>) determinize().complete());
+        final MutableFSA<S> completed = (MutableFSA<S>) determinize().complete();
+        final MutableFSA<S> result = FSAs.shallowCopy(completed);
         @SuppressWarnings("unchecked")
-        final SetIterable<MutableState<S>> nonAcceptStates = (SetIterable) nonAcceptStates();
+        final SetIterable<MutableState<S>> nonAcceptStates = (SetIterable) result.nonAcceptStates();
         result.resetAcceptStates().setAllAsAccept(nonAcceptStates);
 
         return result; // shallow reference

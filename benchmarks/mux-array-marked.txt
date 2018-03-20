@@ -8,14 +8,17 @@
 // Y can be 0-1 (0 and 1 stand for 'empty' and 'with token', respectively)
 //
 
-// at least two processes; one marked
+// at least two processes; one is marked
 I0 {
     init: s0;
 
-    s0 -> s1 q01;
-    s1 -> s1 q00;
-    s1 -> s2 q00m;
+    s0 -> s1 q01m;
+    s1 -> s2 q00;
     s2 -> s2 q00;
+
+    s0 -> s3 q01;
+    s3 -> s3 q00;
+    s3 -> s2 q00m;
 
     accepting: s2;
 }

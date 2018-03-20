@@ -35,13 +35,11 @@ F {
     s1 -> s1 I;
     s1 -> s1 R;
 
-    // one process in the critical section
     s1 -> s2 C;
 
-    // followed by any I/R/C
+    // followed by any I/R
     s2 -> s2 I;
     s2 -> s2 R;
-    s2 -> s2 C;
 
     accepting: s2;
 }

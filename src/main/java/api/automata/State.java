@@ -1,8 +1,11 @@
 package api.automata;
 
 import org.eclipse.collections.api.RichIterable;
+import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Pair;
+
+import java.util.function.Function;
 
 import static common.util.Constants.DISPLAY_NEWLINE;
 import static common.util.Constants.NOT_IMPLEMENTED_YET;
@@ -40,13 +43,16 @@ public interface State<S>
     @Override
     String toString();
 
-    default String toString(String indent, String nameTag)
+    default String toString(String indent, MapIterable<State<S>, String> nameMask)
     {
         final StringBuilder result = new StringBuilder();
+        final Function<State<S>, String> getName = state -> nameMask != null
+                                                            ? nameMask.get(state)
+                                                            : (state.name() != null ? state.name() : this.toString());
 
         transitions().forEach(labelAndState -> {
             result.append(indent);
-            result.append(nameTag).append(" -> ").append(labelAndState.getTwo().name());
+            result.append(getName.apply(this)).append(" -> ").append(getName.apply(labelAndState.getTwo()));
             result.append(" [").append(labelAndState.getOne()).append("];");
             result.append(DISPLAY_NEWLINE);
         });
@@ -56,10 +62,6 @@ public interface State<S>
 
     default String toString(String indent)
     {
-        if (name() == null) { // expected to be used as parts
-            throw new IllegalStateException("no display name available");
-        }
-
-        return toString(indent, name());
+        return toString(indent, null);
     }
 }

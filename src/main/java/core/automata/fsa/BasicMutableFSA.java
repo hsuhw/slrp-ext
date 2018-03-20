@@ -34,20 +34,6 @@ public class BasicMutableFSA<S> extends AbstractMutableFSA<S> implements Mutable
     }
 
     @Override
-    public FSA<S> trimUnreachableStates()
-    {
-        final RichIterable<State<S>> unreachableStates = unreachableStates();
-        if (unreachableStates.isEmpty()) {
-            return this;
-        }
-
-        final BasicMutableFSA<S> result = new BasicMutableFSA<>(this, false);
-        result.states.removeAllIterable(unreachableStates);
-
-        return result;
-    }
-
-    @Override
     public <T, R> Automaton<R> product(Automaton<T> target, Alphabet<R> alphabet, StepMaker<S, T, R> stepMaker,
         Finalizer<S, T, R> finalizer)
     {

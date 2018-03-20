@@ -59,7 +59,7 @@ P1 {
 
     s0 -> r1;
 
-    // change from idle in black to waiting in black
+    // remain black, enter waiting
     r1 -> r1 q000/q000;
     r1 -> r1 q001/q001;
     r1 -> r1 q010/q010;
@@ -94,7 +94,7 @@ P1 {
 
     s0 -> r2;
 
-    // change from waiting with token to CS
+    // enter CS from waiting with token
     r2 -> r2 q000/q000;
     r2 -> r2 q001/q001;
     r2 -> r2 q010/q010;
@@ -115,7 +115,7 @@ P1 {
 
     s0 -> r3;
 
-    // change from CS to idle
+    // exit CS
     r3 -> r3 q000/q000;
     r3 -> r3 q001/q001;
     r3 -> r3 q010/q010;
@@ -138,6 +138,7 @@ P1 {
 
     s0 -> r4;
 
+    // when the right is white and enters waiting, turn to black
     r4 -> r4 q000/q000;
     r4 -> r4 q001/q001;
     r4 -> r4 q010/q010;
@@ -162,6 +163,7 @@ P1 {
 
     s0 -> r41;
 
+    // when the right is white and enters waiting, turn to black (circularized)
     r41 -> s2 q100/q000;
 
     s2 -> s2 q000/q000;
@@ -186,6 +188,7 @@ P1 {
 
     s0 -> r5;
 
+    // when passing token in black, turn white
     r5 -> r5 q000/q000;
     r5 -> r5 q001/q001;
     r5 -> r5 q010/q010;
@@ -210,6 +213,7 @@ P1 {
 
     s0 -> r51;
 
+    // when passing token in black, turn white (circularized)
     r51 -> s4 q000/q010;
     r51 -> s4 q001/q011;
     r51 -> s4 q100/q110;
@@ -234,6 +238,7 @@ P1 {
 
     s0 -> r6;
 
+    // when the right is black and without token, turn to black
     r6 -> r6 q000/q000;
     r6 -> r6 q001/q001;
     r6 -> r6 q010/q010;
@@ -259,6 +264,7 @@ P1 {
 
     s0 -> r61;
 
+    // when the right is black and without token, turn to black (circularized)
     r61 -> s6 q001/q001;
     r61 -> s6 q101/q101;
 
@@ -284,7 +290,7 @@ P1 {
 
     s0 -> r7;
 
-    // change from idle with token to CS
+    // white, with token, can go directly from idle to CS
     r7 -> r7 q000/q000;
     r7 -> r7 q001/q001;
     r7 -> r7 q010/q010;
@@ -304,6 +310,7 @@ P1 {
 
     s0 -> r8;
 
+    // white can only turn to waiting when the left is black
     r8 -> r8 q000/q000;
     r8 -> r8 q001/q001;
     r8 -> r8 q010/q010;
@@ -330,6 +337,7 @@ P1 {
 
     r81 -> s8 q100/q000;
 
+    // white can only turn to waiting when the left is black (circularized)
     s8 -> s8 q000/q000;
     s8 -> s8 q001/q001;
     s8 -> s8 q010/q010;

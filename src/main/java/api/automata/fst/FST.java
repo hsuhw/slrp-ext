@@ -41,15 +41,19 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
     default Alphabet<S> inputAlphabet()
     {
         final MutableSet<S> set = UnifiedSet.newSet(alphabet().size()); // almost sure upper bound
+        final S epsilon = alphabet().epsilon().getOne();
+        set.add(epsilon);
 
-        return Alphabets.create(alphabet().asSet().collect(Pair::getOne, set), alphabet().epsilon().getOne());
+        return Alphabets.create(alphabet().asSet().collect(Pair::getOne, set), epsilon);
     }
 
     default Alphabet<T> outputAlphabet()
     {
         final MutableSet<T> set = UnifiedSet.newSet(alphabet().size()); // almost sure upper bound
+        final T epsilon = alphabet().epsilon().getTwo();
+        set.add(epsilon);
 
-        return Alphabets.create(alphabet().asSet().collect(Pair::getTwo, set), alphabet().epsilon().getTwo());
+        return Alphabets.create(alphabet().asSet().collect(Pair::getTwo, set), epsilon);
     }
 
     default FSA<S> domain()
