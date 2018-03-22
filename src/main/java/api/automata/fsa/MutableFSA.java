@@ -36,7 +36,7 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
     {
         final MutableFSA<R> result = FSAs.create(alphabet, states().size()); // upper bound
         final MutableMap<State<S>, MutableState<R>> stateMapping = UnifiedMap.newMap(states().size());
-        stateMapping.put(startState(), (MutableState<R>) result.startState());
+        stateMapping.put(startState(), result.startState());
 
         R newSymbol;
         for (State<S> dept : states()) {
@@ -129,7 +129,7 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
         final Queue<SetIterable<State<S>>> pendingChecks = new LinkedList<>();
 
         final SetIterable<State<S>> startStates = delta.epsilonClosureOf(startState());
-        stateMapping.put(startStates, (MutableState<S>) result.startState());
+        stateMapping.put(startStates, result.startState());
         pendingChecks.add(startStates);
         final SetIterable<S> symbols = alphabet().noEpsilonSet();
         SetIterable<State<S>> currStates;
@@ -205,9 +205,9 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
         statePartition.forEach(part -> {
             final MutableState<S> newState = partitionMapping.get(part);
             if (part.contains(originalStart)) {
-                final State<S> dummyStart = result.startState();
+                final MutableState<S> dummyStart = result.startState();
                 result.setAsStart(newState);
-                result.removeState((MutableState<S>) dummyStart);
+                result.removeState(dummyStart);
             }
             if (part.anySatisfy(target::isAcceptState)) {
                 result.setAsAccept(newState);
@@ -253,7 +253,7 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
         final SetIterable<MutableState<S>> targetStates = (SetIterable) target.states();
         @SuppressWarnings("unchecked")
         final SetIterable<MutableState<S>> targetAccepts = (SetIterable) target.acceptStates();
-        result.addEpsilonTransition(newStart, (MutableState<S>) startState()).setAsStart(newStart) //
+        result.addEpsilonTransition(newStart, startState()).setAsStart(newStart) //
               .addStates(targetStates).addEpsilonTransition(newStart, (MutableState<S>) target.startState()) //
               .setAllAsAccept(targetAccepts);
 

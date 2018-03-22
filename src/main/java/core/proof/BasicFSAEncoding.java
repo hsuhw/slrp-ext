@@ -410,7 +410,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
         final ImmutableIntSet truthyIndicators = solver.getModelTruthyVariables();
         final MutableFSA<S> result = FSAs.create(intAlphabet.originAlphabet(), stateNumber);
         final MutableList<MutableState<S>> states = FastList.newList(stateNumber);
-        states.add(START_STATE_INDEX, (MutableState<S>) result.startState());
+        states.add(START_STATE_INDEX, result.startState());
         for (int i = 1; i < stateNumber; i++) {
             states.add(i, result.newState("s" + i));
         }

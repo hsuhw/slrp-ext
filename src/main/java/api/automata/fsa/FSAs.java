@@ -81,7 +81,7 @@ public final class FSAs
     {
         final MutableFSA<S> result = create(alphabet, 1);
 
-        final MutableState<S> startState = (MutableState<S>) result.startState();
+        final MutableState<S> startState = result.startState();
         alphabet.noEpsilonSet().forEach(symbol -> result.addTransition(startState, startState, symbol));
         result.setAsAccept(startState);
 
@@ -112,7 +112,7 @@ public final class FSAs
     {
         final int stateCapacity = (int) words.sumOfInt(ListIterable::size); // upper bound
         final MutableFSA<S> result = create(alphabet, stateCapacity);
-        final MutableState<S> startState = (MutableState<S>) result.startState();
+        final MutableState<S> startState = result.startState();
         final MutableState<S> acceptState = result.newState();
         result.setAsAccept(acceptState);
 

@@ -25,7 +25,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
     protected final MutableSet<State<S>> acceptStates;
     protected final TransitionGraph transitionGraph;
     private Alphabet<S> alphabet;
-    private State<S> startState;
+    private MutableState<S> startState;
 
     protected boolean hasChanged;
     private SetIterable<State<S>> nonAcceptStates;
@@ -55,7 +55,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
             states = UnifiedSet.newSet(capacity);
             transitionGraph = new TransitionGraph();
             startState = newState();
-            stateMapping.put(toCopy.startState, (MutableState<S>) startState);
+            stateMapping.put(toCopy.startState, startState);
 
             toCopy.states.forEach(stateToCopy -> {
                 final MutableState<S> newState = stateMapping.computeIfAbsent(stateToCopy, __ -> newState());
@@ -90,7 +90,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
     }
 
     @Override
-    public State<S> startState()
+    public MutableState<S> startState()
     {
         return startState;
     }
@@ -380,7 +380,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
 
         public ProductHandler<T, R> makeProduct(StepMaker<S, T, R> stepMaker)
         {
-            final MutableState<R> dummyStart = (MutableState<R>) result.startState();
+            final MutableState<R> dummyStart = result.startState();
             result.setAsStart(takeState(startState(), target.startState()));
             result.removeState(dummyStart);
             Pair<State<S>, State<T>> currStatePair;

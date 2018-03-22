@@ -118,7 +118,7 @@ public abstract class AbstractAutomatonListListener<S>
 
     public void enterStartStates(List<TerminalNode> stateNodes)
     {
-        final MutableState<S> startState = (MutableState<S>) currBuilder.startState();
+        final MutableState<S> startState = currBuilder.startState();
         if (stateNodes.size() == 1 && stateNodes.get(0) != null) {
             currBuilder.setAsStart(takeState(stateNodes.get(0).getText()));
             currBuilder.removeState(startState);

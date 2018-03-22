@@ -11,6 +11,9 @@ import static common.util.Constants.*;
 public interface MutableAutomaton<S> extends Automaton<S>
 {
     @Override
+    MutableState<S> startState();
+
+    @Override
     TransitionGraph<S> transitionGraph();
 
     @Override
