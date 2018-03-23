@@ -2,14 +2,13 @@ ARG JDK_IMG_VERSION
 FROM openjdk:${JDK_IMG_VERSION}
 
 # Add basic packages
-RUN apt update && apt install -y \
+RUN apt-get update && apt-get install -y \
     make g++ \
  && rm -rf /var/lib/apt/lists/*
 
 # Install gradle
 ARG GRADLE_VERSION
 ARG GRADLE_SHA
-
 RUN cd /usr/lib \
  && curl -fl "https://downloads.gradle.org/distributions/gradle-${GRADLE_VERSION}-bin.zip" -o gradle-bin.zip \
  && echo "${GRADLE_SHA}  gradle-bin.zip" | sha256sum -c - \
@@ -21,10 +20,10 @@ RUN cd /usr/lib \
 ENV GRADLE_HOME /usr/lib/gradle
 ENV PATH ${PATH}:${GRADLE_HOME}/bin
 
-# Set volumes for caches and workspace
-VOLUME ["/root/.gradle/caches", "/usr/src/app"]
+# Set volumes for caches and default workspace
+VOLUME ["/root/.gradle/caches", "/usr/share/app"]
 
-# Default command is '/usr/bin/gradle -version' in dir '/usr/share/app'
+# Set default command to be '/usr/bin/gradle -version' in dir '/usr/share/app'
 WORKDIR /usr/share/app
 ENTRYPOINT ["gradle"]
 CMD ["-version"]

@@ -2,4 +2,4 @@
 
 cd "$(dirname "${BASH_SOURCE[0]}")/.." || exit
 
-sudo docker-compose run --rm gradle "$@"
+sudo docker-compose run --rm main "$@"
