@@ -18,6 +18,11 @@ public interface LStarLearning
     {
         boolean passed();
 
+        default boolean rejected()
+        {
+            return !passed();
+        }
+
         ListIterable<S> positiveCounterexample();
 
         ListIterable<S> negativeCounterexample();

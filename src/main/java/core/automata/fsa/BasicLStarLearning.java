@@ -77,7 +77,7 @@ public class BasicLStarLearning implements LStarLearning
         {
             var hypothesis = settle();
             var check = teacher.checkAnswer(hypothesis);
-            while (!check.passed()) {
+            while (check.rejected()) {
                 final var hasPositiveCounterexample = check.positiveCounterexample() != null;
                 final var counterexample = hasPositiveCounterexample
                                            ? check.positiveCounterexample()
