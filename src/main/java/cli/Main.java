@@ -99,10 +99,10 @@ public final class Main
                 prover = new ExperimentalProver<>(problem, shapeInvariant, shapeOrder, loosenInvariant);
         }
         if (problem.invariant() != null && problem.order() != null) {
-            LOGGER.debug("Invoke a verification on input.");
+            LOGGER.info("Invoke a verification on input.");
             prover.verify();
         } else {
-            LOGGER.debug("Invoke a proof searching on input.");
+            LOGGER.info("Invoke a proof searching on input.");
             prover.prove();
         }
     }

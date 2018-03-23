@@ -80,7 +80,7 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
         List<TransitivityChecker.Counterexample<S>> l3KnownViolations,
         List<FairnessProgressivityChecker.Counterexample<S>> l4KnownViolations)
     {
-        LOGGER.debug("Adding learned constraints: {}, {}, {}, {} ..", //
+        LOGGER.info("Adding learned constraints: {}, {}, {}, {} ..", //
                      l1KnownViolations::size, l2KnownViolations::size, l3KnownViolations::size,
                      l4KnownViolations::size);
 
