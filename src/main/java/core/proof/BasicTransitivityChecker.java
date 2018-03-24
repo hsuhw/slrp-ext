@@ -1,6 +1,5 @@
 package core.proof;
 
-import api.automata.fsa.LanguageSubsetChecker;
 import api.automata.fst.FST;
 import api.proof.TransitivityChecker;
 import org.eclipse.collections.api.RichIterable;
@@ -15,9 +14,8 @@ public class BasicTransitivityChecker implements TransitivityChecker
     @Override
     public <S> Result<S> test(FST<S, S> target)
     {
-        final FST<S, S> transitive = target.compose(target, target.alphabet());
-        final LanguageSubsetChecker.Result<Pair<S, S>> transitivityCheck = target.asFSA()
-                                                                                 .checkContaining(transitive.asFSA());
+        final var transitive = target.compose(target, target.alphabet());
+        final var transitivityCheck = target.asFSA().checkContaining(transitive.asFSA());
         if (transitivityCheck.passed()) {
             return new Result<>(true, null);
         }
@@ -72,8 +70,8 @@ public class BasicTransitivityChecker implements TransitivityChecker
         {
             if (validMiddleSteps == null) {
                 // 'x -> z' is the invalidStep; for 'x -> { y1, y2, ... } -> z', ys are the valid middle steps
-                final ListIterable<S> x = invalidStep.collect(Pair::getOne);
-                final ListIterable<S> z = invalidStep.collect(Pair::getTwo);
+                final var x = invalidStep.collect(Pair::getOne);
+                final var z = invalidStep.collect(Pair::getTwo);
                 validMiddleSteps = relation.postImage(x).select(relation.preImage(z)::contains);
             }
 

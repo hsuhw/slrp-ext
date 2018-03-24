@@ -10,7 +10,6 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.LoggerContext;
-import org.apache.logging.log4j.core.config.Configuration;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -23,15 +22,15 @@ public final class Main
 
     private static void setLogLevel(Level level)
     {
-        final LoggerContext ctx = (LoggerContext) LogManager.getContext(false);
-        final Configuration config = ctx.getConfiguration();
+        final var ctx = (LoggerContext) LogManager.getContext(false);
+        final var config = ctx.getConfiguration();
         config.getLoggerConfig(LogManager.ROOT_LOGGER_NAME).setLevel(level);
         ctx.updateLoggers();
     }
 
     public static void main(String[] args) throws Exception
     {
-        final CommandLineInterface cli = new CommandLineInterface(args);
+        final var cli = new CommandLineInterface(args);
 
         // handle general CLI arguments
         if (cli.invokedCmd().hasOption("help")) {
@@ -73,7 +72,7 @@ public final class Main
         // parse the input file
         final InputStream input = new FileInputStream(cli.invokedCmd().getArgList().get(0));
         final Parser<Problem<String>> problemParser = new StringProblemParser();
-        final Problem<String> problem = problemParser.parse(input).getOnly();
+        final var problem = problemParser.parse(input).getOnly();
         LOGGER.debug("Initial config parsed:" + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", //
                      problem.initialConfigs());
         LOGGER.debug("Final config parsed:" + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", //
@@ -87,10 +86,10 @@ public final class Main
 
         // process the input problem
         final Prover prover;
-        final String mode = cli.invokedCmd().hasOption("mode") ? cli.invokedCmd().getOptionValue("mode") : "exp";
-        final boolean shapeInvariant = cli.invokedCmd().hasOption("shape-invariant");
-        final boolean shapeOrder = cli.invokedCmd().hasOption("shape-order");
-        final boolean loosenInvariant = cli.invokedCmd().hasOption("loose-invariant");
+        final var mode = cli.invokedCmd().hasOption("mode") ? cli.invokedCmd().getOptionValue("mode") : "exp";
+        final var shapeInvariant = cli.invokedCmd().hasOption("shape-invariant");
+        final var shapeOrder = cli.invokedCmd().hasOption("shape-order");
+        final var loosenInvariant = cli.invokedCmd().hasOption("loose-invariant");
         switch (mode) {
             case "cav16mono":
                 prover = new CAV16MonoProver<>(problem, shapeInvariant, shapeOrder, loosenInvariant);

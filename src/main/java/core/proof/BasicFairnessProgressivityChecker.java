@@ -1,7 +1,6 @@
 package core.proof;
 
 import api.automata.fsa.FSA;
-import api.automata.fsa.LanguageSubsetChecker;
 import api.automata.fst.FST;
 import api.proof.FairnessProgressivityChecker;
 import org.eclipse.collections.api.RichIterable;
@@ -15,10 +14,10 @@ public class BasicFairnessProgressivityChecker implements FairnessProgressivityC
     @Override
     public <S> Result<S> test(FST<S, S> behavior, FSA<S> matteringConfigs, FSA<S> invariant, FST<S, S> order)
     {
-        final FST<S, S> smallerMoves = behavior.intersect(order);
-        final FSA<S> smallerAvails = smallerMoves.domain();
-        final FSA<S> matteringInvariant = matteringConfigs.intersect(invariant);
-        final LanguageSubsetChecker.Result<S> someSmallerAvail = smallerAvails.checkContaining(matteringInvariant);
+        final var smallerMoves = behavior.intersect(order);
+        final var smallerAvails = smallerMoves.domain();
+        final var matteringInvariant = matteringConfigs.intersect(invariant);
+        final var someSmallerAvail = smallerAvails.checkContaining(matteringInvariant);
 
         if (someSmallerAvail.passed()) {
             return new Result<>(true, null);
@@ -59,7 +58,7 @@ public class BasicFairnessProgressivityChecker implements FairnessProgressivityC
 
     public static class Counterexample<S> implements FairnessProgressivityChecker.Counterexample<S>
     {
-        private ListIterable<S> instance;
+        private final ListIterable<S> instance;
         private final FST<S, S> behavior;
         private RichIterable<ListIterable<S>> possibleProgressCandidates;
 

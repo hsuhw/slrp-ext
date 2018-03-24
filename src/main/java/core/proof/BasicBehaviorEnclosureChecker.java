@@ -1,7 +1,6 @@
 package core.proof;
 
 import api.automata.fsa.FSA;
-import api.automata.fsa.LanguageSubsetChecker;
 import api.automata.fst.FST;
 import api.proof.BehaviorEnclosureChecker;
 import org.eclipse.collections.api.RichIterable;
@@ -15,8 +14,8 @@ public class BasicBehaviorEnclosureChecker implements BehaviorEnclosureChecker
     @Override
     public <S> Result<S> test(FST<S, S> behavior, FSA<S> encloser)
     {
-        final FSA<S> postBehavior = behavior.postImage(encloser);
-        final LanguageSubsetChecker.Result<S> enclosureCheck = encloser.checkContaining(postBehavior);
+        final var postBehavior = behavior.postImage(encloser);
+        final var enclosureCheck = encloser.checkContaining(postBehavior);
 
         if (enclosureCheck.passed()) {
             return new Result<>(true, null);

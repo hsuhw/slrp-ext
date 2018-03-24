@@ -15,10 +15,8 @@ import common.util.Stopwatch;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.block.function.primitive.IntIntToObjectFunction;
-import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.api.tuple.primitive.IntIntPair;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.tuple.Tuples;
 
@@ -61,14 +59,14 @@ public abstract class AbstractProver<S> implements Prover
         givenInvariant = problem.invariant();
         givenOrder = problem.order();
 
-        final MutableSet<S> roundSymbols = process.transitionGraph().referredArcLabels().collect(Pair::getTwo).toSet();
+        final var roundSymbols = process.transitionGraph().referredArcLabels().collect(Pair::getTwo).toSet();
         roundSymbols.add(wholeAlphabet.epsilon());
         roundAlphabet = Alphabets.create(roundSymbols, wholeAlphabet.epsilon());
         orderAlphabet = Alphabets.product(roundAlphabet, roundAlphabet);
         orderReflexiveSymbols = roundAlphabet.asSet().collect(s -> Tuples.pair(s, s)).toSet();
 
-        final IntIntPair invSizeBound = problem.invariantSizeBound();
-        final IntIntPair ordSizeBound = problem.orderSizeBound();
+        final var invSizeBound = problem.invariantSizeBound();
+        final var ordSizeBound = problem.orderSizeBound();
         invariantSizeBegin = invSizeBound != null ? invSizeBound.getOne() : 0;
         invariantSizeEnd = invSizeBound != null ? invSizeBound.getTwo() : 0;
         orderSizeBegin = ordSizeBound != null ? ordSizeBound.getOne() : 0;
@@ -82,8 +80,8 @@ public abstract class AbstractProver<S> implements Prover
 
     private LanguageSubsetChecker.Result<S> schedulerOperatesOnAllNonfinals()
     {
-        final FSA<S> nonEmptyConfigs = FSAs.acceptingOnly(wholeAlphabet, Lists.immutable.of(Lists.immutable.empty()));
-        final FSA<S> nonEmptyNonfinalConfigs = nonEmptyConfigs.intersect(nonfinalConfigs);
+        final var nonEmptyConfigs = FSAs.acceptingOnly(wholeAlphabet, Lists.immutable.of(Lists.immutable.empty()));
+        final var nonEmptyNonfinalConfigs = nonEmptyConfigs.intersect(nonfinalConfigs);
 
         return schedulerDomain.checkContaining(nonEmptyNonfinalConfigs);
     }
@@ -104,18 +102,18 @@ public abstract class AbstractProver<S> implements Prover
         LOGGER.info("Scheduler responds to all process nonfinals: {}", this::schedulerRespondsToAllProcesses);
 
         Pair<FSA<S>, FST<S, S>> result;
-        final int stabilizerBound = invariantSizeEnd * invariantSizeEnd + orderSizeEnd * orderSizeEnd;
-        final long startTime = Stopwatch.currentThreadCpuTimeInMs();
-        for (int stabilizer = 1; stabilizer <= stabilizerBound; stabilizer++) {
-            for (int invSize = invariantSizeBegin; invSize <= invariantSizeEnd; invSize++) {
-                for (int ordSize = orderSizeBegin; ordSize <= orderSizeEnd; ordSize++) {
-                    final int stabilizerFactor = invSize * invSize + ordSize * ordSize;
+        final var stabilizerBound = invariantSizeEnd * invariantSizeEnd + orderSizeEnd * orderSizeEnd;
+        final var startTime = Stopwatch.currentThreadCpuTimeInMs();
+        for (var stabilizer = 1; stabilizer <= stabilizerBound; stabilizer++) {
+            for (var invSize = invariantSizeBegin; invSize <= invariantSizeEnd; invSize++) {
+                for (var ordSize = orderSizeBegin; ordSize <= orderSizeEnd; ordSize++) {
+                    final var stabilizerFactor = invSize * invSize + ordSize * ordSize;
                     if (stabilizerFactor != stabilizer) {
                         continue;
                     }
                     if ((result = resultSupplier.value(invSize, ordSize)) != null) {
-                        final long endTime = Stopwatch.currentThreadCpuTimeInMs();
-                        final long timeSpent = endTime - startTime;
+                        final var endTime = Stopwatch.currentThreadCpuTimeInMs();
+                        final var timeSpent = endTime - startTime;
                         System.out.println("A proof found under the search bound in " + timeSpent + "ms.");
                         System.out.println();
                         System.out.println("A " + result.getOne());
@@ -125,8 +123,8 @@ public abstract class AbstractProver<S> implements Prover
                 }
             }
         }
-        final long endTime = Stopwatch.currentThreadCpuTimeInMs();
-        final long timeSpent = endTime - startTime;
+        final var endTime = Stopwatch.currentThreadCpuTimeInMs();
+        final var timeSpent = endTime - startTime;
         System.out.println("No proof found under the search bound.  " + timeSpent + "ms spent.");
     }
 }

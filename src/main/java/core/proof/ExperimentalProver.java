@@ -1,6 +1,5 @@
 package core.proof;
 
-import api.automata.AlphabetIntEncoder;
 import api.automata.AlphabetIntEncoders;
 import api.automata.Alphabets;
 import api.automata.fsa.FSA;
@@ -13,9 +12,6 @@ import common.sat.ContradictionException;
 import common.sat.SatSolver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.collections.api.IntIterable;
-import org.eclipse.collections.api.RichIterable;
-import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
 
@@ -42,7 +38,7 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
         super(problem, shapeInvariant, shapeOrder, loosenInvariant);
 
         allBehavior = scheduler.compose(process, scheduler.alphabet());
-        final FSA<S> allBehaviorDomain = allBehavior.domain();
+        final var allBehaviorDomain = allBehavior.domain();
         matteringConfigs = allBehaviorDomain.intersect(nonfinalConfigs);
         LOGGER.debug("All behaviour computed: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", allBehavior);
     }
@@ -56,18 +52,18 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
     private static <S> void refineProgressivity(SatSolver solver, FSAEncoding<S> invariantEncoding,
         FSAEncoding<Pair<S, S>> orderEncoding, FairnessProgressivityChecker.Counterexample<S> counterexample)
     {
-        final ListIterable<S> x = counterexample.fruitlessStep();
-        final RichIterable<ListIterable<S>> possibleY = counterexample.possibleProgressSteps();
+        final var x = counterexample.fruitlessStep();
+        final var possibleY = counterexample.possibleProgressSteps();
         if (possibleY.isEmpty()) {
             LOGGER.debug("Blocking {}", x);
             invariantEncoding.ensureNoAccepting(x);
             return;
         }
 
-        final int takenX = solver.newFreeVariable();
+        final var takenX = solver.newFreeVariable();
         invariantEncoding.ensureAcceptingIfOnlyIf(takenX, x);
-        final IntIterable takenAtLeastOneXY = possibleY.collectInt(y -> {
-            final int takenXY = solver.newFreeVariable();
+        final var takenAtLeastOneXY = possibleY.collectInt(y -> {
+            final var takenXY = solver.newFreeVariable();
             orderEncoding.ensureAcceptingIfOnlyIf(takenXY, Alphabets.pairWord(x, y));
             return takenXY;
         });
@@ -81,8 +77,7 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
         List<FairnessProgressivityChecker.Counterexample<S>> l4KnownViolations)
     {
         LOGGER.info("Adding learned constraints: {}, {}, {}, {} ..", //
-                     l1KnownViolations::size, l2KnownViolations::size, l3KnownViolations::size,
-                     l4KnownViolations::size);
+                    l1KnownViolations::size, l2KnownViolations::size, l3KnownViolations::size, l4KnownViolations::size);
 
         l1KnownViolations.forEach(violation -> refineInitConfigsEncloser(invEnc, violation));
         l2KnownViolations.forEach(violation -> refineBehaviorEncloser(solver, invEnc, violation));
@@ -93,8 +88,8 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
     @Override
     public void prove()
     {
-        final AlphabetIntEncoder<S> invSymbolEncoding = AlphabetIntEncoders.create(wholeAlphabet);
-        final AlphabetIntEncoder<Pair<S, S>> ordSymbolEncoding = AlphabetIntEncoders.create(orderAlphabet);
+        final var invSymbolEncoding = AlphabetIntEncoders.create(wholeAlphabet);
+        final var ordSymbolEncoding = AlphabetIntEncoders.create(orderAlphabet);
 
         // having empty string excluded makes searching from 0 or 1 meaningless
         invariantSizeBegin = invariantSizeBegin < 1 ? 1 : invariantSizeBegin;
@@ -108,11 +103,11 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
         search((invSize, ordSize) -> {
             LOGGER.info("Searching in state spaces {} & {} ..", invSize, ordSize);
 
-            final FSAEncoding<S> invEnc = newFSAEncoding(solver, invSize, invSymbolEncoding, shapeInvariant);
-            final FSAEncoding<Pair<S, S>> ordEnc = newFSAEncoding(solver, ordSize, ordSymbolEncoding, shapeOrder);
+            final var invEnc = newFSAEncoding(solver, invSize, invSymbolEncoding, shapeInvariant);
+            final var ordEnc = newFSAEncoding(solver, ordSize, ordSymbolEncoding, shapeOrder);
             ordEnc.ensureNoWordPurelyMadeOf(orderReflexiveSymbols);
 
-            boolean contradiction = false;
+            var contradiction = false;
             try {
                 addLearnedConstraints(invEnc, ordEnc, l1KnownViolations, l2KnownViolations, l3KnownViolations,
                                       l4KnownViolations);
@@ -129,8 +124,8 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
             FairnessProgressivityChecker.Result<S> l4;
             while (!contradiction && solver.findItSatisfiable()) {
                 contradiction = false;
-                final FSA<S> invCand = invEnc.resolve();
-                final FST<S, S> ordCand = FSTs.castFrom((MutableFSA<Pair<S, S>>) ordEnc.resolve());
+                final var invCand = invEnc.resolve();
+                final var ordCand = FSTs.castFrom((MutableFSA<Pair<S, S>>) ordEnc.resolve());
 
                 LOGGER.debug("Invariant candidate: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", invCand);
                 LOGGER.debug("Order candidate (>): " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", ordCand);
@@ -151,7 +146,7 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
                     refineTransitivity(solver, ordEnc, l3.counterexample());
                 }
                 if (!loosenInvariant && (l4Precheck = schedulerOperatesOnAllNonfinalInvariants(invCand)).rejected()) {
-                    final ListIterable<S> v = l4Precheck.counterexample().witness();
+                    final var v = l4Precheck.counterexample().witness();
                     l4PrecheckViolation = new BasicFairnessProgressivityChecker.Counterexample<>(allBehavior, v);
                     l4 = new BasicFairnessProgressivityChecker.Result<>(false, l4PrecheckViolation);
                 } else {
@@ -182,13 +177,13 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
     @Override
     public void verify()
     {
-        final FSA<S> invCand = givenInvariant.determinize().minimize();
-        final FST<S, S> ordCand = givenOrder;
+        final var invCand = givenInvariant.determinize().minimize();
+        final var ordCand = givenOrder;
 
-        final String l1 = checkInitConfigsEnclosure(initialConfigs, invCand).toString();
-        final String l2 = checkBehaviorEnclosure(allBehavior, invCand).toString();
-        final String l3 = checkTransitivity(ordCand).toString();
-        final String l4 = checkProgressivity(allBehavior, nonfinalConfigs, invCand, ordCand).toString();
+        final var l1 = checkInitConfigsEnclosure(initialConfigs, invCand).toString();
+        final var l2 = checkBehaviorEnclosure(allBehavior, invCand).toString();
+        final var l3 = checkTransitivity(ordCand).toString();
+        final var l4 = checkProgressivity(allBehavior, nonfinalConfigs, invCand, ordCand).toString();
 
         LOGGER.debug("Invariant candidate: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", invCand);
         LOGGER.debug("Order candidate (>): " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", ordCand);

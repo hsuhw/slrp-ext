@@ -15,8 +15,6 @@ import common.sat.ContradictionException;
 import common.sat.SatSolver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.eclipse.collections.api.list.ListIterable;
-import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -24,7 +22,6 @@ import org.eclipse.collections.impl.tuple.Tuples;
 import java.util.LinkedList;
 import java.util.List;
 
-import static api.proof.FSAEncoding.CertainWord;
 import static common.util.Constants.DISPLAY_NEWLINE;
 
 public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
@@ -32,7 +29,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
     private static final Logger LOGGER = LogManager.getLogger();
     private static final BehaviorEnclosureChecker BEHAVIOR_ENCLOSURE_CHECKER;
     private static final TransitivityChecker TRANSITIVITY_CHECKER;
-    private static final AnySchedulerProgressivityChecker ANY_SCHEDULER_PROGRESSABILITY_CHECKER;
+    private static final AnySchedulerProgressivityChecker ANY_SCHEDULER_PROGRESSIVITY_CHECKER;
 
     private final FST<S, S> nonfinalScheduler;
     private final FST<S, S> allBehavior;
@@ -41,7 +38,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
     static {
         BEHAVIOR_ENCLOSURE_CHECKER = new BasicBehaviorEnclosureChecker();
         TRANSITIVITY_CHECKER = new BasicTransitivityChecker();
-        ANY_SCHEDULER_PROGRESSABILITY_CHECKER = new BasicAnySchedulerProgressivityChecker();
+        ANY_SCHEDULER_PROGRESSIVITY_CHECKER = new BasicAnySchedulerProgressivityChecker();
     }
 
     public CAV16MonoProver(Problem<S> problem, boolean shapeInvariant, boolean shapeOrder, boolean loosenInvariant)
@@ -84,11 +81,11 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
     static <S> void refineBehaviorEncloser(SatSolver solver, FSAEncoding<S> encloserEncoding,
         BehaviorEnclosureChecker.Counterexample<S> counterexample)
     {
-        final ListIterable<S> invalidStep = counterexample.invalidStep();
-        final int takenStep = solver.newFreeVariable();
+        final var invalidStep = counterexample.invalidStep();
+        final var takenStep = solver.newFreeVariable();
         encloserEncoding.ensureAcceptingIfOnlyIf(takenStep, invalidStep);
-        for (ListIterable<S> cause : counterexample.causes()) {
-            final int takenCause = solver.newFreeVariable();
+        for (var cause : counterexample.causes()) {
+            final var takenCause = solver.newFreeVariable();
             encloserEncoding.ensureAcceptingIfOnlyIf(takenCause, cause);
             solver.addImplication(takenCause, takenStep);
         }
@@ -102,15 +99,15 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
     static <S> void refineTransitivity(SatSolver solver, FSAEncoding<Pair<S, S>> targetEncoding,
         TransitivityChecker.Counterexample<S> counterexample)
     {
-        final ListIterable<Pair<S, S>> invalidStep = counterexample.invalidStep();
-        final ListIterable<S> x = invalidStep.collect(Pair::getOne);
-        final ListIterable<S> z = invalidStep.collect(Pair::getTwo);
+        final var invalidStep = counterexample.invalidStep();
+        final var x = invalidStep.collect(Pair::getOne);
+        final var z = invalidStep.collect(Pair::getTwo);
 
-        final int takenStep = solver.newFreeVariable();
+        final var takenStep = solver.newFreeVariable();
         targetEncoding.ensureAcceptingIfOnlyIf(takenStep, invalidStep);
-        for (ListIterable<S> y : counterexample.validMiddleSteps()) {
-            final int takenXY = solver.newFreeVariable();
-            final int takenYZ = solver.newFreeVariable();
+        for (var y : counterexample.validMiddleSteps()) {
+            final var takenXY = solver.newFreeVariable();
+            final var takenYZ = solver.newFreeVariable();
             targetEncoding.ensureAcceptingIfOnlyIf(takenXY, Alphabets.pairWord(x, y));
             targetEncoding.ensureAcceptingIfOnlyIf(takenYZ, Alphabets.pairWord(y, z));
             solver.addClause(-takenXY, -takenYZ, takenStep);
@@ -120,38 +117,38 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
     private static <S> AnySchedulerProgressivityChecker.Result<S> checkProgressivity(FST<S, S> nonfinalScheduler,
         FST<S, S> process, FSA<S> invariant, FST<S, S> order)
     {
-        return ANY_SCHEDULER_PROGRESSABILITY_CHECKER.test(nonfinalScheduler, process, invariant, order);
+        return ANY_SCHEDULER_PROGRESSIVITY_CHECKER.test(nonfinalScheduler, process, invariant, order);
     }
 
     private static <S> void refineProgressivity(SatSolver solver, FSAEncoding<S> invariantEncoding,
         FSAEncoding<Pair<S, S>> orderEncoding, FST<S, S> process, Alphabet<S> steadyAlphabet,
         AnySchedulerProgressivityChecker.Counterexample<S> counterexample)
     {
-        final ListIterable<S> x = counterexample.fruitlessStep().collect(Twin::getOne);
-        final ListIterable<S> y = counterexample.fruitlessStep().collect(Twin::getTwo);
+        final var x = counterexample.fruitlessStep().collect(Twin::getOne);
+        final var y = counterexample.fruitlessStep().collect(Twin::getTwo);
         if (y.isEmpty() || y.get(0) == null) {
             LOGGER.debug("Blocking {}", x);
             invariantEncoding.ensureNoAccepting(x);
             return;
         }
-        final FSA<S> possibleZ = FSAs.acceptingOnly(steadyAlphabet, process.postImage(y));
+        final var possibleZ = FSAs.acceptingOnly(steadyAlphabet, process.postImage(y));
         if (possibleZ.acceptsNone()) {
             LOGGER.debug("Blocking {}", x);
             invariantEncoding.ensureNoAccepting(x);
             return;
         }
 
-        final int takenX = solver.newFreeVariable();
+        final var takenX = solver.newFreeVariable();
         invariantEncoding.ensureAcceptingIfOnlyIf(takenX, x);
-        final int certainZExists = solver.newFreeVariable();
-        final CertainWord<S> z = invariantEncoding.ensureAcceptingCertainWordIf(certainZExists, x.size());
+        final var certainZExists = solver.newFreeVariable();
+        final var z = invariantEncoding.ensureAcceptingCertainWordIf(certainZExists, x.size());
         z.ensureAcceptedBy(possibleZ);
-        final CertainWord<Pair<S, S>> xz = orderEncoding.ensureAcceptingCertainWordIf(certainZExists, x.size());
-        final SetIterable<S> noEpsilonSteadyAlphabet = steadyAlphabet.noEpsilonSet();
+        final var xz = orderEncoding.ensureAcceptingCertainWordIf(certainZExists, x.size());
+        final var noEpsilonSteadyAlphabet = steadyAlphabet.noEpsilonSet();
         x.forEachWithIndex((chx, pos) -> noEpsilonSteadyAlphabet.forEach(chz -> {
-            final Twin<S> chxz = Tuples.twin(chx, chz);
-            final int chzAtPos = z.getCharacterIndicator(pos, chz);
-            final int chxzAtPos = xz.getCharacterIndicator(pos, chxz);
+            final var chxz = Tuples.twin(chx, chz);
+            final var chzAtPos = z.getCharacterIndicator(pos, chz);
+            final var chxzAtPos = xz.getCharacterIndicator(pos, chxz);
             solver.addImplication(chzAtPos, chxzAtPos);
         }));
 
@@ -165,8 +162,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         List<AnySchedulerProgressivityChecker.Counterexample<S>> l4KnownViolations)
     {
         LOGGER.info("Adding learned constraints: {}, {}, {}, {} ..", //
-                     l1KnownViolations::size, l2KnownViolations::size, l3KnownViolations::size,
-                     l4KnownViolations::size);
+                    l1KnownViolations::size, l2KnownViolations::size, l3KnownViolations::size, l4KnownViolations::size);
 
         l1KnownViolations.forEach(v -> refineInitConfigsEncloser(invariantEncoding, v));
         l2KnownViolations.forEach(v -> refineBehaviorEncloser(solver, invariantEncoding, v));
@@ -178,8 +174,8 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
     @Override
     public void prove()
     {
-        final AlphabetIntEncoder<S> invSymbolEncoding = AlphabetIntEncoders.create(wholeAlphabet);
-        final AlphabetIntEncoder<Pair<S, S>> ordSymbolEncoding = AlphabetIntEncoders.create(orderAlphabet);
+        final var invSymbolEncoding = AlphabetIntEncoders.create(wholeAlphabet);
+        final var ordSymbolEncoding = AlphabetIntEncoders.create(orderAlphabet);
 
         // having empty string excluded makes searching from 0 or 1 meaningless
         invariantSizeBegin = invariantSizeBegin < 1 ? 1 : invariantSizeBegin;
@@ -193,11 +189,11 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
         search((invSize, ordSize) -> {
             LOGGER.info("Searching in state spaces {} & {} ..", invSize, ordSize);
 
-            final FSAEncoding<S> invEnc = newFSAEncoding(solver, invSize, invSymbolEncoding, shapeInvariant);
-            final FSAEncoding<Pair<S, S>> ordEnc = newFSAEncoding(solver, ordSize, ordSymbolEncoding, shapeOrder);
+            final var invEnc = newFSAEncoding(solver, invSize, invSymbolEncoding, shapeInvariant);
+            final var ordEnc = newFSAEncoding(solver, ordSize, ordSymbolEncoding, shapeOrder);
             ordEnc.ensureNoWordPurelyMadeOf(orderReflexiveSymbols);
 
-            boolean contradiction = false;
+            var contradiction = false;
             try {
                 addLearnedConstraints(invEnc, ordEnc, l1KnownViolations, l2KnownViolations, l3KnownViolations,
                                       l4KnownViolations);
@@ -214,8 +210,8 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
             AnySchedulerProgressivityChecker.Result<S> l4;
             while (!contradiction && solver.findItSatisfiable()) {
                 contradiction = false;
-                final FSA<S> invCand = invEnc.resolve();
-                final FST<S, S> ordCand = FSTs.castFrom((MutableFSA<Pair<S, S>>) ordEnc.resolve());
+                final var invCand = invEnc.resolve();
+                final var ordCand = FSTs.castFrom((MutableFSA<Pair<S, S>>) ordEnc.resolve());
 
                 LOGGER.debug("Invariant candidate: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", invCand);
                 LOGGER.debug("Order candidate (>): " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", ordCand);
@@ -236,8 +232,8 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
                     refineTransitivity(solver, ordEnc, l3.counterexample());
                 }
                 if (!loosenInvariant && (l4Precheck = schedulerOperatesOnAllNonfinalInvariants(invCand)).rejected()) {
-                    final ListIterable<S> violation = l4Precheck.counterexample().witness();
-                    final ListIterable<Twin<S>> v = violation.collect(ch -> Tuples.twin(ch, null));
+                    final var violation = l4Precheck.counterexample().witness();
+                    final var v = violation.collect(ch -> Tuples.twin(ch, null));
                     l4PrecheckViolation = new BasicAnySchedulerProgressivityChecker.Counterexample<>(v);
                     l4 = new BasicAnySchedulerProgressivityChecker.Result<>(false, l4PrecheckViolation);
                 } else {
@@ -269,13 +265,13 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
     @Override
     public void verify()
     {
-        final FSA<S> invCand = givenInvariant.determinize().minimize();
-        final FST<S, S> ordCand = givenOrder;
+        final var invCand = givenInvariant.determinize().minimize();
+        final var ordCand = givenOrder;
 
-        final String l1 = checkInitConfigsEnclosure(initialConfigs, invCand).toString();
-        final String l2 = invEnclosesAll ? checkBehaviorEnclosure(allBehavior, invCand).toString() : "--";
-        final String l3 = checkTransitivity(ordCand).toString();
-        final String l4 = checkProgressivity(nonfinalScheduler, process, invCand, ordCand).toString();
+        final var l1 = checkInitConfigsEnclosure(initialConfigs, invCand).toString();
+        final var l2 = invEnclosesAll ? checkBehaviorEnclosure(allBehavior, invCand).toString() : "--";
+        final var l3 = checkTransitivity(ordCand).toString();
+        final var l4 = checkProgressivity(nonfinalScheduler, process, invCand, ordCand).toString();
 
         LOGGER.debug("Invariant candidate: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", invCand);
         LOGGER.debug("Order candidate (>): " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", ordCand);

@@ -6,7 +6,6 @@ import api.automata.MutableState;
 import api.automata.State;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
-import api.automata.fsa.MutableFSA;
 import api.proof.FSAEncoding;
 import common.sat.SatSolver;
 import common.util.Assert;
@@ -15,7 +14,6 @@ import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.map.primitive.MutableObjectIntMap;
 import org.eclipse.collections.api.set.SetIterable;
-import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.impl.list.mutable.FastList;
 import org.eclipse.collections.impl.list.primitive.IntInterval;
@@ -37,15 +35,15 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
 
     private void prepareTransitionIndicators()
     {
-        final int symbolNumber = intAlphabet.size();
+        final var symbolNumber = intAlphabet.size();
         transitionIndicators = new ImmutableIntList[stateNumber][symbolNumber];
-        for (int state = 0; state < stateNumber; state++) {
-            for (int symbol = 0; symbol < symbolNumber; symbol++) {
+        for (var state = 0; state < stateNumber; state++) {
+            for (var symbol = 0; symbol < symbolNumber; symbol++) {
                 transitionIndicators[state][symbol] = solver.newFreeVariables(stateNumber);
             }
         }
-        final int transIndBegin = transitionIndicators[0][0].getFirst();
-        final int transIndEnd = transitionIndicators[stateNumber - 1][symbolNumber - 1].getLast();
+        final var transIndBegin = transitionIndicators[0][0].getFirst();
+        final var transIndEnd = transitionIndicators[stateNumber - 1][symbolNumber - 1].getLast();
         solver.addClause(IntInterval.from(transIndBegin).to(transIndEnd)); // at least one transition overall
     }
 
@@ -57,11 +55,11 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
 
     private void ensureDeterminism()
     {
-        for (int dept = 0; dept < stateNumber; dept++) {
-            final ImmutableIntList destsReachedByEpsilon = transitionIndicators[dept][EPSILON_SYMBOL_INDEX];
+        for (var dept = 0; dept < stateNumber; dept++) {
+            final var destsReachedByEpsilon = transitionIndicators[dept][EPSILON_SYMBOL_INDEX];
             destsReachedByEpsilon.forEach(solver::setLiteralFalsy); // no epsilon transition
-            for (int symbol = 1; symbol < intAlphabet.size(); symbol++) {
-                final ImmutableIntList possibleDest = transitionIndicators[dept][symbol];
+            for (var symbol = 1; symbol < intAlphabet.size(); symbol++) {
+                final var possibleDest = transitionIndicators[dept][symbol];
                 solver.addClauseAtMost(1, possibleDest); // at most one transition, can be zero
             }
         }
@@ -69,27 +67,27 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
 
     private void applySymmetryBreakingHeuristics()
     {
-        final int symbolNumber = intAlphabet.size();
-        final int[][] structuralOrder = new int[stateNumber - 1][symbolNumber + 1]; // skip the start state
-        for (int i = 0; i < structuralOrder.length; i++) {
-            final int state = i + 1;
-            final int beAcceptState = acceptStateIndicators.get(state);
+        final var symbolNumber = intAlphabet.size();
+        final var structuralOrder = new int[stateNumber - 1][symbolNumber + 1]; // skip the start state
+        for (var i = 0; i < structuralOrder.length; i++) {
+            final var state = i + 1;
+            final var beAcceptState = acceptStateIndicators.get(state);
             structuralOrder[i][0] = beAcceptState; // assign to the highest digit (affects the most)
-            for (int symbol = 0; symbol < symbolNumber; symbol++) {
-                final int hasLoopOnSymbol = transitionIndicators[state][symbol].get(state);
+            for (var symbol = 0; symbol < symbolNumber; symbol++) {
+                final var hasLoopOnSymbol = transitionIndicators[state][symbol].get(state);
                 structuralOrder[i][1 + symbol] = hasLoopOnSymbol;
             }
         }
-        for (int i = structuralOrder.length - 1; i > 0; i--) {
+        for (var i = structuralOrder.length - 1; i > 0; i--) {
             solver.markAsGreaterEqualInBinary(structuralOrder[i], structuralOrder[i - 1]);
         }
     }
 
     private void applyLinearShapeRestriction()
     {
-        for (int dept = 0; dept < stateNumber; dept++) {
-            for (int dest = 0; dest < stateNumber; dest++) {
-                for (int symbol = 1; symbol < intAlphabet.size(); symbol++) {
+        for (var dept = 0; dept < stateNumber; dept++) {
+            for (var dest = 0; dest < stateNumber; dest++) {
+                for (var symbol = 1; symbol < intAlphabet.size(); symbol++) {
                     if (dest == dept || dest == (dept + 1) % stateNumber || dest == (dept + 2) % stateNumber) {
                         continue;
                     }
@@ -125,9 +123,9 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
 
     private ImmutableIntList[] prepareDistanceIndicators()
     {
-        final ImmutableIntList[] distanceIndicators = new ImmutableIntList[stateNumber];
-        for (int state = 0; state < stateNumber; state++) {
-            final ImmutableIntList possibleDistance = solver.newFreeVariables(stateNumber);
+        final var distanceIndicators = new ImmutableIntList[stateNumber];
+        for (var state = 0; state < stateNumber; state++) {
+            final var possibleDistance = solver.newFreeVariables(stateNumber);
             distanceIndicators[state] = possibleDistance; // from 0 to n - 1
             solver.addClauseExactly(1, possibleDistance); // prevent any self-loop cause a distance
         }
@@ -138,18 +136,18 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     private void encodePossibleDistByTransIf(int required, int currState, ImmutableIntList[] distanceIndicators,
         TransitionSelector transitionSelector)
     {
-        final int symbolNumber = intAlphabet.size();
-        final ImmutableIntList[][] possibleDistByTrans = new ImmutableIntList[stateNumber][symbolNumber];
-        for (int prevState = 0; prevState < stateNumber; prevState++) {
-            for (int symbol = 0; symbol < symbolNumber; symbol++) {
+        final var symbolNumber = intAlphabet.size();
+        final var possibleDistByTrans = new ImmutableIntList[stateNumber][symbolNumber];
+        for (var prevState = 0; prevState < stateNumber; prevState++) {
+            for (var symbol = 0; symbol < symbolNumber; symbol++) {
                 possibleDistByTrans[prevState][symbol] = solver.newFreeVariables(stateNumber);
-                final int transCanCauseNoDist = possibleDistByTrans[prevState][symbol].get(0);
+                final var transCanCauseNoDist = possibleDistByTrans[prevState][symbol].get(0);
                 solver.setLiteralFalsy(transCanCauseNoDist);
-                for (int distNum = 1; distNum < stateNumber; distNum++) {
-                    final int transCauseDistNum = possibleDistByTrans[prevState][symbol].get(distNum);
-                    final int transBeAvailable = transitionSelector.take(prevState, currState, symbol);
-                    final int prevBeNumMinusOne = distanceIndicators[prevState].get(distNum - 1);
-                    final int currBeNum = distanceIndicators[currState].get(distNum);
+                for (var distNum = 1; distNum < stateNumber; distNum++) {
+                    final var transCauseDistNum = possibleDistByTrans[prevState][symbol].get(distNum);
+                    final var transBeAvailable = transitionSelector.take(prevState, currState, symbol);
+                    final var prevBeNumMinusOne = distanceIndicators[prevState].get(distNum - 1);
+                    final var currBeNum = distanceIndicators[currState].get(distNum);
 
                     // transCauseDistNum <--> transBeAvailable && prevBeNumMinusOne && currBeNum
                     solver.addImplications(transCauseDistNum, transBeAvailable, prevBeNumMinusOne, currBeNum);
@@ -158,8 +156,8 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
             }
         }
         // if required, at least one valid distance caused by the transitions
-        final int distByTransBegin = possibleDistByTrans[0][0].getFirst();
-        final int distByTransEnd = possibleDistByTrans[stateNumber - 1][symbolNumber - 1].getLast();
+        final var distByTransBegin = possibleDistByTrans[0][0].getFirst();
+        final var distByTransEnd = possibleDistByTrans[stateNumber - 1][symbolNumber - 1].getLast();
         solver.addClauseIf(required, IntInterval.from(distByTransBegin).to(distByTransEnd));
     }
 
@@ -170,13 +168,13 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
             return;
         }
 
-        final ImmutableIntList[] distFromStartIndicators = prepareDistanceIndicators();
-        final int startStateDistBeZero = distFromStartIndicators[START_STATE_INDEX].get(0);
+        final var distFromStartIndicators = prepareDistanceIndicators();
+        final var startStateDistBeZero = distFromStartIndicators[START_STATE_INDEX].get(0);
         solver.setLiteralTruthy(startStateDistBeZero);
-        final int notStartState = solver.newFreeVariable();
+        final var notStartState = solver.newFreeVariable();
         solver.setLiteralTruthy(notStartState);
-        for (int state = 1; state < stateNumber; state++) { // skip the start state
-            final int distCanBeZero = distFromStartIndicators[state].get(0);
+        for (var state = 1; state < stateNumber; state++) { // skip the start state
+            final var distCanBeZero = distFromStartIndicators[state].get(0);
             solver.setLiteralFalsy(distCanBeZero);
             encodePossibleDistByTransIf(notStartState, state, distFromStartIndicators,
                                         (dept, dest, symbol) -> transitionIndicators[dept][symbol].get(dest));
@@ -192,10 +190,10 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
             return;
         }
 
-        ImmutableIntList[] distFromAcceptIndicators = prepareDistanceIndicators();
-        for (int state = 0; state < stateNumber; state++) {
-            final int takenAsAcceptState = acceptStateIndicators.get(state);
-            final int distBeZero = distFromAcceptIndicators[state].get(0);
+        var distFromAcceptIndicators = prepareDistanceIndicators();
+        for (var state = 0; state < stateNumber; state++) {
+            final var takenAsAcceptState = acceptStateIndicators.get(state);
+            final var distBeZero = distFromAcceptIndicators[state].get(0);
             solver.markAsEquivalent(takenAsAcceptState, distBeZero);
             encodePossibleDistByTransIf(-takenAsAcceptState, state, distFromAcceptIndicators,
                                         (dept, dest, symbol) -> transitionIndicators[dest][symbol].get(dept));
@@ -206,9 +204,9 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
 
     private CertainWord makeWord(ListIterable<S> definition)
     {
-        final S epsilon = intAlphabet.originEpsilon();
-        final ListIterable<S> givenWord = definition.select(symbol -> symbol != epsilon);
-        final CertainWord word = new CertainWord(givenWord.size());
+        final var epsilon = intAlphabet.originEpsilon();
+        final var givenWord = definition.select(symbol -> symbol != epsilon);
+        final var word = new CertainWord(givenWord.size());
         givenWord.forEachWithIndex((symbol, pos) -> word.setCharacterAt(pos, symbol));
 
         return word;
@@ -217,25 +215,25 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     private void ensureAcceptingIf(int activated, CertainWord word)
     {
         // define each possible step over states on each input symbol read
-        final ImmutableIntList[] stepIndicators = new ImmutableIntList[word.length + 1];
-        for (int readHead = 0; readHead < word.length + 1; readHead++) {
-            final ImmutableIntList possibleStateStepping = solver.newFreeVariables(stateNumber);
+        final var stepIndicators = new ImmutableIntList[word.length + 1];
+        for (var readHead = 0; readHead < word.length + 1; readHead++) {
+            final var possibleStateStepping = solver.newFreeVariables(stateNumber);
             stepIndicators[readHead] = possibleStateStepping;
             solver.addClause(possibleStateStepping);
         }
-        final int initialStepBeStartState = stepIndicators[0].get(START_STATE_INDEX);
+        final var initialStepBeStartState = stepIndicators[0].get(START_STATE_INDEX);
         solver.setLiteralTruthy(initialStepBeStartState);
 
         // make the taken steps represent the given word
-        for (int readHead = 0; readHead < word.length; readHead++) {
-            final ImmutableIntList possibleSymbol = word.characterIndicators[readHead];
-            for (int qi = 0; qi < stateNumber; qi++) {
-                final int takenQiAsCurr = stepIndicators[readHead].get(qi);
-                for (int qj = 0; qj < stateNumber; qj++) {
-                    final int takenQjAsNext = stepIndicators[readHead + 1].get(qj);
-                    for (int s = 0; s < intAlphabet.size(); s++) {
-                        final int sBeSymbol = possibleSymbol.get(s);
-                        final int transBeAvailable = transitionIndicators[qi][s].get(qj);
+        for (var readHead = 0; readHead < word.length; readHead++) {
+            final var possibleSymbol = word.characterIndicators[readHead];
+            for (var qi = 0; qi < stateNumber; qi++) {
+                final var takenQiAsCurr = stepIndicators[readHead].get(qi);
+                for (var qj = 0; qj < stateNumber; qj++) {
+                    final var takenQjAsNext = stepIndicators[readHead + 1].get(qj);
+                    for (var s = 0; s < intAlphabet.size(); s++) {
+                        final var sBeSymbol = possibleSymbol.get(s);
+                        final var transBeAvailable = transitionIndicators[qi][s].get(qj);
                         solver.addClauseIf(activated, -takenQiAsCurr, -takenQjAsNext, -sBeSymbol, transBeAvailable);
                     }
                 }
@@ -243,10 +241,10 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
         }
 
         // make the taken steps form an accepting path
-        final ImmutableIntList possibleLastStep = stepIndicators[word.length];
-        for (int state = 0; state < stateNumber; state++) {
-            final int ifTakenAsLastStep = possibleLastStep.get(state);
-            final int beAcceptState = acceptStateIndicators.get(state);
+        final var possibleLastStep = stepIndicators[word.length];
+        for (var state = 0; state < stateNumber; state++) {
+            final var ifTakenAsLastStep = possibleLastStep.get(state);
+            final var beAcceptState = acceptStateIndicators.get(state);
             solver.addImplicationIf(activated, ifTakenAsLastStep, beAcceptState);
         }
     }
@@ -254,7 +252,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     @Override
     public void ensureAccepting(ListIterable<S> word)
     {
-        final int activated = solver.newFreeVariable();
+        final var activated = solver.newFreeVariable();
         ensureAcceptingIf(activated, makeWord(word));
         solver.setLiteralTruthy(activated);
     }
@@ -262,48 +260,48 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     private void prepareFailureIndicators(ImmutableIntList failAtIndicators, ImmutableIntList failedAlreadyIndicators)
     {
         failAtIndicators.forEachWithIndex((failAtCurr, i) -> {
-            final int failedAlreadyAtCurr = failedAlreadyIndicators.get(i);
-            final int failedAlreadyAtNext = failedAlreadyIndicators.get(i + 1);
+            final var failedAlreadyAtCurr = failedAlreadyIndicators.get(i);
+            final var failedAlreadyAtNext = failedAlreadyIndicators.get(i + 1);
 
             // failedAlreadyAtNext <--> failAtCurr || failedAlreadyAtCurr
             solver.addImplication(failAtCurr, failedAlreadyAtNext);
             solver.addImplication(failedAlreadyAtCurr, failedAlreadyAtNext);
             solver.addClause(-failedAlreadyAtNext, failedAlreadyAtCurr, failAtCurr);
         });
-        final int initialStepNeverFailedAlready = -failedAlreadyIndicators.get(0);
+        final var initialStepNeverFailedAlready = -failedAlreadyIndicators.get(0);
         solver.setLiteralTruthy(initialStepNeverFailedAlready);
     }
 
     private void ensureNotAcceptWordIf(int activated, CertainWord word)
     {
         // prepare the fail bits for each step of the input read
-        final ImmutableIntList failAtIndicators = solver.newFreeVariables(word.length);
-        final ImmutableIntList failedAlreadyIndicators = solver.newFreeVariables(word.length + 1);
+        final var failAtIndicators = solver.newFreeVariables(word.length);
+        final var failedAlreadyIndicators = solver.newFreeVariables(word.length + 1);
         prepareFailureIndicators(failAtIndicators, failedAlreadyIndicators);
 
         // define each possible step over states on each input symbol read
-        final ImmutableIntList[] stepIndicators = new ImmutableIntList[word.length + 1];
-        for (int readHead = 0; readHead < word.length + 1; readHead++) {
-            final ImmutableIntList possibleStateStepping = solver.newFreeVariables(stateNumber);
+        final var stepIndicators = new ImmutableIntList[word.length + 1];
+        for (var readHead = 0; readHead < word.length + 1; readHead++) {
+            final var possibleStateStepping = solver.newFreeVariables(stateNumber);
             stepIndicators[readHead] = possibleStateStepping;
-            final int stillNotFailed = -failedAlreadyIndicators.get(readHead);
+            final var stillNotFailed = -failedAlreadyIndicators.get(readHead);
             solver.addClauseIf(stillNotFailed, possibleStateStepping);
         }
-        final int initialStepBeStartState = stepIndicators[0].get(START_STATE_INDEX);
+        final var initialStepBeStartState = stepIndicators[0].get(START_STATE_INDEX);
         solver.setLiteralTruthy(initialStepBeStartState);
 
         // make the taken steps form a non-accepting path
-        for (int readHead = 0; readHead < word.length; readHead++) {
-            final int alreadyFailed = failedAlreadyIndicators.get(readHead);
-            final int failsHere = failAtIndicators.get(readHead);
-            final ImmutableIntList possibleSymbol = word.characterIndicators[readHead];
-            for (int qi = 0; qi < stateNumber; qi++) {
-                final int takenQiAsCurr = stepIndicators[readHead].get(qi);
-                for (int qj = 0; qj < stateNumber; qj++) {
-                    final int takenQjAsNext = stepIndicators[readHead + 1].get(qj);
-                    for (int s = 0; s < intAlphabet.size(); s++) {
-                        final int sBeSymbol = possibleSymbol.get(s);
-                        final int transBeAvailable = transitionIndicators[qi][s].get(qj);
+        for (var readHead = 0; readHead < word.length; readHead++) {
+            final var alreadyFailed = failedAlreadyIndicators.get(readHead);
+            final var failsHere = failAtIndicators.get(readHead);
+            final var possibleSymbol = word.characterIndicators[readHead];
+            for (var qi = 0; qi < stateNumber; qi++) {
+                final var takenQiAsCurr = stepIndicators[readHead].get(qi);
+                for (var qj = 0; qj < stateNumber; qj++) {
+                    final var takenQjAsNext = stepIndicators[readHead + 1].get(qj);
+                    for (var s = 0; s < intAlphabet.size(); s++) {
+                        final var sBeSymbol = possibleSymbol.get(s);
+                        final var transBeAvailable = transitionIndicators[qi][s].get(qj);
                         solver.addClauseIf(activated, alreadyFailed, failsHere, -takenQiAsCurr, -takenQjAsNext,
                                            -sBeSymbol, transBeAvailable);
                         solver.addClauseIf(activated, alreadyFailed, -failsHere, -takenQiAsCurr, -sBeSymbol,
@@ -312,11 +310,11 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
                 }
             }
         }
-        final int failedBeforeFinal = failedAlreadyIndicators.get(word.length);
-        final ImmutableIntList possibleLastStep = stepIndicators[word.length];
-        for (int state = 0; state < stateNumber; state++) {
-            final int takenAsLastStep = possibleLastStep.get(state);
-            final int notAcceptState = -acceptStateIndicators.get(state);
+        final var failedBeforeFinal = failedAlreadyIndicators.get(word.length);
+        final var possibleLastStep = stepIndicators[word.length];
+        for (var state = 0; state < stateNumber; state++) {
+            final var takenAsLastStep = possibleLastStep.get(state);
+            final var notAcceptState = -acceptStateIndicators.get(state);
             solver.addClauseIf(activated, failedBeforeFinal, -takenAsLastStep, notAcceptState);
         }
     }
@@ -324,7 +322,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     @Override
     public void ensureNoAccepting(ListIterable<S> word)
     {
-        final int activated = solver.newFreeVariable();
+        final var activated = solver.newFreeVariable();
         ensureNotAcceptWordIf(activated, makeWord(word));
         solver.setLiteralTruthy(activated);
     }
@@ -332,7 +330,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     @Override
     public void ensureAcceptingIfOnlyIf(int indicator, ListIterable<S> word)
     {
-        final CertainWord encodedWord = makeWord(word);
+        final var encodedWord = makeWord(word);
         ensureAcceptingIf(indicator, encodedWord);
         ensureNotAcceptWordIf(-indicator, encodedWord);
     }
@@ -340,7 +338,7 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     @Override
     public CertainWord ensureAcceptingCertainWordIf(int indicator, int length)
     {
-        final CertainWord certainWord = new CertainWord(length);
+        final var certainWord = new CertainWord(length);
         ensureAcceptingIf(indicator, certainWord);
 
         return certainWord;
@@ -349,29 +347,29 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     @Override
     public void ensureNoWordPurelyMadeOf(SetIterable<S> symbols)
     {
-        final ImmutableIntList encodedSymbols = intAlphabet.encode(symbols.toList().toImmutable());
+        final var encodedSymbols = intAlphabet.encode(symbols.toList().toImmutable());
 
         if (encodedSymbols.contains(EPSILON_SYMBOL_INDEX)) {
             solver.setLiteralsFalsy(acceptStateIndicators.get(0));
         }
 
-        final ImmutableIntList canBePurelyMadeUntil = solver.newFreeVariables(stateNumber + 1);
-        final int initialStepAlwaysPossible = canBePurelyMadeUntil.get(START_STATE_INDEX);
+        final var canBePurelyMadeUntil = solver.newFreeVariables(stateNumber + 1);
+        final var initialStepAlwaysPossible = canBePurelyMadeUntil.get(START_STATE_INDEX);
         solver.setLiteralTruthy(initialStepAlwaysPossible);
 
-        final int startStatePurityBroken = -canBePurelyMadeUntil.get(stateNumber);
-        for (int qi = 0; qi < stateNumber; qi++) {
-            final int purityAlreadyBroken = -canBePurelyMadeUntil.get(qi);
-            final int ifIsAcceptState = acceptStateIndicators.get(qi);
+        final var startStatePurityBroken = -canBePurelyMadeUntil.get(stateNumber);
+        for (var qi = 0; qi < stateNumber; qi++) {
+            final var purityAlreadyBroken = -canBePurelyMadeUntil.get(qi);
+            final var ifIsAcceptState = acceptStateIndicators.get(qi);
             if (qi == 0) {
                 solver.addImplication(ifIsAcceptState, startStatePurityBroken);
             } else {
                 solver.addImplication(ifIsAcceptState, purityAlreadyBroken);
             }
-            for (int qj = 0; qj < stateNumber; qj++) {
-                final int stillPossibleAtQj = qj == 0 ? -startStatePurityBroken : canBePurelyMadeUntil.get(qj);
-                for (int s = 0; s < encodedSymbols.size(); s++) {
-                    final int transAvailable = transitionIndicators[qi][encodedSymbols.get(s)].get(qj);
+            for (var qj = 0; qj < stateNumber; qj++) {
+                final var stillPossibleAtQj = qj == 0 ? -startStatePurityBroken : canBePurelyMadeUntil.get(qj);
+                for (var s = 0; s < encodedSymbols.size(); s++) {
+                    final var transAvailable = transitionIndicators[qi][encodedSymbols.get(s)].get(qj);
                     solver.addImplicationIf(-purityAlreadyBroken, transAvailable, stillPossibleAtQj);
                 }
             }
@@ -382,15 +380,14 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
     public void blockCurrentInstance()
     {
         // collect which to be blocked
-        final ImmutableIntSet truthyIndicators = solver.getModelTruthyVariables();
+        final var truthyIndicators = solver.getModelTruthyVariables();
         final MutableIntSet blockingTrack = new IntHashSet(truthyIndicators.size());
-        acceptStateIndicators.forEach(acceptIndicator -> {
-            blockingTrack.add(truthyIndicators.contains(acceptIndicator) ? acceptIndicator : -acceptIndicator);
-        });
-        for (int qi = 0; qi < stateNumber; qi++) {
-            for (int qj = 0; qj < stateNumber; qj++) {
-                for (int s = 0; s < intAlphabet.size(); s++) {
-                    final int transIndicator = transitionIndicators[qi][s].get(qj);
+        acceptStateIndicators.forEach(acceptIndicator -> blockingTrack
+            .add(truthyIndicators.contains(acceptIndicator) ? acceptIndicator : -acceptIndicator));
+        for (var qi = 0; qi < stateNumber; qi++) {
+            for (var qj = 0; qj < stateNumber; qj++) {
+                for (var s = 0; s < intAlphabet.size(); s++) {
+                    final var transIndicator = transitionIndicators[qi][s].get(qj);
                     blockingTrack.add(truthyIndicators.contains(transIndicator) ? transIndicator : -transIndicator);
                 }
             }
@@ -407,11 +404,11 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
         }
 
         // decode states
-        final ImmutableIntSet truthyIndicators = solver.getModelTruthyVariables();
-        final MutableFSA<S> result = FSAs.create(intAlphabet.originAlphabet(), stateNumber);
+        final var truthyIndicators = solver.getModelTruthyVariables();
+        final var result = FSAs.create(intAlphabet.originAlphabet(), stateNumber);
         final MutableList<MutableState<S>> states = FastList.newList(stateNumber);
         states.add(START_STATE_INDEX, result.startState());
-        for (int i = 1; i < stateNumber; i++) {
+        for (var i = 1; i < stateNumber; i++) {
             states.add(i, result.newState("s" + i));
         }
         acceptStateIndicators.forEachWithIndex((indicator, stateIndex) -> {
@@ -421,9 +418,9 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
         });
 
         // decode transitions
-        for (int qi = 0; qi < stateNumber; qi++) {
-            for (int qj = 0; qj < stateNumber; qj++) {
-                for (int s = 0; s < intAlphabet.size(); s++) {
+        for (var qi = 0; qi < stateNumber; qi++) {
+            for (var qj = 0; qj < stateNumber; qj++) {
+                for (var s = 0; s < intAlphabet.size(); s++) {
                     if (truthyIndicators.contains(transitionIndicators[qi][s].get(qj))) {
                         result.addTransition(states.get(qi), states.get(qj), intAlphabet.decode(s));
                     }
@@ -451,10 +448,10 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
             this.length = length;
             characterIndicators = new ImmutableIntList[length];
 
-            final int symbolNumber = intAlphabet.size();
-            for (int i = 0; i < length; i++) {
-                final ImmutableIntList possibleSymbol = solver.newFreeVariables(symbolNumber);
-                final int characterCanBeEpsilon = possibleSymbol.get(EPSILON_SYMBOL_INDEX);
+            final var symbolNumber = intAlphabet.size();
+            for (var i = 0; i < length; i++) {
+                final var possibleSymbol = solver.newFreeVariables(symbolNumber);
+                final var characterCanBeEpsilon = possibleSymbol.get(EPSILON_SYMBOL_INDEX);
                 solver.setLiteralFalsy(characterCanBeEpsilon);
                 solver.addClause(possibleSymbol);
                 characterIndicators[i] = possibleSymbol;
@@ -502,38 +499,38 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
         @Override
         public void ensureAcceptedBy(FSA<S> fsa)
         {
-            final FSA<S> dfa = fsa.determinize();
-            final int stateNumber = dfa.states().size();
-            final MutableList<State<S>> stateDecoder = dfa.states().toList();
+            final var dfa = fsa.determinize();
+            final var stateNumber = dfa.states().size();
+            final var stateDecoder = dfa.states().toList();
             final MutableObjectIntMap<State<S>> stateEncoder = new ObjectIntHashMap<>(stateNumber);
             stateDecoder.forEachWithIndex(stateEncoder::put);
 
             // define each possible step over the DFA's states with each character of the word
-            final ImmutableIntList[] stepIndicators = new ImmutableIntList[length + 1];
-            for (int pos = 0; pos < length + 1; pos++) {
-                final ImmutableIntList possibleStateStepping = solver.newFreeVariables(stateNumber);
+            final var stepIndicators = new ImmutableIntList[length + 1];
+            for (var pos = 0; pos < length + 1; pos++) {
+                final var possibleStateStepping = solver.newFreeVariables(stateNumber);
                 stepIndicators[pos] = possibleStateStepping;
                 solver.addClause(possibleStateStepping);
             }
-            final int initialStepBeStartState = stepIndicators[0].get(stateEncoder.get(dfa.startState()));
+            final var initialStepBeStartState = stepIndicators[0].get(stateEncoder.get(dfa.startState()));
             solver.setLiteralTruthy(initialStepBeStartState);
 
             // make the taken steps represent the word
-            final SetIterable<S> symbols = alphabet().asSet();
-            for (int pos = 0; pos < length; pos++) {
-                final ImmutableIntList possibleSymbol = characterIndicators[pos];
-                for (int qi = 0; qi < stateNumber; qi++) {
-                    final int takenQiAsCurr = stepIndicators[pos].get(qi);
-                    final State<S> stateQi = stateDecoder.get(qi);
-                    for (int qj = 0; qj < stateNumber; qj++) {
-                        final int takenQjAsNext = stepIndicators[pos + 1].get(qj);
-                        final State<S> stateQj = stateDecoder.get(qj);
-                        final SetIterable<S> enabledQiToQjArc = stateQi.enabledSymbolsTo(stateQj);
-                        for (S symbol : symbols) {
+            final var symbols = alphabet().asSet();
+            for (var pos = 0; pos < length; pos++) {
+                final var possibleSymbol = characterIndicators[pos];
+                for (var qi = 0; qi < stateNumber; qi++) {
+                    final var takenQiAsCurr = stepIndicators[pos].get(qi);
+                    final var stateQi = stateDecoder.get(qi);
+                    for (var qj = 0; qj < stateNumber; qj++) {
+                        final var takenQjAsNext = stepIndicators[pos + 1].get(qj);
+                        final var stateQj = stateDecoder.get(qj);
+                        final var enabledQiToQjArc = stateQi.enabledSymbolsTo(stateQj);
+                        for (var symbol : symbols) {
                             if (enabledQiToQjArc.contains(symbol)) { // consider the disabled symbols
                                 continue;
                             }
-                            final int posBeDisableSymbol = possibleSymbol.get(intAlphabet.encode(symbol));
+                            final var posBeDisableSymbol = possibleSymbol.get(intAlphabet.encode(symbol));
                             solver.addClause(-takenQiAsCurr, -takenQjAsNext, -posBeDisableSymbol);
                         }
                     }
@@ -541,9 +538,9 @@ public class BasicFSAEncoding<S> implements FSAEncoding<S>
             }
 
             // make the taken steps form an accepting path
-            final ImmutableIntList possibleLastStep = stepIndicators[length];
-            for (State<S> nonAcceptState : dfa.nonAcceptStates()) {
-                final int finalStepBeNonAccept = possibleLastStep.get(stateEncoder.get(nonAcceptState));
+            final var possibleLastStep = stepIndicators[length];
+            for (var nonAcceptState : dfa.nonAcceptStates()) {
+                final var finalStepBeNonAccept = possibleLastStep.get(stateEncoder.get(nonAcceptState));
                 solver.setLiteralFalsy(finalStepBeNonAccept);
             }
         }

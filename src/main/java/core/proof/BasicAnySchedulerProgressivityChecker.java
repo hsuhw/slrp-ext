@@ -28,22 +28,22 @@ public class BasicAnySchedulerProgressivityChecker implements AnySchedulerProgre
     @Override
     public <S> Result<S> test(FST<S, S> nonfinalScheduler, FST<S, S> process, FSA<S> invariant, FST<S, S> order)
     {
-        final FST<S, S> processInvariantMoves = process.maskByOutput(invariant);
+        final var processInvariantMoves = process.maskByOutput(invariant);
 
         final StepMaker<Pair<S, S>, Pair<S, S>, Pair<S, S>> smallerAvailSchedulerPair = //
             (statePair, processMove, greaterThan) -> {
-                final boolean processMovesToSmaller = processMove.getTwo().equals(greaterThan.getTwo());
-                final S schedulerDept = greaterThan.getOne();
-                final S schedulerDest = processMove.getOne();
+                final var processMovesToSmaller = processMove.getTwo().equals(greaterThan.getTwo());
+                final var schedulerDept = greaterThan.getOne();
+                final var schedulerDest = processMove.getOne();
                 return processMovesToSmaller ? Tuples.pair(schedulerDept, schedulerDest) : null;
             };
 
-        final FST<S, S> smallerAvailSchedulerMoves = //
+        final var smallerAvailSchedulerMoves = //
             (FST<S, S>) processInvariantMoves.product(order, nonfinalScheduler.alphabet(), smallerAvailSchedulerPair,
                                                       AcceptStates.select(processInvariantMoves, order, AND));
 
-        final ListIterable<Twin<S>> witness = new CounterexampleBFS<>(nonfinalScheduler.asFSA(), invariant,
-                                                                      smallerAvailSchedulerMoves.asFSA()).run();
+        final var witness = new CounterexampleBFS<>(nonfinalScheduler.asFSA(), invariant,
+                                                    smallerAvailSchedulerMoves.asFSA()).run();
 
         return witness == null //
                ? new Result<>(true, null) //
@@ -120,8 +120,8 @@ public class BasicAnySchedulerProgressivityChecker implements AnySchedulerProgre
         public int hashCode()
         {
             if (hashCode == -1) {
-                final int prime = 67;
-                int result = 1;
+                final var prime = 67;
+                var result = 1;
 
                 result = prime * result + sched.hashCode();
                 result = prime * result + inv.hashCode();
@@ -143,7 +143,7 @@ public class BasicAnySchedulerProgressivityChecker implements AnySchedulerProgre
             if (obj instanceof StateTuple<?>) {
                 try {
                     @SuppressWarnings("unchecked")
-                    final StateTuple<S> other = (StateTuple<S>) obj;
+                    final var other = (StateTuple<S>) obj;
                     return other.sched.equals(this.sched) && other.inv.equals(this.inv) && other.rhs.equals(this.rhs);
                 } catch (ClassCastException e) {
                     return false;
@@ -191,10 +191,10 @@ public class BasicAnySchedulerProgressivityChecker implements AnySchedulerProgre
         {
             final MutableList<Twin<S>> witnessBacktrace = FastList.newList();
             witnessBacktrace.add(breakingStep);
-            StateTuple<S> currStateTuple = stateTuple;
+            var currStateTuple = stateTuple;
             Twin<S> currSymbol;
             while (!currStateTuple.equals(startStateTuple)) {
-                final Pair<StateTuple<S>, Twin<S>> visitorAndSymbol = visitRecord.get(currStateTuple);
+                final var visitorAndSymbol = visitRecord.get(currStateTuple);
                 if (!(currSymbol = visitorAndSymbol.getTwo()).equals(epsilon)) {
                     witnessBacktrace.add(currSymbol);
                 }
@@ -224,12 +224,12 @@ public class BasicAnySchedulerProgressivityChecker implements AnySchedulerProgre
                 if (rhsDept.enabledSymbols().contains(epsilon)) {
                     throw new IllegalStateException("RHS should be deterministic");
                 }
-                for (Pair<S, S> symbol : schedDept.enabledSymbols()) {
+                for (var symbol : schedDept.enabledSymbols()) {
                     if (symbol.equals(epsilonPair)) {
                         invDest = invDept;
                         rhsDest = rhsDept;
                     } else {
-                        final S xSymbol = symbol.getOne();
+                        final var xSymbol = symbol.getOne();
                         if (!invDept.transitionExists(xSymbol)) {
                             continue;
                         }
@@ -238,7 +238,7 @@ public class BasicAnySchedulerProgressivityChecker implements AnySchedulerProgre
                     }
                     invAccepts = invariant.isAcceptState(invDest);
                     rhsAccepts = rhs.isAcceptState(rhsDest);
-                    for (State<Pair<S, S>> schedDest : schedDept.successors(symbol)) {
+                    for (var schedDest : schedDept.successors(symbol)) {
                         if (nonfinalScheduler.isAcceptState(schedDest) && invAccepts && !rhsAccepts) {
                             return witnessFoundAt(currStateTuple, (Twin<S>) symbol);
                         }

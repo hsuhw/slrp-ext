@@ -14,15 +14,15 @@ public final class CommandLineInterface
     CommandLineInterface(String[] args) throws ParseException
     {
         cmdSyntax = "slrp-ext [OPTIONS] FILE" + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "options:" + DISPLAY_NEWLINE;
-        String helpDesc = "print this message and exit";
-        String versionDesc = "print the version information and exit";
-        String waitDesc = "wait before run for a manual profiler setup";
-        String shapeInvariantDesc = "use the shape constraint when searching invariant";
-        String shapeOrderDesc = "use the shape constraint when searching order";
-        String looseInvariantDesc = "allow loose invariant";
-        String logLevelDesc = "set the logging level (\"debug\"|\"info\"|\"warn\"|\"error\"|\"fatal\") " //
+        final var helpDesc = "print this message and exit";
+        final var versionDesc = "print the version information and exit";
+        final var waitDesc = "wait before run for a manual profiler setup";
+        final var shapeInvariantDesc = "use the shape constraint when searching invariant";
+        final var shapeOrderDesc = "use the shape constraint when searching order";
+        final var looseInvariantDesc = "allow loose invariant";
+        final var logLevelDesc = "set the logging level (\"debug\"|\"info\"|\"warn\"|\"error\"|\"fatal\") " //
             + "(default \"warn\")";
-        String modeDesc = "set the mode (\"exp\"|\"cav16mono\") (default \"exp\")";
+        final var modeDesc = "set the mode (\"exp\"|\"cav16mono\") (default \"exp\")";
 
         options = new Options();
         options.addOption("h", "help", false, helpDesc);
