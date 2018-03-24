@@ -3,8 +3,6 @@ package api.automata.fst;
 import api.automata.*;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
-import api.automata.fsa.MutableFSA;
-import core.automata.fst.BasicMutableFST;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.SetIterable;
@@ -30,15 +28,15 @@ public interface MutableFST<S, T> extends MutableAutomaton<Pair<S, T>>, FST<S, T
     private <R> Automaton<R> projectInto(MutableAutomaton<R> result, Function<Pair<S, T>, R> projector)
     {
         final MutableMap<State<Pair<S, T>>, MutableState<R>> stateMapping = UnifiedMap.newMap(states().size());
-        stateMapping.put(startState(), (MutableState<R>) result.startState());
+        stateMapping.put(startState(), result.startState());
 
         R newSymbol;
-        for (State<Pair<S, T>> dept : states()) {
-            final MutableState<R> newDept = stateMapping.computeIfAbsent(dept, __ -> result.newState());
-            for (Pair<S, T> symbol : dept.enabledSymbols()) {
-                for (State<Pair<S, T>> dest : dept.successors(symbol)) {
+        for (var dept : states()) {
+            final var newDept = stateMapping.computeIfAbsent(dept, __ -> result.newState());
+            for (var symbol : dept.enabledSymbols()) {
+                for (var dest : dept.successors(symbol)) {
                     if ((newSymbol = projector.apply(symbol)) != null) {
-                        final MutableState<R> newDest = stateMapping.computeIfAbsent(dest, __ -> result.newState());
+                        final var newDest = stateMapping.computeIfAbsent(dest, __ -> result.newState());
                         result.addTransition(newDept, newDest, newSymbol);
                     }
                 }
@@ -52,13 +50,13 @@ public interface MutableFST<S, T> extends MutableAutomaton<Pair<S, T>>, FST<S, T
     @Override
     default <R> Automaton<R> project(Alphabet<R> alphabet, Function<Pair<S, T>, R> projector)
     {
-        final int capacity = states().size(); // upper bound
+        final var capacity = states().size(); // upper bound
         if (alphabet.epsilon() instanceof Pair<?, ?>) {
             @SuppressWarnings("unchecked")
-            final MutableAutomaton<R> result = new BasicMutableFST(alphabet, capacity);
+            final MutableAutomaton<R> result = FSTs.create((Alphabet) alphabet, capacity);
             return projectInto(result, projector);
         } else {
-            final MutableFSA<R> result = FSAs.create(alphabet, capacity);
+            final var result = FSAs.create(alphabet, capacity);
             return projectInto(result, projector);
         }
     }
@@ -139,12 +137,12 @@ public interface MutableFST<S, T> extends MutableAutomaton<Pair<S, T>>, FST<S, T
             throw new IllegalArgumentException(NONEXISTING_STATE);
         }
 
-        final MutableFST<S, T> result = FSTs.shallowCopy(this);
-        final MutableState<Pair<S, T>> newStart = result.newState();
+        final var result = FSTs.shallowCopy(this);
+        final var newStart = result.newState();
         @SuppressWarnings("unchecked")
         final SetIterable<MutableState<Pair<S, T>>> targetStates = (SetIterable) target.states();
-        result.addEpsilonTransition(newStart, (MutableState<Pair<S, T>>) startState()).setAsStart(newStart)
-              .addStates(targetStates).addEpsilonTransition(newStart, (MutableState<Pair<S, T>>) target.startState());
+        result.addEpsilonTransition(newStart, startState()).setAsStart(newStart).addStates(targetStates)
+              .addEpsilonTransition(newStart, (MutableState<Pair<S, T>>) target.startState());
 
         return result; // shallow reference
     }
