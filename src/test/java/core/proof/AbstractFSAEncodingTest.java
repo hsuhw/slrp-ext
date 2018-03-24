@@ -6,7 +6,6 @@ import api.automata.fsa.FSA;
 import api.proof.FSAEncoding;
 import common.sat.Sat4jSolverAdapter;
 import common.sat.SatSolver;
-import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.Sets;
 
@@ -21,11 +20,11 @@ public abstract class AbstractFSAEncodingTest
     protected abstract FSAEncoding<Object> newEncoding(int size, AlphabetIntEncoder<Object> alphabetEncoding);
 
     {
-        final Object e = new Object();
-        final Object a1 = new Object();
-        final Object a2 = new Object();
-        final AlphabetIntEncoder<Object> alphabet1 = AlphabetIntEncoders.create(Lists.mutable.of(e, a1), e);
-        final AlphabetIntEncoder<Object> alphabet2 = AlphabetIntEncoders.create(Lists.mutable.of(e, a1, a2), e);
+        final var e = new Object();
+        final var a1 = new Object();
+        final var a2 = new Object();
+        final var alphabet1 = AlphabetIntEncoders.create(Lists.mutable.of(e, a1), e);
+        final var alphabet2 = AlphabetIntEncoders.create(Lists.mutable.of(e, a1, a2), e);
 
         describe("To ignore shapeless targets", () -> {
 
@@ -35,7 +34,7 @@ public abstract class AbstractFSAEncodingTest
 
             it("can ensure no unreachable state", () -> {
                 FSA<Object> fsa;
-                int count = 0;
+                var count = 0;
                 encoding.ensureNoUnreachableState();
                 while (solver.findItSatisfiable()) {
                     fsa = encoding.resolve();
@@ -48,7 +47,7 @@ public abstract class AbstractFSAEncodingTest
 
             it("can ensure no dead-end state", () -> {
                 FSA<Object> fsa;
-                int count = 0;
+                var count = 0;
                 encoding.ensureNoDeadEndState();
                 while (solver.findItSatisfiable()) {
                     fsa = encoding.resolve();
@@ -61,7 +60,7 @@ public abstract class AbstractFSAEncodingTest
 
             it("can ensure no dangling state", () -> {
                 FSA<Object> fsa;
-                int count = 0;
+                var count = 0;
                 encoding.ensureNoDanglingState();
                 while (solver.findItSatisfiable()) {
                     fsa = encoding.resolve();
@@ -78,10 +77,10 @@ public abstract class AbstractFSAEncodingTest
 
             describe("set up ahead", () -> {
 
-                final ImmutableList<Object> word1 = Lists.immutable.of(a1, a1, a1, a1, a1);
-                final ImmutableList<Object> word2 = Lists.immutable.of(a1, a1);
-                final ImmutableList<Object> word3 = Lists.immutable.of(a1, a2, a1);
-                final ImmutableList<Object> word4 = Lists.immutable.of(a2, a1, a2);
+                final var word1 = Lists.immutable.of(a1, a1, a1, a1, a1);
+                final var word2 = Lists.immutable.of(a1, a1);
+                final var word3 = Lists.immutable.of(a1, a2, a1);
+                final var word4 = Lists.immutable.of(a2, a1, a2);
 
                 beforeEach(() -> {
                     encoding = newEncoding(3, alphabet1);
@@ -91,7 +90,7 @@ public abstract class AbstractFSAEncodingTest
                 it("can show all on accepting a word", () -> {
                     encoding.ensureAccepting(word1);
                     FSA<Object> fsa;
-                    int count = 0;
+                    var count = 0;
                     while (solver.findItSatisfiable()) {
                         fsa = encoding.resolve();
                         expect(fsa.accepts(word1)).toBeTrue();
@@ -104,7 +103,7 @@ public abstract class AbstractFSAEncodingTest
                 it("can show all on not accepting a word", () -> {
                     encoding.ensureNoAccepting(word1);
                     FSA<Object> fsa;
-                    int count = 0;
+                    var count = 0;
                     while (solver.findItSatisfiable()) {
                         fsa = encoding.resolve();
                         expect(fsa.accepts(word1)).toBeFalse();
@@ -115,12 +114,12 @@ public abstract class AbstractFSAEncodingTest
                 });
 
                 it("can show all on iff-accepting a word", () -> {
-                    final int yes = solver.newFreeVariable();
+                    final var yes = solver.newFreeVariable();
                     solver.setLiteralTruthy(yes);
                     encoding.ensureAcceptingIfOnlyIf(-yes, word1);
                     encoding.ensureAcceptingIfOnlyIf(yes, word2);
                     FSA<Object> fsa;
-                    int count = 0;
+                    var count = 0;
                     while (solver.findItSatisfiable()) {
                         fsa = encoding.resolve();
                         expect(fsa.accepts(word1)).toBeFalse();
@@ -138,7 +137,7 @@ public abstract class AbstractFSAEncodingTest
                     encoding.ensureAccepting(word4);
                     encoding.ensureNoWordPurelyMadeOf(Sets.immutable.of(a1));
                     FSA<Object> fsa;
-                    int count = 0;
+                    var count = 0;
                     while (solver.findItSatisfiable()) {
                         fsa = encoding.resolve();
                         expect(fsa.accepts(word3)).toBeTrue();
