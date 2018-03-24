@@ -7,9 +7,9 @@ import core.automata.AbstractMutableAutomaton;
 import core.automata.fsa.BasicMutableFSA;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.list.ListIterable;
-import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.api.map.primitive.MutableIntObjectMap;
 import org.eclipse.collections.impl.factory.Sets;
-import org.eclipse.collections.impl.tuple.Tuples;
+import org.eclipse.collections.impl.map.mutable.primitive.IntObjectHashMap;
 
 import java.lang.ref.SoftReference;
 import java.util.WeakHashMap;
@@ -18,8 +18,16 @@ import static common.util.Constants.NO_IMPLEMENTATION_FOUND;
 
 public final class FSAs
 {
-    private static final WeakHashMap<Alphabet, Pair<SoftReference<Alphabet>, FSA>> NONE_CACHE = new WeakHashMap<>();
-    private static final WeakHashMap<Alphabet, Pair<SoftReference<Alphabet>, FSA>> ALL_CACHE = new WeakHashMap<>();
+    // TODO: verify that the caching is working correctly
+    private static final WeakHashMap<Alphabet, SoftReference<FSA>> NONE_FSA_CACHE;
+    private static final WeakHashMap<Alphabet, SoftReference<FSA>> ALL_FSA_CACHE;
+    private static final WeakHashMap<Alphabet, SoftReference<MutableIntObjectMap<FSA>>> FIXED_LENGTH_FSA_CACHE;
+
+    static {
+        NONE_FSA_CACHE = new WeakHashMap<>();
+        ALL_FSA_CACHE = new WeakHashMap<>();
+        FIXED_LENGTH_FSA_CACHE = new WeakHashMap<>();
+    }
 
     private FSAs()
     {
@@ -64,15 +72,16 @@ public final class FSAs
 
     public static <S> FSA<S> acceptingNone(Alphabet<S> alphabet)
     {
-        Pair<SoftReference<Alphabet>, FSA> cache = NONE_CACHE.get(alphabet);
-        if (cache != null && cache.getOne().get() != null) {
+        final var cache = NONE_FSA_CACHE.get(alphabet);
+        FSA cachedItem;
+        if (cache != null && (cachedItem = cache.get()) != null) {
             @SuppressWarnings("unchecked")
-            final FSA<S> cachedResult = cache.getTwo();
-            return cachedResult;
+            final FSA<S> result = cachedItem;
+            return result;
         }
 
-        final FSA<S> result = createAcceptingNone(alphabet);
-        NONE_CACHE.put(alphabet, Tuples.pair(new SoftReference<>(alphabet), result));
+        final var result = createAcceptingNone(alphabet);
+        NONE_FSA_CACHE.put(alphabet, new SoftReference<>(result));
 
         return result;
     }
@@ -90,15 +99,57 @@ public final class FSAs
 
     public static <S> FSA<S> acceptingAll(Alphabet<S> alphabet)
     {
-        Pair<SoftReference<Alphabet>, FSA> cache = ALL_CACHE.get(alphabet);
-        if (cache != null && cache.getOne().get() != null) {
+        final var cache = ALL_FSA_CACHE.get(alphabet);
+        FSA cachedItem;
+        if (cache != null && (cachedItem = cache.get()) != null) {
             @SuppressWarnings("unchecked")
-            final FSA<S> cachedResult = cache.getTwo();
-            return cachedResult;
+            final FSA<S> result = cachedItem;
+            return result;
         }
 
-        final FSA<S> result = createAcceptingAll(alphabet);
-        ALL_CACHE.put(alphabet, Tuples.pair(new SoftReference<>(alphabet), result));
+        final var result = createAcceptingAll(alphabet);
+        ALL_FSA_CACHE.put(alphabet, new SoftReference<>(result));
+
+        return result;
+    }
+
+    private static <S> FSA<S> createAcceptingAllOnLength(Alphabet<S> alphabet, int length)
+    {
+        final var result = create(alphabet, length + 1);
+
+        var currState = result.startState();
+        for (var i = 0; i < length; i++) {
+            final var nextState = result.newState();
+            for (var symbol : alphabet.noEpsilonSet()) {
+                result.addTransition(currState, nextState, symbol);
+            }
+            currState = nextState;
+        }
+        result.setAsAccept(currState);
+
+        return result;
+    }
+
+    public static <S> FSA<S> acceptingAllOnLength(Alphabet<S> alphabet, int length)
+    {
+        final var cache = FIXED_LENGTH_FSA_CACHE.get(alphabet);
+        MutableIntObjectMap<FSA> cachedItems;
+        if (cache != null && (cachedItems = cache.get()) != null) {
+            if (cachedItems.containsKey(length)) {
+                @SuppressWarnings("unchecked")
+                final FSA<S> result = cachedItems.get(length);
+                return result;
+            }
+
+            final var result = createAcceptingAllOnLength(alphabet, length);
+            cachedItems.put(length, result);
+            return result;
+        }
+
+        final var result = createAcceptingAllOnLength(alphabet, length);
+        final var lengthCache = new IntObjectHashMap<FSA>();
+        lengthCache.put(length, result);
+        FIXED_LENGTH_FSA_CACHE.put(alphabet, new SoftReference<>(lengthCache));
 
         return result;
     }

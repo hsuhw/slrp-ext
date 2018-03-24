@@ -253,6 +253,8 @@ public interface FSA<S> extends Automaton<S>
 
     LanguageSubsetChecker.Result<S> checkContaining(FSA<S> target);
 
+    LanguageSubsetChecker.Result<S> checkContainingWithCounterSource(FSA<S> target);
+
     @Override
     String toString();
 }

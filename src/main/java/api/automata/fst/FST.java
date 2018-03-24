@@ -1,19 +1,22 @@
 package api.automata.fst;
 
-import api.automata.Alphabet;
-import api.automata.Alphabets;
-import api.automata.Automaton;
-import api.automata.State;
+import api.automata.*;
 import api.automata.fsa.FSA;
+import api.automata.fsa.FSAs;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.stack.MutableStack;
 import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.api.tuple.primitive.ObjectIntPair;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.eclipse.collections.impl.stack.mutable.ArrayStack;
+import org.eclipse.collections.impl.tuple.primitive.PrimitiveTuples;
+
+import java.util.LinkedList;
+import java.util.List;
 
 import static api.util.Connectives.*;
 import static common.util.Constants.NOT_IMPLEMENTED_YET;
@@ -135,6 +138,54 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
         return (FSA<T>) product(fsa, outputAlphabet(), Labels.transduced(), AcceptStates.select(this, fsa, AND));
     }
 
+    private static <S> ObjectIntPair<FSA<S>> postStarImageOnLength(FST<S, S> fst, FSA<S> target, int length)
+    {
+        final var trimmedTarget = target.intersect(FSAs.acceptingAllOnLength(target.alphabet(), length));
+
+        final List<FSA<S>> closedImages = new LinkedList<>();
+        closedImages.add(trimmedTarget);
+        var currTarget = trimmedTarget;
+        var convergeSteps = 0;
+        while (true) {
+            convergeSteps++;
+            var remains = fst.postImage(currTarget);
+            for (var closedImage : closedImages) {
+                final var containment = closedImage.checkContainingWithCounterSource(remains);
+                if (containment.passed()) { // union all closed images
+                    final var stateCapacity = closedImages.stream().mapToInt(each -> each.states().size()).sum() + 1;
+                    final var result = FSAs.create(target.alphabet(), stateCapacity);
+                    final var start = result.startState();
+                    closedImages.forEach(image -> {
+                        @SuppressWarnings("unchecked")
+                        final SetIterable<MutableState<S>> states = (SetIterable) image.states();
+                        @SuppressWarnings("unchecked")
+                        final SetIterable<MutableState<S>> accepts = (SetIterable) image.acceptStates();
+                        result.addStates(states).addEpsilonTransition(start, (MutableState<S>) image.startState())
+                              .setAllAsAccept(accepts);
+                    });
+                    return PrimitiveTuples.pair(result, convergeSteps);
+                }
+                remains = containment.counterexample().sourceImage();
+            }
+            closedImages.add(remains);
+            currTarget = remains;
+        }
+    }
+
+    default ObjectIntPair<FSA<S>> postStarImageOnLength(FSA<S> target, int length)
+    {
+        final var epsilon = alphabet().epsilon();
+        final var input = epsilon.getOne();
+        final var output = epsilon.getTwo();
+        if (!input.getClass().isInstance(output) || !output.getClass().isInstance(input)) {
+            throw new UnsupportedOperationException("only available on same space mapping instances");
+        }
+
+        @SuppressWarnings("unchecked")
+        final var fst = (FST<S, S>) this;
+        return postStarImageOnLength(fst, target, length);
+    }
+
     default RichIterable<ListIterable<S>> preImage(ListIterable<T> word)
     {
         final ListIterable<T> trimmedWord = word.allSatisfy(outputAlphabet()::notEpsilon)
@@ -151,6 +202,20 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
         final FST<T, S> inv = inverse(); // should be cached
 
         return (FSA<S>) inv.product(fsa, inputAlphabet(), Labels.transduced(), AcceptStates.select(inv, fsa, AND));
+    }
+
+    default ObjectIntPair<FSA<S>> preStarImageOnLength(FSA<S> target, int length)
+    {
+        final var epsilon = alphabet().epsilon();
+        final var input = epsilon.getOne();
+        final var output = epsilon.getTwo();
+        if (!input.getClass().isInstance(output) || !output.getClass().isInstance(input)) {
+            throw new UnsupportedOperationException("only available on same space mapping instances");
+        }
+
+        @SuppressWarnings("unchecked")
+        final var fst = (FST<S, S>) this;
+        return postStarImageOnLength(fst.inverse(), target, length);
     }
 
     FST<S, T> intersect(FST<S, T> target);
