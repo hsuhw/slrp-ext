@@ -55,13 +55,13 @@ public class BasicTransitivityChecker implements TransitivityChecker
 
     private class Counterexample<S> implements TransitivityChecker.Counterexample<S>
     {
-        private final ListIterable<Pair<S, S>> invalidStep;
+        private final ListIterable<Pair<S, S>> breakingStep;
         private final FST<S, S> relation;
         private RichIterable<ListIterable<S>> validMiddleSteps;
 
         private Counterexample(FST<S, S> relation, ListIterable<Pair<S, S>> witness)
         {
-            this.invalidStep = witness;
+            this.breakingStep = witness;
             this.relation = relation;
         }
 
@@ -69,9 +69,9 @@ public class BasicTransitivityChecker implements TransitivityChecker
         public RichIterable<ListIterable<S>> validMiddleSteps()
         {
             if (validMiddleSteps == null) {
-                // 'x -> z' is the invalidStep; for 'x -> { y1, y2, ... } -> z', ys are the valid middle steps
-                final var x = invalidStep.collect(Pair::getOne);
-                final var z = invalidStep.collect(Pair::getTwo);
+                // 'x -> z' is the breakingStep; for 'x -> { y1, y2, ... } -> z', ys are the valid middle steps
+                final var x = breakingStep.collect(Pair::getOne);
+                final var z = breakingStep.collect(Pair::getTwo);
                 validMiddleSteps = relation.postImage(x).select(relation.preImage(z)::contains);
             }
 
@@ -79,15 +79,15 @@ public class BasicTransitivityChecker implements TransitivityChecker
         }
 
         @Override
-        public ListIterable<Pair<S, S>> invalidStep()
+        public ListIterable<Pair<S, S>> breakingStep()
         {
-            return invalidStep;
+            return breakingStep;
         }
 
         @Override
         public String toString()
         {
-            return "witness of intransitive parts: " + invalidStep() + " valid middle steps: " +
+            return "witness of intransitive parts: " + breakingStep() + " valid middle steps: " +
                 validMiddleSteps().makeString();
         }
     }

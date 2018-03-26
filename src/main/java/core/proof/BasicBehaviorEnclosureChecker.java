@@ -3,7 +3,6 @@ package core.proof;
 import api.automata.fsa.FSA;
 import api.automata.fst.FST;
 import api.proof.BehaviorEnclosureChecker;
-import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.list.ListIterable;
 
 import static common.util.Constants.DISPLAY_INDENT;
@@ -58,7 +57,7 @@ public class BasicBehaviorEnclosureChecker implements BehaviorEnclosureChecker
     {
         private final ListIterable<S> invalidStep;
         private final FST<S, S> behavior;
-        private RichIterable<ListIterable<S>> causes;
+        private ListIterable<ListIterable<S>> causes;
 
         private Counterexample(FST<S, S> behavior, ListIterable<S> instance)
         {
@@ -67,7 +66,7 @@ public class BasicBehaviorEnclosureChecker implements BehaviorEnclosureChecker
         }
 
         @Override
-        public RichIterable<ListIterable<S>> causes()
+        public ListIterable<ListIterable<S>> causes()
         {
             if (causes == null) {
                 causes = behavior.preImage(invalidStep);
@@ -77,7 +76,7 @@ public class BasicBehaviorEnclosureChecker implements BehaviorEnclosureChecker
         }
 
         @Override
-        public ListIterable<S> invalidStep()
+        public ListIterable<S> breakingStep()
         {
             return invalidStep;
         }
@@ -85,7 +84,7 @@ public class BasicBehaviorEnclosureChecker implements BehaviorEnclosureChecker
         @Override
         public String toString()
         {
-            return "witness of nonenclosed parts: " + invalidStep() + " causes: " + causes().makeString();
+            return "witness of nonenclosed parts: " + breakingStep() + " causes: " + causes().makeString();
         }
     }
 }

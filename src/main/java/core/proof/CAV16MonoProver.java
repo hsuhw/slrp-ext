@@ -50,6 +50,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
 //                      ? scheduler.union(process)
 //                      : scheduler.compose(process, scheduler.alphabet());
         allBehavior = scheduler.compose(process, scheduler.alphabet());
+        LOGGER.debug("All behaviour computed: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", allBehavior);
         invEnclosesAll = problem.invariantEnclosesAllBehavior();
     }
 
@@ -81,12 +82,12 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
     static <S> void refineBehaviorEncloser(SatSolver solver, FSAEncoding<S> encloserEncoding,
         BehaviorEnclosureChecker.Counterexample<S> counterexample)
     {
-        final var invalidStep = counterexample.invalidStep();
+        final var breakingStep = counterexample.breakingStep();
         final var takenStep = solver.newFreeVariable();
-        encloserEncoding.ensureAcceptingIfOnlyIf(takenStep, invalidStep);
-        for (var cause : counterexample.causes()) {
+        encloserEncoding.ensureAcceptingIfOnlyIf(takenStep, breakingStep);
+        for (var causeOfBreaking : counterexample.causes()) {
             final var takenCause = solver.newFreeVariable();
-            encloserEncoding.ensureAcceptingIfOnlyIf(takenCause, cause);
+            encloserEncoding.ensureAcceptingIfOnlyIf(takenCause, causeOfBreaking);
             solver.addImplication(takenCause, takenStep);
         }
     }
@@ -99,12 +100,12 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
     static <S> void refineTransitivity(SatSolver solver, FSAEncoding<Pair<S, S>> targetEncoding,
         TransitivityChecker.Counterexample<S> counterexample)
     {
-        final var invalidStep = counterexample.invalidStep();
-        final var x = invalidStep.collect(Pair::getOne);
-        final var z = invalidStep.collect(Pair::getTwo);
+        final var breakingStep = counterexample.breakingStep();
+        final var x = breakingStep.collect(Pair::getOne);
+        final var z = breakingStep.collect(Pair::getTwo);
 
         final var takenStep = solver.newFreeVariable();
-        targetEncoding.ensureAcceptingIfOnlyIf(takenStep, invalidStep);
+        targetEncoding.ensureAcceptingIfOnlyIf(takenStep, breakingStep);
         for (var y : counterexample.validMiddleSteps()) {
             final var takenXY = solver.newFreeVariable();
             final var takenYZ = solver.newFreeVariable();

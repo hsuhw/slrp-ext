@@ -26,9 +26,9 @@ public interface BehaviorEnclosureChecker
 
     interface Counterexample<S>
     {
-        RichIterable<ListIterable<S>> causes();
+        ListIterable<ListIterable<S>> causes();
 
-        ListIterable<S> invalidStep();
+        ListIterable<S> breakingStep();
 
         @Override
         String toString();

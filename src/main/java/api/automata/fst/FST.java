@@ -3,7 +3,6 @@ package api.automata.fst;
 import api.automata.*;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
-import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.api.set.SetIterable;
@@ -124,13 +123,14 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
         return result;
     }
 
-    default RichIterable<ListIterable<T>> postImage(ListIterable<S> word)
+    default ListIterable<ListIterable<T>> postImage(ListIterable<S> word)
     {
         final ListIterable<S> trimmedWord = word.allSatisfy(inputAlphabet()::notEpsilon)
                                             ? word
                                             : word.select(inputAlphabet()::notEpsilon);
 
-        return run(startState(), trimmedWord, trimmedWord.size()).collect(each -> (ListIterable<T>) each.toList());
+        return run(startState(), trimmedWord, trimmedWord.size()).collect(each -> (ListIterable<T>) each.toList())
+                                                                 .toList();
     }
 
     default FSA<T> postImage(FSA<S> fsa)
@@ -186,7 +186,7 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
         return postStarImageOnLength(fst, target, length);
     }
 
-    default RichIterable<ListIterable<S>> preImage(ListIterable<T> word)
+    default ListIterable<ListIterable<S>> preImage(ListIterable<T> word)
     {
         final ListIterable<T> trimmedWord = word.allSatisfy(outputAlphabet()::notEpsilon)
                                             ? word
@@ -194,7 +194,7 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
         final FST<T, S> inv = inverse(); // should be cached
 
         return inv.run(inv.startState(), trimmedWord, trimmedWord.size())
-                  .collect(each -> (ListIterable<S>) each.toList());
+                  .collect(each -> (ListIterable<S>) each.toList()).toList();
     }
 
     default FSA<S> preImage(FSA<T> fsa)

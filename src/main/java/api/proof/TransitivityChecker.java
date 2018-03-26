@@ -28,7 +28,7 @@ public interface TransitivityChecker
     {
         RichIterable<ListIterable<S>> validMiddleSteps();
 
-        ListIterable<Pair<S, S>> invalidStep();
+        ListIterable<Pair<S, S>> breakingStep();
 
         @Override
         String toString();
