@@ -21,7 +21,7 @@ import java.util.List;
 import static common.util.Constants.DISPLAY_NEWLINE;
 import static core.proof.CAV16MonoProver.*;
 
-public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
+public class FairnessSATBasedProver<S> extends AbstractProver<S> implements Prover
 {
     private static final Logger LOGGER = LogManager.getLogger();
     private static final FairnessProgressivityChecker FAIRNESS_PROGRESSIVITY_CHECKER;
@@ -33,14 +33,15 @@ public class ExperimentalProver<S> extends AbstractProver<S> implements Prover
         FAIRNESS_PROGRESSIVITY_CHECKER = new BasicFairnessProgressivityChecker();
     }
 
-    public ExperimentalProver(Problem<S> problem, boolean shapeInvariant, boolean shapeOrder, boolean loosenInvariant)
+    public FairnessSATBasedProver(Problem<S> problem, boolean shapeInvariant, boolean shapeOrder,
+        boolean loosenInvariant)
     {
         super(problem, shapeInvariant, shapeOrder, loosenInvariant);
 
         allBehavior = scheduler.compose(process, scheduler.alphabet());
+        LOGGER.debug("All behaviour computed: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", allBehavior);
         final var allBehaviorDomain = allBehavior.domain();
         matteringConfigs = allBehaviorDomain.intersect(nonfinalConfigs);
-        LOGGER.debug("All behaviour computed: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", allBehavior);
     }
 
     private static <S> FairnessProgressivityChecker.Result<S> checkProgressivity(FST<S, S> behavior,

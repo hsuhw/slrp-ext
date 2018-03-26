@@ -5,7 +5,7 @@ import api.proof.Problem;
 import api.proof.Prover;
 import core.parser.StringProblemParser;
 import core.proof.CAV16MonoProver;
-import core.proof.ExperimentalProver;
+import core.proof.FairnessSATBasedProver;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -95,7 +95,7 @@ public final class Main
                 prover = new CAV16MonoProver<>(problem, shapeInvariant, shapeOrder, loosenInvariant);
                 break;
             default: // should be 'exp'
-                prover = new ExperimentalProver<>(problem, shapeInvariant, shapeOrder, loosenInvariant);
+                prover = new FairnessSATBasedProver<>(problem, shapeInvariant, shapeOrder, loosenInvariant);
         }
         if (problem.invariant() != null && problem.order() != null) {
             LOGGER.info("Invoke a verification on input.");
