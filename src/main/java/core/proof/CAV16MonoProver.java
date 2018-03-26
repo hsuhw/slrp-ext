@@ -11,7 +11,7 @@ import api.automata.fsa.MutableFSA;
 import api.automata.fst.FST;
 import api.automata.fst.FSTs;
 import api.proof.*;
-import common.sat.ContradictionException;
+import common.util.ContradictionException;
 import common.sat.SatSolver;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

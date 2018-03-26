@@ -1,6 +1,8 @@
 package common.sat;
 
+import common.util.ContradictionException;
 import common.util.Stopwatch;
+import common.util.TimeoutException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.list.primitive.ImmutableIntList;

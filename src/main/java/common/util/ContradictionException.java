@@ -1,4 +1,4 @@
-package common.sat;
+package common.util;
 
 public class ContradictionException extends RuntimeException
 {
