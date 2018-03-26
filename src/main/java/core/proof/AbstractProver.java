@@ -25,6 +25,7 @@ public abstract class AbstractProver<S> implements Prover
     private static final Logger LOGGER = LogManager.getLogger();
 
     final FSA<S> initialConfigs;
+    final FSA<S> finalConfigs;
     final FSA<S> nonfinalConfigs;
     final FST<S, S> scheduler;
     private final FSA<S> schedulerDomain;
@@ -50,7 +51,8 @@ public abstract class AbstractProver<S> implements Prover
     AbstractProver(Problem<S> problem, boolean shapeInvariant, boolean shapeOrder, boolean loosenInvariant)
     {
         initialConfigs = problem.initialConfigs().determinize().minimize();
-        nonfinalConfigs = problem.finalConfigs().determinize().minimize().complement();
+        finalConfigs = problem.finalConfigs().determinize().minimize();
+        nonfinalConfigs = finalConfigs.complement();
         scheduler = problem.scheduler();
         process = problem.process();
         wholeAlphabet = initialConfigs.alphabet(); // relying on current parsing behavior
