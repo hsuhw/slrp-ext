@@ -11,8 +11,8 @@ import api.automata.fsa.MutableFSA;
 import api.automata.fst.FST;
 import api.automata.fst.FSTs;
 import api.proof.*;
-import common.util.ContradictionException;
 import common.sat.SatSolver;
+import common.util.ContradictionException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.eclipse.collections.api.tuple.Pair;
@@ -49,7 +49,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
 //        allBehavior = loosenInvariant
 //                      ? scheduler.union(process)
 //                      : scheduler.compose(process, scheduler.alphabet());
-        allBehavior = scheduler.compose(process, scheduler.alphabet());
+        allBehavior = scheduler.compose(process, orderAlphabet);
         LOGGER.debug("All behaviour computed: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", allBehavior);
         invEnclosesAll = problem.invariantEnclosesAllBehavior();
     }
@@ -175,7 +175,7 @@ public class CAV16MonoProver<S> extends AbstractProver<S> implements Prover
     @Override
     public void prove()
     {
-        final var invSymbolEncoding = AlphabetIntEncoders.create(wholeAlphabet);
+        final var invSymbolEncoding = AlphabetIntEncoders.create(roundAlphabet);
         final var ordSymbolEncoding = AlphabetIntEncoders.create(orderAlphabet);
 
         // having empty string excluded makes searching from 0 or 1 meaningless

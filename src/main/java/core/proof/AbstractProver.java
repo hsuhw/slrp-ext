@@ -33,7 +33,7 @@ public abstract class AbstractProver<S> implements Prover
     private final FSA<S> processRange;
     final FSA<S> givenInvariant;
     final FST<S, S> givenOrder;
-    final Alphabet<S> wholeAlphabet;
+    private final Alphabet<S> wholeAlphabet;
     final Alphabet<S> roundAlphabet;
     final Alphabet<Pair<S, S>> orderAlphabet;
     final SetIterable<Pair<S, S>> orderReflexiveSymbols;
@@ -50,12 +50,11 @@ public abstract class AbstractProver<S> implements Prover
 
     AbstractProver(Problem<S> problem, boolean shapeInvariant, boolean shapeOrder, boolean loosenInvariant)
     {
-        initialConfigs = problem.initialConfigs().determinize().minimize();
         finalConfigs = problem.finalConfigs().determinize().minimize();
         nonfinalConfigs = finalConfigs.complement();
         scheduler = problem.scheduler();
         process = problem.process();
-        wholeAlphabet = initialConfigs.alphabet(); // relying on current parsing behavior
+        wholeAlphabet = problem.initialConfigs().alphabet(); // relying on current parsing behavior
         schedulerDomain = ((MutableFSA<S>) scheduler.domain()).setAlphabet(wholeAlphabet).determinize();
         processRange = ((MutableFSA<S>) process.range()).setAlphabet(wholeAlphabet).determinize().minimize();
         givenInvariant = problem.invariant();
@@ -66,6 +65,7 @@ public abstract class AbstractProver<S> implements Prover
         roundAlphabet = Alphabets.create(roundSymbols, wholeAlphabet.epsilon());
         orderAlphabet = Alphabets.product(roundAlphabet, roundAlphabet);
         orderReflexiveSymbols = roundAlphabet.asSet().collect(s -> Tuples.pair(s, s)).toSet();
+        initialConfigs = ((MutableFSA<S>) problem.initialConfigs()).setAlphabet(roundAlphabet).determinize().minimize();
 
         final var invSizeBound = problem.invariantSizeBound();
         final var ordSizeBound = problem.orderSizeBound();

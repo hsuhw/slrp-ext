@@ -38,7 +38,7 @@ public class FairnessSATBasedProver<S> extends AbstractProver<S> implements Prov
     {
         super(problem, shapeInvariant, shapeOrder, loosenInvariant);
 
-        allBehavior = scheduler.compose(process, scheduler.alphabet());
+        allBehavior = scheduler.compose(process, orderAlphabet);
         LOGGER.debug("All behaviour computed: " + DISPLAY_NEWLINE + DISPLAY_NEWLINE + "{}", allBehavior);
         final var allBehaviorDomain = allBehavior.domain();
         matteringConfigs = allBehaviorDomain.intersect(nonfinalConfigs);
@@ -89,7 +89,7 @@ public class FairnessSATBasedProver<S> extends AbstractProver<S> implements Prov
     @Override
     public void prove()
     {
-        final var invSymbolEncoding = AlphabetIntEncoders.create(wholeAlphabet);
+        final var invSymbolEncoding = AlphabetIntEncoders.create(roundAlphabet);
         final var ordSymbolEncoding = AlphabetIntEncoders.create(orderAlphabet);
 
         // having empty string excluded makes searching from 0 or 1 meaningless
