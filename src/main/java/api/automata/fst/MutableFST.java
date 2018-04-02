@@ -12,7 +12,6 @@ import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import java.util.function.Function;
 
 import static api.util.Connectives.*;
-import static api.util.Constants.NONEXISTING_STATE;
 import static common.util.Constants.NOT_IMPLEMENTED_YET;
 
 public interface MutableFST<S, T> extends MutableAutomaton<Pair<S, T>>, FST<S, T>
@@ -133,16 +132,16 @@ public interface MutableFST<S, T> extends MutableAutomaton<Pair<S, T>>, FST<S, T
         if (!(target instanceof MutableFST<?, ?>) || !alphabet().equals(target.alphabet())) {
             throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
         }
-        if (!states().containsAllIterable(target.states())) {
-            throw new IllegalArgumentException(NONEXISTING_STATE);
-        }
 
         final var result = FSTs.shallowCopy(this);
         final var newStart = result.newState();
         @SuppressWarnings("unchecked")
         final SetIterable<MutableState<Pair<S, T>>> targetStates = (SetIterable) target.states();
-        result.addEpsilonTransition(newStart, startState()).setAsStart(newStart).addStates(targetStates)
-              .addEpsilonTransition(newStart, (MutableState<Pair<S, T>>) target.startState());
+        @SuppressWarnings("unchecked")
+        final SetIterable<MutableState<Pair<S, T>>> targetAccepts = (SetIterable) target.acceptStates();
+        result.addEpsilonTransition(newStart, startState()).setAsStart(newStart) //
+              .addStates(targetStates).addEpsilonTransition(newStart, (MutableState<Pair<S, T>>) target.startState())
+              .setAllAsAccept(targetAccepts);
 
         return result; // shallow reference
     }
