@@ -5,6 +5,7 @@ import api.proof.Problem;
 import api.proof.Prover;
 import core.parser.StringProblemParser;
 import core.proof.CAV16MonoProver;
+import core.proof.FairnessLearningBasedProver;
 import core.proof.FairnessSATBasedProver;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -86,15 +87,18 @@ public final class Main
 
         // process the input problem
         final Prover prover;
-        final var mode = cli.invokedCmd().hasOption("mode") ? cli.invokedCmd().getOptionValue("mode") : "exp";
+        final var mode = cli.invokedCmd().hasOption("mode") ? cli.invokedCmd().getOptionValue("mode") : "default";
         final var shapeInvariant = cli.invokedCmd().hasOption("shape-invariant");
         final var shapeOrder = cli.invokedCmd().hasOption("shape-order");
         final var loosenInvariant = cli.invokedCmd().hasOption("loose-invariant");
         switch (mode) {
-            case "cav16mono":
+            case "cav16-mono":
                 prover = new CAV16MonoProver<>(problem, shapeInvariant, shapeOrder, loosenInvariant);
                 break;
-            default: // should be 'exp'
+            case "fairness-learning":
+                prover = new FairnessLearningBasedProver<>(problem, shapeInvariant, shapeOrder, loosenInvariant);
+                break;
+            default: // should be 'fairness-sat'
                 prover = new FairnessSATBasedProver<>(problem, shapeInvariant, shapeOrder, loosenInvariant);
         }
         if (problem.invariant() != null && problem.order() != null) {

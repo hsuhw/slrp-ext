@@ -123,7 +123,8 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
         }
 
         final Automaton.TransitionGraph<S> delta = transitionGraph();
-        final int capacity = states().size() * states().size(); // heuristic
+        final var capacityComputed = states().size() * states().size(); // heuristic
+        final int capacity = capacityComputed < 0 ? Integer.MAX_VALUE : capacityComputed;
         final MutableFSA<S> result = FSAs.create(alphabet(), capacity);
         final MutableMap<SetIterable<State<S>>, MutableState<S>> stateMapping = UnifiedMap.newMap(capacity);
         final Queue<SetIterable<State<S>>> pendingChecks = new LinkedList<>();
@@ -236,8 +237,7 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
     @Override
     default FSA<S> intersect(FSA<S> target)
     {
-        return (FSA<S>) product(target, alphabet(), Labels.matched(),
-                                AcceptStates.select(this, target, AND)); // one-off
+        return (FSA<S>) product(target, alphabet(), Labels.matched(), AcceptStates.select(this, target, AND));
     }
 
     @Override

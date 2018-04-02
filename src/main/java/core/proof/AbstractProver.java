@@ -50,8 +50,7 @@ public abstract class AbstractProver<S> implements Prover
 
     AbstractProver(Problem<S> problem, boolean shapeInvariant, boolean shapeOrder, boolean loosenInvariant)
     {
-        finalConfigs = problem.finalConfigs().determinize().minimize();
-        nonfinalConfigs = finalConfigs.complement();
+        nonfinalConfigs = problem.finalConfigs().determinize().minimize().complement();
         scheduler = problem.scheduler();
         process = problem.process();
         wholeAlphabet = problem.initialConfigs().alphabet(); // relying on current parsing behavior
@@ -65,6 +64,7 @@ public abstract class AbstractProver<S> implements Prover
         roundAlphabet = Alphabets.create(roundSymbols, wholeAlphabet.epsilon());
         orderAlphabet = Alphabets.product(roundAlphabet, roundAlphabet);
         orderReflexiveSymbols = roundAlphabet.asSet().collect(s -> Tuples.pair(s, s)).toSet();
+        finalConfigs = ((MutableFSA<S>) problem.finalConfigs()).setAlphabet(roundAlphabet).determinize().minimize();
         initialConfigs = ((MutableFSA<S>) problem.initialConfigs()).setAlphabet(roundAlphabet).determinize().minimize();
 
         final var invSizeBound = problem.invariantSizeBound();

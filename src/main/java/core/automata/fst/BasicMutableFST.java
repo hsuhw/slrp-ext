@@ -31,7 +31,8 @@ public class BasicMutableFST<S, T> extends AbstractMutableFST<S, T> implements M
     public <U, R> Automaton<R> product(Automaton<U> target, Alphabet<R> alphabet, StepMaker<Pair<S, T>, U, R> stepMaker,
         Finalizer<Pair<S, T>, U, R> finalizer)
     {
-        final int capacity = states().size() * target.states().size(); // upper bound
+        final var capacityComputed = states().size() * target.states().size(); // upper bound
+        final int capacity = capacityComputed < 0 ? Integer.MAX_VALUE : capacityComputed;
         if (alphabet.epsilon() instanceof Pair<?, ?>) {
             @SuppressWarnings("unchecked")
             final MutableAutomaton<R> result = new BasicMutableFST(alphabet, capacity);

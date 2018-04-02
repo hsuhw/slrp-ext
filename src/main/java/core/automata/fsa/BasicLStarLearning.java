@@ -5,6 +5,7 @@ import api.automata.MutableState;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import api.automata.fsa.LStarLearning;
+import common.util.InterruptException;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MapIterable;
@@ -25,7 +26,7 @@ import static core.Parameters.LSTAR_LEARNING_STATE_CAPACITY;
 public class BasicLStarLearning implements LStarLearning
 {
     @Override
-    public <S> FSA<S> learn(Alphabet<S> alphabet, Teacher<S> teacher)
+    public <S> FSA<S> learn(Alphabet<S> alphabet, Teacher<S> teacher) throws InterruptException
     {
         return new Learner<>(alphabet, teacher).learn();
     }
@@ -47,14 +48,14 @@ public class BasicLStarLearning implements LStarLearning
             distinguishingWords = Sets.mutable.empty();
         }
 
-        private FSA<S> learn()
+        private FSA<S> learn() throws InterruptException
         {
             final var trivialAnswer = attemptTrivialCase();
 
             return trivialAnswer != null ? trivialAnswer : compute();
         }
 
-        private FSA<S> attemptTrivialCase()
+        private FSA<S> attemptTrivialCase() throws InterruptException
         {
             var hypothesis = FSAs.create(alphabet, LSTAR_LEARNING_STATE_CAPACITY);
             final var startBeAccept = teacher.targetAccepts(emptyWord);
@@ -73,7 +74,7 @@ public class BasicLStarLearning implements LStarLearning
             return null;
         }
 
-        private FSA<S> compute()
+        private FSA<S> compute() throws InterruptException
         {
             var hypothesis = settle();
             var check = teacher.checkAnswer(hypothesis);

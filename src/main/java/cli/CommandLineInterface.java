@@ -22,7 +22,8 @@ public final class CommandLineInterface
         final var looseInvariantDesc = "allow loose invariant";
         final var logLevelDesc = "set the logging level (\"debug\"|\"info\"|\"warn\"|\"error\"|\"fatal\") " //
             + "(default \"warn\")";
-        final var modeDesc = "set the mode (\"exp\"|\"cav16mono\") (default \"exp\")";
+        final var modeDesc = "set the mode (\"fairness-sat\"|\"fairness-learning\"|\"cav16-mono\") " //
+            + "(default \"fairness-sat\")";
 
         options = new Options();
         options.addOption("h", "help", false, helpDesc);
