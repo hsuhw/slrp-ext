@@ -141,3 +141,5 @@ gen/
 *.tokens
 container/volumes/*
 !lib/jalf.jar
+lib/libvata.so
+lib/libvata.dylib

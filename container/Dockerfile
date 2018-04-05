@@ -1,12 +1,11 @@
 ARG JDK_IMG_VERSION
 FROM openjdk:${JDK_IMG_VERSION}
 
-# Add basic packages
-RUN apt-get update && apt-get install -y \
-    make g++ \
- && rm -rf /var/lib/apt/lists/*
+# Setup a common shell environment
+RUN curl https://gist.githubusercontent.com/hsuhw/36a711277a448085e0ac/raw/.bash_common > ~/.bash_common \
+ && echo "\nsource ~/.bash_common" >> ~/.bashrc
 
-# Install gradle
+# Install Gradle
 ARG GRADLE_VERSION
 ARG GRADLE_SHA
 RUN cd /usr/lib \
@@ -15,6 +14,11 @@ RUN cd /usr/lib \
  && unzip gradle-bin.zip \
  && ln -s "/usr/lib/gradle-${GRADLE_VERSION}/bin/gradle" /usr/bin/gradle \
  && rm gradle-bin.zip
+
+# Add basic packages
+RUN apt-get update && apt-get install -y \
+    make cmake g++ libboost-all-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 # Set appropriate environment variables
 ENV GRADLE_HOME /usr/lib/gradle

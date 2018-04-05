@@ -1,15 +1,20 @@
+import org.gradle.internal.os.OperatingSystem
+
 plugins {
     id 'com.github.johnrengelman.shadow' version '2.0.2'
     id 'java'
+    id 'cpp'
     id 'antlr'
     id 'jacoco'
 }
 
+// repos
 repositories {
     jcenter()
     mavenCentral()
 }
 
+// build: Java part
 dependencies {
     antlr 'org.antlr:antlr4:4.7.1'
     compile 'org.ow2.sat4j:org.ow2.sat4j.core:2.3.5'
@@ -30,13 +35,72 @@ generateGrammarSource {
     exclude 'generated/Automaton.g4'
     exclude 'generated/Transducer.g4'
     exclude 'generated/Tokens.g4'
-    arguments += ["-lib", "src/main/antlr/generated"]
+    arguments += ['-lib', 'src/main/antlr/generated']
 }
 
+shadowJar {
+    destinationDir = projectDir
+    classifier = null
+}
+
+build.dependsOn shadowJar
+
+// build: native part
+def isOnMac = OperatingSystem.current().isMacOsX()
+
+model {
+    repositories {
+        libs(PrebuiltLibraries) {
+            vataPrebuilt {
+                headers.srcDir file('include')
+                binaries.withType(StaticLibraryBinary) {
+                    staticLibraryFile = file("lib/libvata.a.${isOnMac ? 'darwin' : 'debian'}")
+                }
+            }
+        }
+    }
+    components {
+        vata(NativeLibrarySpec) {
+            sources {
+                cpp {
+                    source {
+                        srcDir 'src/main/jni/vata'
+                        include "**/*.cpp"
+                    }
+                    lib library: 'vataPrebuilt', linkage: 'static'
+                }
+            }
+        }
+        all {
+            binaries.all {
+                def javaHome = System.properties['java.home']
+                cppCompiler.args '-O2'
+                cppCompiler.args '-std=c++14'
+                cppCompiler.args "-I${javaHome}/include"
+                cppCompiler.args "-I${javaHome}/include/${isOnMac ? 'darwin' : 'linux'}"
+            }
+        }
+    }
+}
+
+task copyLibVata(type: Copy) {
+    from "build/libs/vata/shared/libvata.${isOnMac ? 'dylib' : 'so'}"
+    into 'lib'
+}
+
+assemble.finalizedBy copyLibVata
+
+// test
 test {
     testLogging {
         showStandardStreams = true
     }
+}
+
+test.dependsOn assemble
+
+tasks.withType(Test) {
+    systemProperty 'java.library.path', 'lib'
 }
 
 jacoco {
@@ -50,15 +114,9 @@ jacocoTestReport {
     }
 }
 
-jar.enabled = false
-
-shadowJar {
-    destinationDir = projectDir
-    classifier = null
-}
-
-assemble.dependsOn shadowJar
-
+// clean
 clean.doLast {
-    file("${projectDir}/${rootProject.name}.jar").delete()
+    file("${rootProject.name}.jar").delete()
+    file('lib/libvata.dylib').delete()
+    file('lib/libvata.so').delete()
 }
