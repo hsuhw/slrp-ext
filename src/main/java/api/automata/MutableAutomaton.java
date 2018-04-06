@@ -1,9 +1,10 @@
 package api.automata;
 
 import org.eclipse.collections.api.RichIterable;
-import org.eclipse.collections.api.block.function.Function;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.map.mutable.UnifiedMap;
+
+import java.util.function.Function;
 
 import static api.util.Constants.DISPLAY_DUMMY_STATE_NAME_PREFIX;
 import static common.util.Constants.*;
@@ -12,6 +13,28 @@ public interface MutableAutomaton<S> extends Automaton<S>
 {
     @Override
     MutableState<S> startState();
+
+    default <R> Automaton<R> projectInto(MutableAutomaton<R> result, Function<S, R> projector)
+    {
+        final MutableMap<State<S>, MutableState<R>> stateMapping = UnifiedMap.newMap(states().size());
+        stateMapping.put(startState(), result.startState());
+
+        R newSymbol;
+        for (var dept : states()) {
+            final var newDept = stateMapping.computeIfAbsent(dept, __ -> result.newState());
+            for (var symbol : dept.enabledSymbols()) {
+                for (var dest : dept.successors(symbol)) {
+                    if ((newSymbol = projector.apply(symbol)) != null) {
+                        final var newDest = stateMapping.computeIfAbsent(dest, __ -> result.newState());
+                        result.addTransition(newDept, newDest, newSymbol);
+                    }
+                }
+            }
+        }
+        acceptStates().forEach(originAccept -> result.setAsAccept(stateMapping.get(originAccept)));
+
+        return result.trimUnreachableStates(); // one-off
+    }
 
     @Override
     TransitionGraph<S> transitionGraph();
@@ -83,19 +106,17 @@ public interface MutableAutomaton<S> extends Automaton<S>
     default String toString(String indent, String nameTag)
     {
         MutableMap<State<S>, String> nameMask = null;
-        Function<State<S>, String> getName = state -> state.name() != null ? state.name() : this.toString();
         if (states().anySatisfy(that -> that.name() == null)) {
             nameMask = UnifiedMap.newMap(states().size()); // upper bound
             var i = 0;
             for (var state : states()) {
                 nameMask.put(state, state.name() == null ? DISPLAY_DUMMY_STATE_NAME_PREFIX + i++ : state.name());
             }
-            getName = nameMask::get;
         }
 
         final var innerIndent = indent + DISPLAY_INDENT;
-        final var startState = getName.apply(startState());
-        final var acceptStates = acceptStates().collect(getName).makeString();
+        final var startState = nameMask == null ? startState().name() : nameMask.get(startState());
+        final var acceptStates = acceptStates().collect(nameMask == null ? State::name : nameMask::get).makeString();
         final var result = new StringBuilder();
         result.append(indent).append(nameTag).append(nameTag.equals("") ? "{" : " {").append(DISPLAY_NEWLINE);
         result.append(innerIndent).append("start: ").append(startState).append(";").append(DISPLAY_NEWLINE);

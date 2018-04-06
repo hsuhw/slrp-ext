@@ -192,12 +192,9 @@ public class BasicAnySchedulerProgressivityChecker implements AnySchedulerProgre
             final MutableList<Twin<S>> witnessBacktrace = FastList.newList();
             witnessBacktrace.add(breakingStep);
             var currStateTuple = stateTuple;
-            Twin<S> currSymbol;
             while (!currStateTuple.equals(startStateTuple)) {
                 final var visitorAndSymbol = visitRecord.get(currStateTuple);
-                if (!(currSymbol = visitorAndSymbol.getTwo()).equals(epsilon)) {
-                    witnessBacktrace.add(currSymbol);
-                }
+                witnessBacktrace.add(visitorAndSymbol.getTwo());
                 currStateTuple = visitorAndSymbol.getOne();
             }
 

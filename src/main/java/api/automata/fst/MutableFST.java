@@ -1,13 +1,14 @@
 package api.automata.fst;
 
-import api.automata.*;
+import api.automata.Alphabet;
+import api.automata.Automaton;
+import api.automata.MutableAutomaton;
+import api.automata.MutableState;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import org.eclipse.collections.api.RichIterable;
-import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 
 import java.util.function.Function;
 
@@ -22,28 +23,6 @@ public interface MutableFST<S, T> extends MutableAutomaton<Pair<S, T>>, FST<S, T
         @SuppressWarnings("unchecked")
         final SetIterable<MutableState<Pair<S, T>>> unreachableStates = (SetIterable) unreachableStates();
         return FSTs.deepCopy(this).removeStates(unreachableStates);
-    }
-
-    private <R> Automaton<R> projectInto(MutableAutomaton<R> result, Function<Pair<S, T>, R> projector)
-    {
-        final MutableMap<State<Pair<S, T>>, MutableState<R>> stateMapping = UnifiedMap.newMap(states().size());
-        stateMapping.put(startState(), result.startState());
-
-        R newSymbol;
-        for (var dept : states()) {
-            final var newDept = stateMapping.computeIfAbsent(dept, __ -> result.newState());
-            for (var symbol : dept.enabledSymbols()) {
-                for (var dest : dept.successors(symbol)) {
-                    if ((newSymbol = projector.apply(symbol)) != null) {
-                        final var newDest = stateMapping.computeIfAbsent(dest, __ -> result.newState());
-                        result.addTransition(newDept, newDest, newSymbol);
-                    }
-                }
-            }
-        }
-        acceptStates().forEach(originAccept -> result.setAsAccept(stateMapping.get(originAccept)));
-
-        return result.trimUnreachableStates(); // one-off
     }
 
     @Override

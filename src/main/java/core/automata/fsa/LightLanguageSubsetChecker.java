@@ -76,21 +76,15 @@ public class LightLanguageSubsetChecker implements LanguageSubsetChecker
         private ListIterable<S> witnessFoundAt(Twin<State<S>> statePair, S breakingStep)
         {
             final MutableList<S> witnessBacktrace = FastList.newList();
-
-            if (breakingStep != epsilon) {
-                witnessBacktrace.add(breakingStep);
-            }
+            witnessBacktrace.add(breakingStep);
             var currStatePair = statePair;
-            S currSymbol;
             while (!currStatePair.equals(startStatePair)) {
                 final var visitorAndSymbol = visitRecord.get(currStatePair);
-                if (!(currSymbol = visitorAndSymbol.getTwo()).equals(epsilon)) {
-                    witnessBacktrace.add(currSymbol);
-                }
+                witnessBacktrace.add(visitorAndSymbol.getTwo());
                 currStatePair = visitorAndSymbol.getOne();
             }
 
-            return witnessBacktrace.reverseThis();
+            return witnessBacktrace.reverseThis().select(includer.alphabet()::notEpsilon);
         }
 
         private ListIterable<S> run()

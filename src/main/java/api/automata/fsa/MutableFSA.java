@@ -35,24 +35,8 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
     default <R> FSA<R> project(Alphabet<R> alphabet, Function<S, R> projector)
     {
         final var result = FSAs.create(alphabet, states().size()); // upper bound
-        final MutableMap<State<S>, MutableState<R>> stateMapping = UnifiedMap.newMap(states().size());
-        stateMapping.put(startState(), result.startState());
 
-        R newSymbol;
-        for (var dept : states()) {
-            final var newDept = stateMapping.computeIfAbsent(dept, __ -> result.newState());
-            for (var symbol : dept.enabledSymbols()) {
-                for (var dest : dept.successors(symbol)) {
-                    if ((newSymbol = projector.apply(symbol)) != null) {
-                        final var newDest = stateMapping.computeIfAbsent(dest, __ -> result.newState());
-                        result.addTransition(newDept, newDest, newSymbol);
-                    }
-                }
-            }
-        }
-        acceptStates().forEach(originAccept -> result.setAsAccept(stateMapping.get(originAccept)));
-
-        return result.trimUnreachableStates(); // one-off
+        return (FSA<R>) projectInto(result, projector);
     }
 
     @Override
