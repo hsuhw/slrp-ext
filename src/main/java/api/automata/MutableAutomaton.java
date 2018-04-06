@@ -6,8 +6,7 @@ import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 
 import java.util.function.Function;
 
-import static api.util.Constants.DISPLAY_DUMMY_STATE_NAME_PREFIX;
-import static common.util.Constants.*;
+import static common.util.Constants.NOT_IMPLEMENTED_YET;
 
 public interface MutableAutomaton<S> extends Automaton<S>
 {
@@ -101,33 +100,6 @@ public interface MutableAutomaton<S> extends Automaton<S>
 
     @Override
     String toString();
-
-    @Override
-    default String toString(String indent, String nameTag)
-    {
-        MutableMap<State<S>, String> nameMask = null;
-        if (states().anySatisfy(that -> that.name() == null)) {
-            nameMask = UnifiedMap.newMap(states().size()); // upper bound
-            var i = 0;
-            for (var state : states()) {
-                nameMask.put(state, state.name() == null ? DISPLAY_DUMMY_STATE_NAME_PREFIX + i++ : state.name());
-            }
-        }
-
-        final var innerIndent = indent + DISPLAY_INDENT;
-        final var startState = nameMask == null ? startState().name() : nameMask.get(startState());
-        final var acceptStates = acceptStates().collect(nameMask == null ? State::name : nameMask::get).makeString();
-        final var result = new StringBuilder();
-        result.append(indent).append(nameTag).append(nameTag.equals("") ? "{" : " {").append(DISPLAY_NEWLINE);
-        result.append(innerIndent).append("start: ").append(startState).append(";").append(DISPLAY_NEWLINE);
-        for (var state : states()) {
-            result.append(state.toString(innerIndent, nameMask));
-        }
-        result.append(innerIndent).append("accept: ").append(acceptStates).append(";").append(DISPLAY_NEWLINE);
-        result.append(indent).append("}").append(DISPLAY_NEWLINE);
-
-        return result.toString();
-    }
 
     interface TransitionGraph<S> extends Automaton.TransitionGraph<S>
     {

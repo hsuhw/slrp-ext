@@ -28,6 +28,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
     private MutableState<S> startState;
 
     protected boolean hasChanged;
+    private MapIterable<State<S>, String> stateNames;
     private SetIterable<State<S>> nonAcceptStates;
     private SetIterable<State<S>> reachableStates;
     private SetIterable<State<S>> unreachableStates;
@@ -87,6 +88,16 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
     public SetIterable<State<S>> states()
     {
         return states.asUnmodifiable();
+    }
+
+    @Override
+    public MapIterable<State<S>, String> stateNames()
+    {
+        if (!hasChanged && stateNames != null) {
+            return stateNames;
+        }
+
+        return (stateNames = MutableAutomaton.super.stateNames());
     }
 
     @Override
@@ -306,12 +317,6 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
         hasChanged = true;
 
         return this;
-    }
-
-    @Override
-    public String toString()
-    {
-        return toString("", "");
     }
 
     private class TransitionGraph implements MutableAutomaton.TransitionGraph<S>

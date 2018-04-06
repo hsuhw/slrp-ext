@@ -16,7 +16,10 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.function.Function;
 
+import static api.util.Constants.DISPLAY_DUMMY_STATE_NAME_PREFIX;
 import static api.util.Constants.NONEXISTING_STATE;
+import static common.util.Constants.DISPLAY_INDENT;
+import static common.util.Constants.DISPLAY_NEWLINE;
 import static common.util.Constants.NOT_IMPLEMENTED_YET;
 
 public interface Automaton<S>
@@ -24,6 +27,18 @@ public interface Automaton<S>
     Alphabet<S> alphabet();
 
     SetIterable<State<S>> states();
+
+    default MapIterable<State<S>, String> stateNames()
+    {
+        final MutableMap<State<S>, String> result = UnifiedMap.newMap(states().size()); // upper bound
+
+        var i = 0;
+        for (var state : states()) {
+            result.put(state, state.name() == null ? DISPLAY_DUMMY_STATE_NAME_PREFIX + i++ : state.name());
+        }
+
+        return result;
+    }
 
     State<S> startState();
 
@@ -105,7 +120,24 @@ public interface Automaton<S>
     @Override
     String toString();
 
-    String toString(String indent, String nameTag);
+    default String toString(String indent, String nameTag)
+    {
+        final var stateNames = stateNames();
+        final var innerIndent = indent + DISPLAY_INDENT;
+
+        final var result = new StringBuilder();
+        final var startState = stateNames.get(startState());
+        final var acceptStates = acceptStates().collect(stateNames::get).makeString();
+        result.append(indent).append(nameTag).append(nameTag.equals("") ? "{" : " {").append(DISPLAY_NEWLINE);
+        result.append(innerIndent).append("start: ").append(startState).append(";").append(DISPLAY_NEWLINE);
+        for (var state : states()) {
+            result.append(state.toString(innerIndent, stateNames));
+        }
+        result.append(innerIndent).append("accept: ").append(acceptStates).append(";").append(DISPLAY_NEWLINE);
+        result.append(indent).append("}").append(DISPLAY_NEWLINE);
+
+        return result.toString();
+    }
 
     @FunctionalInterface
     interface StepMaker<S, T, R>
