@@ -55,8 +55,8 @@ public class SetAlphabet<S> implements Alphabet<S>
     public int hashCode()
     {
         if (hashCode == -1) {
-            final int prime = 71;
-            int result = 1;
+            final var prime = 71;
+            var result = 1;
 
             result = prime * result + symbols.hashCode();
             result = prime * result + epsilon.hashCode();
@@ -77,7 +77,7 @@ public class SetAlphabet<S> implements Alphabet<S>
         if (obj instanceof SetAlphabet<?>) {
             try {
                 @SuppressWarnings("unchecked")
-                final SetAlphabet<S> other = (SetAlphabet<S>) obj;
+                final var other = (SetAlphabet<S>) obj;
                 return other.symbols.equals(this.symbols) && other.epsilon.equals(this.epsilon);
             } catch (ClassCastException e) {
                 return false;

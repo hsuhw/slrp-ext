@@ -21,9 +21,9 @@ import static core.Parameters.estimateExtendedSize;
 
 public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
 {
-    protected final MutableSet<State<S>> states;
-    protected final MutableSet<State<S>> acceptStates;
-    protected final TransitionGraph transitionGraph;
+    private final MutableSet<State<S>> states;
+    private final MutableSet<State<S>> acceptStates;
+    private final TransitionGraph transitionGraph;
     private Alphabet<S> alphabet;
     private MutableState<S> startState;
 
@@ -47,7 +47,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
 
     public AbstractMutableAutomaton(AbstractMutableAutomaton<S> toCopy, boolean deep)
     {
-        final int capacity = estimateExtendedSize(toCopy.states.size());
+        final var capacity = estimateExtendedSize(toCopy.states.size());
         if (deep) {
             final MutableMap<State<S>, MutableState<S>> stateMapping = UnifiedMap.newMap(capacity);
 
@@ -58,9 +58,9 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
             stateMapping.put(toCopy.startState, startState);
 
             toCopy.states.forEach(stateToCopy -> {
-                final MutableState<S> newState = stateMapping.computeIfAbsent(stateToCopy, __ -> newState());
+                final var newState = stateMapping.computeIfAbsent(stateToCopy, __ -> newState());
                 stateToCopy.enabledSymbols().forEach(symbol -> stateToCopy.successors(symbol).forEach(succ -> {
-                    final MutableState<S> newSucc = stateMapping.computeIfAbsent(succ, __ -> newState());
+                    final var newSucc = stateMapping.computeIfAbsent(succ, __ -> newState());
                     newState.addTransition(symbol, newSucc);
                 }));
             });
@@ -149,7 +149,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
         }
 
         final MutableSet<State<S>> result = UnifiedSet.newSet(states().size()); // upper bound
-        final MapIterable<State<S>, SetIterable<State<S>>> predecessors = predecessorRelation();
+        final var predecessors = predecessorRelation();
         final Queue<State<S>> pendingChecks = new LinkedList<>(acceptStates);
         result.addAllIterable(acceptStates);
 
@@ -196,7 +196,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
     @Override
     public MutableAutomaton<S> setAlphabet(Alphabet<S> alphabet)
     {
-        final SetIterable<S> givenAlphabet = alphabet.asSet();
+        final var givenAlphabet = alphabet.asSet();
         if (!states.allSatisfy(that -> givenAlphabet.containsAllIterable(that.enabledSymbols()))) {
             throw new IllegalArgumentException("given alphabet does not contain all used symbols");
         }
@@ -212,7 +212,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
     @Override
     public MutableState<S> newState()
     {
-        final MutableState<S> state = createState();
+        final var state = createState();
         states.add(state);
         hasChanged = true;
 
@@ -380,25 +380,25 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
 
         public ProductHandler<T, R> makeProduct(StepMaker<S, T, R> stepMaker)
         {
-            final MutableState<R> dummyStart = result.startState();
+            final var dummyStart = result.startState();
             result.setAsStart(takeState(startState(), target.startState()));
             result.removeState(dummyStart);
             Pair<State<S>, State<T>> currStatePair;
             while ((currStatePair = pendingChecks.poll()) != null) {
-                final MutableState<R> deptP = stateMapping.get(currStatePair);
-                final State<S> dept1 = currStatePair.getOne();
-                final State<T> dept2 = currStatePair.getTwo();
+                final var deptP = stateMapping.get(currStatePair);
+                final var dept1 = currStatePair.getOne();
+                final var dept2 = currStatePair.getTwo();
                 dept1.successors(epsilon1).forEach(dest -> result.addEpsilonTransition(deptP, takeState(dest, dept2)));
                 dept2.successors(epsilon2).forEach(dest -> result.addEpsilonTransition(deptP, takeState(dept1, dest)));
-                for (S symbol1 : dept1.enabledSymbols()) {
+                for (var symbol1 : dept1.enabledSymbols()) {
                     if (symbol1.equals(epsilon1)) {
                         continue; // already handled
                     }
-                    for (T symbol2 : dept2.enabledSymbols()) {
+                    for (var symbol2 : dept2.enabledSymbols()) {
                         if (symbol2.equals(epsilon2)) {
                             continue; // already handled
                         }
-                        final R symbolP = stepMaker.apply(currStatePair, symbol1, symbol2);
+                        final var symbolP = stepMaker.apply(currStatePair, symbol1, symbol2);
                         if (symbolP == null) {
                             continue; // no step should be made
                         }

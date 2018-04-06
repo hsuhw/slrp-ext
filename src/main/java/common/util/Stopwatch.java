@@ -1,7 +1,6 @@
 package common.util;
 
 import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadMXBean;
 import java.time.Instant;
 
 public final class Stopwatch
@@ -27,7 +26,8 @@ public final class Stopwatch
 
     public static long currentThreadCpuTimeInNs()
     {
-        ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+        final var bean = ManagementFactory.getThreadMXBean();
+
         return bean.isCurrentThreadCpuTimeSupported() ? bean.getCurrentThreadCpuTime() : 0L;
     }
 

@@ -10,9 +10,9 @@ import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.describe;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.it;
 
-public abstract class AbstractAlphabetTest
+abstract class AbstractAlphabetTest
 {
-    protected abstract Builder<Object> newBuilder(int capacity, Object epsilon);
+    abstract Builder<Object> newBuilder(int capacity, Object epsilon);
 
     {
         final var e = new Object();

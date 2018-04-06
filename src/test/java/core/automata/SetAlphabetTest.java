@@ -9,7 +9,7 @@ import static api.automata.Alphabet.Builder;
 public class SetAlphabetTest extends AbstractAlphabetTest
 {
     @Override
-    protected Builder<Object> newBuilder(int capacity, Object epsilon)
+    Builder<Object> newBuilder(int capacity, Object epsilon)
     {
         return new SetAlphabetBuilder<>(capacity, epsilon);
     }

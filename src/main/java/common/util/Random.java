@@ -9,14 +9,14 @@ import static org.apache.commons.text.CharacterPredicates.LETTERS;
 
 public final class Random
 {
-    private Random()
-    {
-    }
-
     private static final RandomStringGenerator lowerCasedAlphanumericRSG = new RandomStringGenerator.Builder()
         .withinRange('0', 'z').filteredBy(c -> (isLetter(c) && isLowerCase(c)), DIGITS).build();
     private static final RandomStringGenerator alphanumericRSG = new RandomStringGenerator.Builder()
         .withinRange('0', 'z').filteredBy(LETTERS, DIGITS).build();
+
+    private Random()
+    {
+    }
 
     public static String alphanumeric(int length, boolean includeUpperCase)
     {

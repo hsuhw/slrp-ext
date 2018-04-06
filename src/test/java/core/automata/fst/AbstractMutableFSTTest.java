@@ -3,7 +3,6 @@ package core.automata.fst;
 import api.automata.Alphabet;
 import api.automata.Alphabets;
 import api.automata.fsa.FSAs;
-import api.automata.fst.FSTs;
 import api.automata.fst.MutableFST;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.factory.Lists;
@@ -13,12 +12,12 @@ import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.describe;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.it;
 
-public abstract class AbstractMutableFSTTest
+abstract class AbstractMutableFSTTest
 {
-    protected final Alphabet<Object> alphabet;
-    protected final Alphabet<Pair<Object, Object>> ioAlphabet;
+    private final Alphabet<Object> alphabet;
+    private final Alphabet<Pair<Object, Object>> ioAlphabet;
 
-    protected abstract <S, T> MutableFST<S, T> newFST(Alphabet<Pair<S, T>> alphabet, int stateCapacity);
+    abstract <S, T> MutableFST<S, T> newFST(Alphabet<Pair<S, T>> alphabet, int stateCapacity);
 
     {
         final var e = new Object();

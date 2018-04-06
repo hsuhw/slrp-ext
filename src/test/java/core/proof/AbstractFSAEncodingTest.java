@@ -12,12 +12,12 @@ import org.eclipse.collections.impl.factory.Sets;
 import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
 
-public abstract class AbstractFSAEncodingTest
+abstract class AbstractFSAEncodingTest
 {
-    protected final SatSolver solver = new Sat4jSolverAdapter();
-    protected FSAEncoding<Object> encoding;
+    final SatSolver solver = new Sat4jSolverAdapter();
+    private FSAEncoding<Object> encoding;
 
-    protected abstract FSAEncoding<Object> newEncoding(int size, AlphabetIntEncoder<Object> alphabetEncoding);
+    abstract FSAEncoding<Object> newEncoding(int size, AlphabetIntEncoder<Object> alphabetEncoding);
 
     {
         final var e = new Object();

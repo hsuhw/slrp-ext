@@ -65,7 +65,7 @@ public class StringFSTListListener extends TransducerListBaseListener
     public void enterInOutTransition(InOutTransitionContext ctx)
     {
         final Pair<String, String> symbol;
-        final InOutTransitionLabelContext label = ctx.inOutTransitionLabel();
+        final var label = ctx.inOutTransitionLabel();
         symbol = label.emptyLabel() != null
                  ? EPSILON_SYMBOL
                  : Tuples.twin(label.slashedLabel().ID(0).getText(), label.slashedLabel().ID(1).getText());

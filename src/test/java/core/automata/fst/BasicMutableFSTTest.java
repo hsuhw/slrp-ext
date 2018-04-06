@@ -10,7 +10,7 @@ import org.junit.runner.RunWith;
 public class BasicMutableFSTTest extends AbstractMutableFSTTest
 {
     @Override
-    protected <S, T> MutableFST<S, T> newFST(Alphabet<Pair<S, T>> alphabet, int stateCapacity)
+    <S, T> MutableFST<S, T> newFST(Alphabet<Pair<S, T>> alphabet, int stateCapacity)
     {
         return new BasicMutableFST<>(alphabet, stateCapacity);
     }

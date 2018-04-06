@@ -73,7 +73,7 @@ public abstract class AbstractAutomatonListListener<S>
     public ListIterable<? extends Automaton<S>> result()
     {
         if (symbolPolicy == AGGREGATE) {
-            final Alphabet<S> alphabet = currAlphabet.build();
+            final var alphabet = currAlphabet.build();
             result.forEach(automaton -> automaton.setAlphabet(alphabet));
         }
 
@@ -84,7 +84,7 @@ public abstract class AbstractAutomatonListListener<S>
 
     public void enterAutomaton(int startLineNo, int endLineNo)
     {
-        final int capacity = endLineNo - startLineNo + 1; // heuristic
+        final var capacity = endLineNo - startLineNo + 1; // heuristic
         if (symbolPolicy == SEPARATE) {
             currAlphabet = Alphabets.builder(predefinedAlphabet);
         }
@@ -118,7 +118,7 @@ public abstract class AbstractAutomatonListListener<S>
 
     public void enterStartStates(List<TerminalNode> stateNodes)
     {
-        final MutableState<S> startState = currBuilder.startState();
+        final var startState = currBuilder.startState();
         if (stateNodes.size() == 1 && stateNodes.get(0) != null) {
             currBuilder.setAsStart(takeState(stateNodes.get(0).getText()));
             currBuilder.removeState(startState);
@@ -129,8 +129,8 @@ public abstract class AbstractAutomatonListListener<S>
 
     public void enterTransition(List<TerminalNode> stateNodes, S symbol)
     {
-        final MutableState<S> dept = takeState(stateNodes.get(0).getText());
-        final MutableState<S> dest = takeState(stateNodes.get(1).getText());
+        final var dept = takeState(stateNodes.get(0).getText());
+        final var dest = takeState(stateNodes.get(1).getText());
         currAlphabet.add(symbol);
         currBuilder.addTransition(dept, dest, symbol);
     }

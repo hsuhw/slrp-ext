@@ -43,7 +43,7 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
     default Alphabet<S> inputAlphabet()
     {
         final MutableSet<S> set = UnifiedSet.newSet(alphabet().size()); // almost sure upper bound
-        final S epsilon = alphabet().epsilon().getOne();
+        final var epsilon = alphabet().epsilon().getOne();
         set.add(epsilon);
 
         return Alphabets.create(alphabet().asSet().collect(Pair::getOne, set), epsilon);
@@ -52,7 +52,7 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
     default Alphabet<T> outputAlphabet()
     {
         final MutableSet<T> set = UnifiedSet.newSet(alphabet().size()); // almost sure upper bound
-        final T epsilon = alphabet().epsilon().getTwo();
+        final var epsilon = alphabet().epsilon().getTwo();
         set.add(epsilon);
 
         return Alphabets.create(alphabet().asSet().collect(Pair::getTwo, set), epsilon);
@@ -70,7 +70,7 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
 
     default FST<T, S> inverse()
     {
-        final Alphabet<Pair<T, S>> inverseAlphabet = Alphabets.product(outputAlphabet(), inputAlphabet());
+        final var inverseAlphabet = Alphabets.product(outputAlphabet(), inputAlphabet());
 
         return (FST<T, S>) project(inverseAlphabet, Labels.flipped());
     }
@@ -92,25 +92,25 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
 
     private SetIterable<MutableStack<T>> run(State<Pair<S, T>> state, ListIterable<S> inputNoAnyEpsilon, int capacity)
     {
-        final int inputSize = inputNoAnyEpsilon.size();
+        final var inputSize = inputNoAnyEpsilon.size();
         if (inputSize == 0) {
             return isAcceptState(state) ? Sets.immutable.of(new ArrayStack<>(capacity)) : Sets.immutable.empty();
         }
 
-        final int resultCapacity = inputSize * inputSize; // heuristic
+        final var resultCapacity = inputSize * inputSize; // heuristic
         final MutableSet<MutableStack<T>> result = UnifiedSet.newSet(resultCapacity);
-        final Pair<S, T> epsilon = alphabet().epsilon();
+        final var epsilon = alphabet().epsilon();
 
         SetIterable<MutableStack<T>> postfixImages;
         boolean isEpsilonStep;
-        for (Pair<S, T> inOut : state.enabledSymbols()) {
+        for (var inOut : state.enabledSymbols()) {
             if ((isEpsilonStep = inOut.equals(epsilon)) || inOut.getOne().equals(inputNoAnyEpsilon.get(0))) {
-                for (State<Pair<S, T>> succ : state.successors(inOut)) {
-                    final ListIterable<S> postfix = isEpsilonStep
-                                                    ? inputNoAnyEpsilon
-                                                    : inputNoAnyEpsilon.subList(1, inputNoAnyEpsilon.size());
+                for (var succ : state.successors(inOut)) {
+                    final var postfix = isEpsilonStep
+                                        ? inputNoAnyEpsilon
+                                        : inputNoAnyEpsilon.subList(1, inputNoAnyEpsilon.size());
                     postfixImages = run(succ, postfix, capacity);
-                    for (MutableStack<T> postfixOutput : postfixImages) {
+                    for (var postfixOutput : postfixImages) {
                         if (!isEpsilonStep) {
                             postfixOutput.push(inOut.getTwo());
                         }
@@ -125,9 +125,9 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
 
     default ListIterable<ListIterable<T>> postImage(ListIterable<S> word)
     {
-        final ListIterable<S> trimmedWord = word.allSatisfy(inputAlphabet()::notEpsilon)
-                                            ? word
-                                            : word.select(inputAlphabet()::notEpsilon);
+        final var trimmedWord = word.allSatisfy(inputAlphabet()::notEpsilon)
+                                ? word
+                                : word.select(inputAlphabet()::notEpsilon);
 
         return run(startState(), trimmedWord, trimmedWord.size()).collect(each -> (ListIterable<T>) each.toList())
                                                                  .toList();
@@ -188,10 +188,10 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
 
     default ListIterable<ListIterable<S>> preImage(ListIterable<T> word)
     {
-        final ListIterable<T> trimmedWord = word.allSatisfy(outputAlphabet()::notEpsilon)
-                                            ? word
-                                            : word.select(outputAlphabet()::notEpsilon);
-        final FST<T, S> inv = inverse(); // should be cached
+        final var trimmedWord = word.allSatisfy(outputAlphabet()::notEpsilon)
+                                ? word
+                                : word.select(outputAlphabet()::notEpsilon);
+        final var inv = inverse(); // should be cached
 
         return inv.run(inv.startState(), trimmedWord, trimmedWord.size())
                   .collect(each -> (ListIterable<S>) each.toList()).toList();
@@ -199,7 +199,7 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
 
     default FSA<S> preImage(FSA<T> fsa)
     {
-        final FST<T, S> inv = inverse(); // should be cached
+        final var inv = inverse(); // should be cached
 
         return (FSA<S>) inv.product(fsa, inputAlphabet(), Labels.transduced(), AcceptStates.select(inv, fsa, AND));
     }

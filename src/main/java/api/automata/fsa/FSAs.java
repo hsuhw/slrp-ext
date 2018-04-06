@@ -88,9 +88,9 @@ public final class FSAs
 
     private static <S> FSA<S> createAcceptingAll(Alphabet<S> alphabet)
     {
-        final MutableFSA<S> result = create(alphabet, 1);
+        final var result = create(alphabet, 1);
 
-        final MutableState<S> startState = result.startState();
+        final var startState = result.startState();
         alphabet.noEpsilonSet().forEach(symbol -> result.addTransition(startState, startState, symbol));
         result.setAsAccept(startState);
 
@@ -161,21 +161,21 @@ public final class FSAs
 
     public static <S> FSA<S> acceptingOnly(Alphabet<S> alphabet, RichIterable<ListIterable<S>> words)
     {
-        final int stateCapacity = (int) words.sumOfInt(ListIterable::size); // upper bound
-        final MutableFSA<S> result = create(alphabet, stateCapacity);
-        final MutableState<S> startState = result.startState();
-        final MutableState<S> acceptState = result.newState();
+        final var stateCapacity = (int) words.sumOfInt(ListIterable::size); // upper bound
+        final var result = create(alphabet, stateCapacity);
+        final var startState = result.startState();
+        final var acceptState = result.newState();
         result.setAsAccept(acceptState);
 
         MutableState<S> currState = startState, nextState;
         int lastSymbolPos;
         S symbol;
-        for (ListIterable<S> word : words) {
+        for (var word : words) {
             if (word.isEmpty()) {
                 result.addEpsilonTransition(currState, acceptState);
                 continue;
             }
-            for (int i = 0; i < (lastSymbolPos = word.size() - 1); i++) {
+            for (var i = 0; i < (lastSymbolPos = word.size() - 1); i++) {
                 if (!(symbol = word.get(i)).equals(alphabet.epsilon())) {
                     nextState = result.newState();
                     result.addTransition(currState, nextState, symbol);

@@ -8,19 +8,19 @@ import org.eclipse.collections.api.set.SetIterable;
 import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
 
-public abstract class AbstractMutableStateTest
+abstract class AbstractMutableStateTest
 {
-    protected MutableState<Object> state;
-    protected MutableState<Object> state2;
-    protected MutableState<Object> state3;
-    protected final Object a1 = new Object();
-    protected final Object a2 = new Object();
-    protected final Object a3 = new Object();
-    protected final Object nullSymbol = null;
-    protected final String nullString = null;
-    protected final MutableState<Object> nullState = null;
+    private MutableState<Object> state;
+    private MutableState<Object> state2;
+    private MutableState<Object> state3;
+    private final Object a1 = new Object();
+    private final Object a2 = new Object();
+    private final Object a3 = new Object();
+    private final Object nullSymbol = null;
+    private final String nullString = null;
+    private final MutableState<Object> nullState = null;
 
-    protected abstract MutableState<Object> newState();
+    abstract MutableState<Object> newState();
 
     {
         beforeEach(() -> {
@@ -32,11 +32,11 @@ public abstract class AbstractMutableStateTest
         describe("#set/#name", () -> {
 
             it("meets a minimum expectation", () -> {
-                final String name1 = "1qaz";
+                final var name1 = "1qaz";
                 state.setName(name1);
                 expect(state.name()).toEqual(name1);
 
-                final String name2 = "2wsx";
+                final var name2 = "2wsx";
                 state.setName(name2);
                 expect(state.name()).toEqual(name2);
 

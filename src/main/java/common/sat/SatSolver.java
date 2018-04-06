@@ -34,7 +34,7 @@ public interface SatSolver
 
     default void setLiteralsTruthy(int... literals)
     {
-        for (int literal : literals) {
+        for (var literal : literals) {
             setLiteralTruthy(literal);
         }
     }
@@ -46,7 +46,7 @@ public interface SatSolver
 
     default void setLiteralsFalsy(int... literals)
     {
-        for (int literal : literals) {
+        for (var literal : literals) {
             setLiteralFalsy(literal);
         }
     }
@@ -59,7 +59,7 @@ public interface SatSolver
 
     default void markAllAsEquivalent(int... literals)
     {
-        for (int i = 0; i < literals.length - 1; i++) {
+        for (var i = 0; i < literals.length - 1; i++) {
             addClause(-literals[i], literals[i + 1]);
         }
         addClause(-literals[literals.length - 1], literals[0]);
@@ -96,40 +96,40 @@ public interface SatSolver
         if (bitArray1.length == 0 || bitArray2.length == 0) {
             throw new IllegalArgumentException("zero length array given");
         }
-        final int lengthDelta = bitArray1.length - bitArray2.length;
-        final int commonLength = Math.min(bitArray1.length, bitArray2.length);
-        final ImmutableIntList greaterAlreadyIndicators = newFreeVariables(commonLength + 1);
+        final var lengthDelta = bitArray1.length - bitArray2.length;
+        final var commonLength = Math.min(bitArray1.length, bitArray2.length);
+        final var greaterAlreadyIndicators = newFreeVariables(commonLength + 1);
         if (lengthDelta > 0) { // array1 being longer
 
             // define greater in the longer part
-            final int[] longerPartHasValue = new int[lengthDelta];
+            final var longerPartHasValue = new int[lengthDelta];
             System.arraycopy(bitArray1, 0, longerPartHasValue, 0, lengthDelta);
-            final int longerPartGreater = greaterAlreadyIndicators.get(0);
+            final var longerPartGreater = greaterAlreadyIndicators.get(0);
             // longerPartHasValue <--> longerPartGreater
             addClauseIf(longerPartGreater, longerPartHasValue);
-            for (int i = 0; i < lengthDelta; i++) {
+            for (var i = 0; i < lengthDelta; i++) {
                 addImplication(bitArray1[i], longerPartGreater);
             }
 
             // define greater in the common part
-            for (int i = 0; i < bitArray2.length; i++) {
-                final int alreadyGreater = greaterAlreadyIndicators.get(i);
-                final int greaterHere = greaterAlreadyIndicators.get(i + 1);
+            for (var i = 0; i < bitArray2.length; i++) {
+                final var alreadyGreater = greaterAlreadyIndicators.get(i);
+                final var greaterHere = greaterAlreadyIndicators.get(i + 1);
                 encodeGreaterEqualAt(alreadyGreater, greaterHere, bitArray1[lengthDelta + i], bitArray2[i]);
             }
         } else {
-            final int absLengthDelta = -lengthDelta;
+            final var absLengthDelta = -lengthDelta;
 
             // define greater in the longer part
             setLiteralFalsy(greaterAlreadyIndicators.get(0));
-            for (int i = 0; i < absLengthDelta; i++) {
+            for (var i = 0; i < absLengthDelta; i++) {
                 setLiteralFalsy(bitArray2[i]);
             }
 
             // define greater in the common part
-            for (int i = 0; i < bitArray1.length; i++) {
-                final int alreadyGreater = greaterAlreadyIndicators.get(i);
-                final int greaterHere = greaterAlreadyIndicators.get(i + 1);
+            for (var i = 0; i < bitArray1.length; i++) {
+                final var alreadyGreater = greaterAlreadyIndicators.get(i);
+                final var greaterHere = greaterAlreadyIndicators.get(i + 1);
                 encodeGreaterEqualAt(alreadyGreater, greaterHere, bitArray1[i], bitArray2[absLengthDelta + i]);
             }
         }
@@ -282,7 +282,7 @@ public interface SatSolver
      */
     default void addClauseAtMostIf(int indicator, int degree, int... clause)
     {
-        final int paddingLength = clause.length - degree;
+        final var paddingLength = clause.length - degree;
         final MutableIntList padding = new IntArrayList(paddingLength + 1);
         padding.addAll(newFreeVariables(paddingLength));
         final MutableIntList paddedClause = new IntArrayList(clause.length + padding.size());
@@ -353,8 +353,8 @@ public interface SatSolver
      */
     default void addClauseBlocking(int... clause)
     {
-        final int[] blockingClause = new int[clause.length];
-        for (int i = 0; i < clause.length; i++) {
+        final var blockingClause = new int[clause.length];
+        for (var i = 0; i < clause.length; i++) {
             blockingClause[i] = -clause[i];
         }
         addClause(blockingClause);
@@ -379,8 +379,8 @@ public interface SatSolver
      */
     default void addClauseBlockingIf(int indicator, int... clause)
     {
-        final int[] blockingClause = new int[clause.length + 1];
-        for (int i = 0; i < clause.length; i++) {
+        final var blockingClause = new int[clause.length + 1];
+        for (var i = 0; i < clause.length; i++) {
             blockingClause[i] = -clause[i];
         }
         blockingClause[clause.length] = -indicator;
@@ -427,7 +427,7 @@ public interface SatSolver
      */
     default void addImplications(int antecedent, int... consequents)
     {
-        for (int consequent : consequents) {
+        for (var consequent : consequents) {
             addImplication(antecedent, consequent);
         }
     }
@@ -438,7 +438,7 @@ public interface SatSolver
      */
     default void addImplicationsIf(int indicator, int antecedent, int... consequents)
     {
-        for (int consequent : consequents) {
+        for (var consequent : consequents) {
             addImplicationIf(indicator, antecedent, consequent);
         }
     }

@@ -9,7 +9,7 @@ import org.junit.runner.RunWith;
 public class BasicFSAEncodingTest extends AbstractFSAEncodingTest
 {
     @Override
-    protected FSAEncoding<Object> newEncoding(int size, AlphabetIntEncoder<Object> alphabetEncoding)
+    FSAEncoding<Object> newEncoding(int size, AlphabetIntEncoder<Object> alphabetEncoding)
     {
         solver.reset();
 

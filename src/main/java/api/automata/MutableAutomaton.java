@@ -86,20 +86,20 @@ public interface MutableAutomaton<S> extends Automaton<S>
         Function<State<S>, String> getName = state -> state.name() != null ? state.name() : this.toString();
         if (states().anySatisfy(that -> that.name() == null)) {
             nameMask = UnifiedMap.newMap(states().size()); // upper bound
-            int i = 0;
-            for (State<S> state : states()) {
+            var i = 0;
+            for (var state : states()) {
                 nameMask.put(state, state.name() == null ? DISPLAY_DUMMY_STATE_NAME_PREFIX + i++ : state.name());
             }
             getName = nameMask::get;
         }
 
-        final String innerIndent = indent + DISPLAY_INDENT;
-        final String startState = getName.apply(startState());
-        final String acceptStates = acceptStates().collect(getName).makeString();
-        final StringBuilder result = new StringBuilder();
+        final var innerIndent = indent + DISPLAY_INDENT;
+        final var startState = getName.apply(startState());
+        final var acceptStates = acceptStates().collect(getName).makeString();
+        final var result = new StringBuilder();
         result.append(indent).append(nameTag).append(nameTag.equals("") ? "{" : " {").append(DISPLAY_NEWLINE);
         result.append(innerIndent).append("start: ").append(startState).append(";").append(DISPLAY_NEWLINE);
-        for (State<S> state : states()) {
+        for (var state : states()) {
             result.append(state.toString(innerIndent, nameMask));
         }
         result.append(innerIndent).append("accept: ").append(acceptStates).append(";").append(DISPLAY_NEWLINE);

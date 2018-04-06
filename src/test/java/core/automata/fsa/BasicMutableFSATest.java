@@ -9,7 +9,7 @@ import org.junit.runner.RunWith;
 public class BasicMutableFSATest extends AbstractMutableFSATest
 {
     @Override
-    protected MutableFSA<Object> newFSA(Alphabet<Object> alphabet, int stateCapacity)
+    MutableFSA<Object> newFSA(Alphabet<Object> alphabet, int stateCapacity)
     {
         return new BasicMutableFSA<>(alphabet, stateCapacity);
     }

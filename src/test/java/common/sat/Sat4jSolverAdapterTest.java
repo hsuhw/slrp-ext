@@ -34,7 +34,7 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
         describe("#get/setTimeout*()", () -> {
 
             it("changes the second timeout setting", () -> {
-                final int t = solver.getTimeoutInSec();
+                final var t = solver.getTimeoutInSec();
                 solver.setTimeoutInSec(12);
                 expect(solver.getTimeoutInSec()).toEqual(12);
                 solver.setTimeoutInSec(34);
@@ -43,7 +43,7 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
             });
 
             it("changes the millisecond timeout setting", () -> {
-                final long t = solver.getTimeoutInMs();
+                final var t = solver.getTimeoutInMs();
                 solver.setTimeoutInMs(1200);
                 expect(solver.getTimeoutInMs()).toEqual(1200);
                 solver.setTimeoutInMs(3400);
@@ -90,9 +90,9 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
 
             it("returns true when SAT", () -> {
                 solver.addClause(1, 2);
-                final boolean satisfiable1 = solver.findItSatisfiable();
+                final var satisfiable1 = solver.findItSatisfiable();
                 expect(satisfiable1).toBeTrue();
-                final boolean satisfiable2 = solver.findItSatisfiable();
+                final var satisfiable2 = solver.findItSatisfiable();
                 expect(satisfiable1).toEqual(satisfiable2);
             });
 
@@ -100,9 +100,9 @@ public class Sat4jSolverAdapterTest extends AbstractSatSolverTest
                 solver.addClause(1, 2);
                 solver.addClause(-1);
                 solver.addClause(-2);
-                final boolean satisfiable1 = solver.findItSatisfiable();
+                final var satisfiable1 = solver.findItSatisfiable();
                 expect(satisfiable1).toBeFalse();
-                final boolean satisfiable2 = solver.findItSatisfiable();
+                final var satisfiable2 = solver.findItSatisfiable();
                 expect(satisfiable1).toEqual(satisfiable2);
             });
 

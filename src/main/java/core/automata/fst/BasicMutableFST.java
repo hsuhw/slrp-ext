@@ -32,7 +32,7 @@ public class BasicMutableFST<S, T> extends AbstractMutableFST<S, T> implements M
         Finalizer<Pair<S, T>, U, R> finalizer)
     {
         final var capacityComputed = states().size() * target.states().size(); // upper bound
-        final int capacity = capacityComputed < 0 ? Integer.MAX_VALUE : capacityComputed;
+        final var capacity = capacityComputed < 0 ? Integer.MAX_VALUE : capacityComputed;
         if (alphabet.epsilon() instanceof Pair<?, ?>) {
             @SuppressWarnings("unchecked")
             final MutableAutomaton<R> result = new BasicMutableFST(alphabet, capacity);

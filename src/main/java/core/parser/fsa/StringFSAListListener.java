@@ -62,8 +62,8 @@ public class StringFSAListListener extends AutomatonListBaseListener
     @Override
     public void enterTransition(TransitionContext ctx)
     {
-        final String symbol = ctx.transitionLabel().emptyLabel() != null // see if it is epsilon symbol
-                              ? EPSILON_SYMBOL : ctx.transitionLabel().simpleLabel().getText();
+        final var symbol = ctx.transitionLabel().emptyLabel() != null // see if it is epsilon symbol
+                           ? EPSILON_SYMBOL : ctx.transitionLabel().simpleLabel().getText();
 
         listener.enterTransition(ctx.ID(), symbol);
     }

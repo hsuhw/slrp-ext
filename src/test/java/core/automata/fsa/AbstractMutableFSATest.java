@@ -15,11 +15,11 @@ import static api.automata.Automaton.TransitionGraph;
 import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
 
-public abstract class AbstractMutableFSATest
+abstract class AbstractMutableFSATest
 {
-    protected final Alphabet<Object> alphabet;
+    private final Alphabet<Object> alphabet;
 
-    protected abstract MutableFSA<Object> newFSA(Alphabet<Object> alphabet, int stateCapacity);
+    abstract MutableFSA<Object> newFSA(Alphabet<Object> alphabet, int stateCapacity);
 
     {
         final var e = new Object();

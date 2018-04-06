@@ -15,14 +15,12 @@ public abstract class AbstractAntlrParser<S> implements Parser<S>
     @Override
     public ListIterable<S> parse(String source)
     {
-        final CharStream charStream = CharStreams.fromString(source);
-        return parse(charStream);
+        return parse(CharStreams.fromString(source));
     }
 
     @Override
     public ListIterable<S> parse(InputStream stream) throws IOException
     {
-        final CharStream charStream = CharStreams.fromStream(stream);
-        return parse(charStream);
+        return parse(CharStreams.fromStream(stream));
     }
 }

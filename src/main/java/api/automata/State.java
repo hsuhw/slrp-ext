@@ -45,7 +45,7 @@ public interface State<S>
 
     default String toString(String indent, MapIterable<State<S>, String> nameMask)
     {
-        final StringBuilder result = new StringBuilder();
+        final var result = new StringBuilder();
         final Function<State<S>, String> getName = state -> nameMask != null
                                                             ? nameMask.get(state)
                                                             : (state.name() != null ? state.name() : this.toString());

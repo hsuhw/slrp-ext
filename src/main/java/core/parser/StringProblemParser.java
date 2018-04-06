@@ -24,9 +24,9 @@ public class StringProblemParser extends AbstractAntlrParser<Problem<String>> im
         LOGGER.info("Invoke the Problem parsing at thread time {}ms.", //
                     () -> (profilingStartTime = Stopwatch.currentThreadCpuTimeInMs()));
 
-        final ProblemParser parseTreeHandler = new ProblemParser(new CommonTokenStream(new ProblemLexer(charStream)));
-        final ParseTreeWalker parseTreeWalker = new ParseTreeWalker();
-        final StringProblemListener collector = new StringProblemListener();
+        final var parseTreeHandler = new ProblemParser(new CommonTokenStream(new ProblemLexer(charStream)));
+        final var parseTreeWalker = new ParseTreeWalker();
+        final var collector = new StringProblemListener();
         parseTreeWalker.walk(collector, parseTreeHandler.problem());
 
         LOGGER.info("Problem parsed in {}ms.", //

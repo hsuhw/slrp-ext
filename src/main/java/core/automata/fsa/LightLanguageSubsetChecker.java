@@ -34,12 +34,12 @@ public class LightLanguageSubsetChecker implements LanguageSubsetChecker
         if (includer.acceptsNone()) { // empty includes nobody
             return new Result<>(false, new Counterexample<>(subsumer.enumerateOneShortest()));
         }
-        final FSA<S> includerFixed = includer.determinize().complete();
+        final var includerFixed = includer.determinize().complete();
         if (includerFixed.complement().acceptsNone()) { // universe includes anyone
             return new Result<>(true, null);
         }
 
-        final ListIterable<S> divergentWitness = new DivergentWitnessBFS<>(subsumer, includerFixed.minimize()).run();
+        final var divergentWitness = new DivergentWitnessBFS<>(subsumer, includerFixed.minimize()).run();
 
         return divergentWitness == null
                ? new Result<>(true, null)
@@ -80,10 +80,10 @@ public class LightLanguageSubsetChecker implements LanguageSubsetChecker
             if (breakingStep != epsilon) {
                 witnessBacktrace.add(breakingStep);
             }
-            Twin<State<S>> currStatePair = statePair;
+            var currStatePair = statePair;
             S currSymbol;
             while (!currStatePair.equals(startStatePair)) {
-                final Pair<Twin<State<S>>, S> visitorAndSymbol = visitRecord.get(currStatePair);
+                final var visitorAndSymbol = visitRecord.get(currStatePair);
                 if (!(currSymbol = visitorAndSymbol.getTwo()).equals(epsilon)) {
                     witnessBacktrace.add(currSymbol);
                 }
@@ -109,10 +109,10 @@ public class LightLanguageSubsetChecker implements LanguageSubsetChecker
                 if (dept2.enabledSymbols().contains(epsilon)) {
                     throw new IllegalStateException("includer should be deterministic");
                 }
-                for (S symbol : dept1.enabledSymbols()) {
+                for (var symbol : dept1.enabledSymbols()) {
                     dest2 = symbol.equals(epsilon) ? dept2 : dept2.successor(symbol);
                     includerAccepts = includer.isAcceptState(dest2);
-                    for (State<S> dest1 : dept1.successors(symbol)) {
+                    for (var dest1 : dept1.successors(symbol)) {
                         if (subsumer.isAcceptState(dest1) && !includerAccepts) {
                             return witnessFoundAt(currStatePair, symbol);
                         }

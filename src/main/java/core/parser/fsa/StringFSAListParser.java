@@ -29,9 +29,9 @@ public class StringFSAListParser extends AbstractAntlrParser<FSA<String>> implem
                     () -> (profilingStartTime = Stopwatch.currentThreadCpuTimeInMs()));
 
         final TokenStream tokens = new CommonTokenStream(new AutomatonListLexer(charStream));
-        final AutomatonListParser parseTreeHandler = new AutomatonListParser(tokens);
-        final StringFSAListListener collector = new StringFSAListListener(SEPARATE);
-        final ParseTreeWalker parseTreeWalker = new ParseTreeWalker();
+        final var parseTreeHandler = new AutomatonListParser(tokens);
+        final var collector = new StringFSAListListener(SEPARATE);
+        final var parseTreeWalker = new ParseTreeWalker();
         parseTreeWalker.walk(collector, parseTreeHandler.automatonList());
 
         LOGGER.info("Automata parsed in {}ms.", //

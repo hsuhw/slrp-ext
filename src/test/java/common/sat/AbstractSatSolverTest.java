@@ -1,7 +1,6 @@
 package common.sat;
 
 import common.util.ContradictionException;
-import org.eclipse.collections.api.list.primitive.ImmutableIntList;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
 
@@ -9,26 +8,26 @@ import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.*;
 import static core.Parameters.SAT_SOLVER_MAX_CLAUSE_NUMBER;
 
-public abstract class AbstractSatSolverTest
+abstract class AbstractSatSolverTest
 {
-    protected SatSolver solver;
+    SatSolver solver;
 
-    protected boolean modelExists()
+    private boolean modelExists()
     {
         return solver.findItSatisfiable();
     }
 
-    protected void expectModelExists()
+    void expectModelExists()
     {
         expect(solver.findItSatisfiable()).toBeTrue();
     }
 
-    protected void expectNoModelExists()
+    void expectNoModelExists()
     {
         expect(solver.findItSatisfiable()).toBeFalse();
     }
 
-    protected ImmutableIntSet model()
+    private ImmutableIntSet model()
     {
         return solver.getModel();
     }
@@ -56,21 +55,21 @@ public abstract class AbstractSatSolverTest
         describe("#newFreeVariables()", () -> {
 
             it("meets a minimum expectation", () -> {
-                final ImmutableIntList interval = solver.newFreeVariables(3);
+                final var interval = solver.newFreeVariables(3);
                 expect(interval).toBeNotNull();
                 expect(interval.size()).toEqual(3);
                 expect(interval.containsAll(1, 2, 3)).toBeTrue();
             });
 
             it("provides a singleton when called with 1", () -> {
-                final ImmutableIntList singletonInterval = solver.newFreeVariables(1);
+                final var singletonInterval = solver.newFreeVariables(1);
                 expect(singletonInterval).toBeNotNull();
                 expect(singletonInterval.size()).toEqual(1);
                 expect(singletonInterval.contains(1)).toBeTrue();
             });
 
             it("provides empty when called with 0", () -> {
-                final ImmutableIntList empty = solver.newFreeVariables(0);
+                final var empty = solver.newFreeVariables(0);
                 expect(empty).toBeNotNull();
                 expect(empty.isEmpty()).toBeTrue();
             });
@@ -110,7 +109,7 @@ public abstract class AbstractSatSolverTest
             describe("when activated", () -> {
 
                 it("is #addClauseIf(int, int...)", () -> {
-                    final int yes = solver.newFreeVariable();
+                    final var yes = solver.newFreeVariable();
                     solver.addClause(yes);
                     solver.addClauseIf(yes, solver.newFreeVariables(2));
                     solver.addClause(-3);
@@ -123,7 +122,7 @@ public abstract class AbstractSatSolverTest
 
                 it("complains when causing trivial contradictions", () -> {
                     expect(() -> {
-                        final int yes = solver.newFreeVariable();
+                        final var yes = solver.newFreeVariable();
                         solver.addClause(yes);
                         solver.addClause(-2);
                         solver.addClauseIf(yes, solver.newFreeVariables(1));
@@ -140,7 +139,7 @@ public abstract class AbstractSatSolverTest
                     expectModelExists();
                     expect(model().contains(2)).toBeTrue();
 
-                    final int wellNeverMind = solver.newFreeVariable();
+                    final var wellNeverMind = solver.newFreeVariable();
                     solver.addClause(-wellNeverMind);
                     solver.addClauseIf(wellNeverMind, solver.newFreeVariables(2));
                     solver.addClause(-4);
@@ -155,14 +154,14 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(-2);
                     expectNoModelExists();
 
-                    final int wellNeverMind = solver.newFreeVariable();
+                    final var wellNeverMind = solver.newFreeVariable();
                     solver.addClause(-wellNeverMind);
                     solver.addClauseIf(wellNeverMind, solver.newFreeVariables(2));
                     expectNoModelExists();
                 });
 
                 it("never causes a contradiction", () -> {
-                    final int wellNeverMind = solver.newFreeVariable();
+                    final var wellNeverMind = solver.newFreeVariable();
                     solver.addClause(-wellNeverMind);
                     solver.addClause(-2);
                     solver.addClauseIf(wellNeverMind, solver.newFreeVariables(1));
@@ -311,8 +310,8 @@ public abstract class AbstractSatSolverTest
         describe("#markAsGreaterEqualInBinary(IntList, IntList)", () -> {
 
             it("encodes the greater situation 1", () -> {
-                final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
-                final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
+                final var bitArray1 = solver.newFreeVariables(2);
+                final var bitArray2 = solver.newFreeVariables(2);
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
                 solver.setLiteralFalsy(bitArray1.get(1));
                 solver.setLiteralTruthy(bitArray2.get(1));
@@ -322,8 +321,8 @@ public abstract class AbstractSatSolverTest
             });
 
             it("encodes the greater situation 2", () -> {
-                final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
-                final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
+                final var bitArray1 = solver.newFreeVariables(2);
+                final var bitArray2 = solver.newFreeVariables(2);
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
                 solver.setLiteralTruthy(bitArray2.get(0));
                 expectModelExists();
@@ -331,8 +330,8 @@ public abstract class AbstractSatSolverTest
             });
 
             it("encodes the greater situation 3", () -> {
-                final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
-                final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
+                final var bitArray1 = solver.newFreeVariables(2);
+                final var bitArray2 = solver.newFreeVariables(2);
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
                 solver.setLiteralFalsy(bitArray1.get(0));
                 solver.setLiteralTruthy(bitArray2.get(0));
@@ -340,8 +339,8 @@ public abstract class AbstractSatSolverTest
             });
 
             it("encodes the equal situation", () -> {
-                final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
-                final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
+                final var bitArray1 = solver.newFreeVariables(2);
+                final var bitArray2 = solver.newFreeVariables(2);
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
                 solver.markAsGreaterEqualInBinary(bitArray2, bitArray1);
                 while (modelExists()) {
@@ -352,8 +351,8 @@ public abstract class AbstractSatSolverTest
             });
 
             it("handles array1 longer than array2", () -> {
-                final ImmutableIntList bitArray1 = solver.newFreeVariables(2);
-                final ImmutableIntList bitArray2 = solver.newFreeVariables(1);
+                final var bitArray1 = solver.newFreeVariables(2);
+                final var bitArray2 = solver.newFreeVariables(1);
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
                 while (modelExists()) {
                     expect(model().containsAll(-bitArray1.get(0), -bitArray1.get(1), bitArray2.get(0))).toBeFalse();
@@ -362,8 +361,8 @@ public abstract class AbstractSatSolverTest
             });
 
             it("handles array1 shorter than array2", () -> {
-                final ImmutableIntList bitArray1 = solver.newFreeVariables(1);
-                final ImmutableIntList bitArray2 = solver.newFreeVariables(2);
+                final var bitArray1 = solver.newFreeVariables(1);
+                final var bitArray2 = solver.newFreeVariables(2);
                 solver.markAsGreaterEqualInBinary(bitArray1, bitArray2);
                 while (modelExists()) {
                     expect(model().contains(bitArray2.get(0))).toBeFalse();
@@ -402,7 +401,7 @@ public abstract class AbstractSatSolverTest
             describe("when activated", () -> {
 
                 it("is #addClauseAtLeast(int, IntList)", () -> {
-                    final int yes = solver.newFreeVariable();
+                    final var yes = solver.newFreeVariable();
                     solver.addClause(yes);
                     solver.addClauseAtLeastIf(yes, 2, solver.newFreeVariables(4));
                     solver.addClause(-2);
@@ -420,7 +419,7 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(-2);
                     expectNoModelExists();
 
-                    final int yes = solver.newFreeVariable();
+                    final var yes = solver.newFreeVariable();
                     solver.addClause(yes);
                     solver.addClauseAtLeastIf(yes, 2, solver.newFreeVariables(4));
                     expectNoModelExists();
@@ -436,7 +435,7 @@ public abstract class AbstractSatSolverTest
                     expectModelExists();
                     expect(model().contains(2)).toBeTrue();
 
-                    final int wellNeverMind = solver.newFreeVariable();
+                    final var wellNeverMind = solver.newFreeVariable();
                     solver.addClause(-wellNeverMind);
                     solver.addClauseAtLeastIf(wellNeverMind, 2, solver.newFreeVariables(4));
                     solver.addClause(-4);
@@ -453,7 +452,7 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(-2);
                     expectNoModelExists();
 
-                    final int wellNeverMind = solver.newFreeVariable();
+                    final var wellNeverMind = solver.newFreeVariable();
                     solver.addClause(-wellNeverMind);
                     solver.addClauseAtLeastIf(wellNeverMind, 2, solver.newFreeVariables(4));
                     expectNoModelExists();
@@ -501,7 +500,7 @@ public abstract class AbstractSatSolverTest
             describe("when activated", () -> {
 
                 it("is #addClauseAtMost(int, IntList)", () -> {
-                    final int yes = solver.newFreeVariable();
+                    final var yes = solver.newFreeVariable();
                     solver.addClause(yes);
                     solver.addClauseAtMostIf(yes, 2, solver.newFreeVariables(4));
                     solver.addClause(2);
@@ -514,7 +513,7 @@ public abstract class AbstractSatSolverTest
                 });
 
                 it("allows no true in the clause", () -> {
-                    final int yes = solver.newFreeVariable();
+                    final var yes = solver.newFreeVariable();
                     solver.addClause(yes);
                     solver.addClauseAtMostIf(yes, 2, solver.newFreeVariables(4));
                     solver.addClause(-2);
@@ -531,7 +530,7 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(-2);
                     expectNoModelExists();
 
-                    final int yes = solver.newFreeVariable();
+                    final var yes = solver.newFreeVariable();
                     solver.addClause(yes);
                     solver.addClauseAtMostIf(yes, 2, solver.newFreeVariables(4));
                     expectNoModelExists();
@@ -547,7 +546,7 @@ public abstract class AbstractSatSolverTest
                     expectModelExists();
                     expect(model().contains(2)).toBeTrue();
 
-                    final int wellNeverMind = solver.newFreeVariable();
+                    final var wellNeverMind = solver.newFreeVariable();
                     solver.addClause(-wellNeverMind);
                     solver.addClauseAtMostIf(wellNeverMind, 2, solver.newFreeVariables(4));
                     solver.addClause(4);
@@ -563,7 +562,7 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(-2);
                     expectNoModelExists();
 
-                    final int wellNeverMind = solver.newFreeVariable();
+                    final var wellNeverMind = solver.newFreeVariable();
                     solver.addClause(-wellNeverMind);
                     solver.addClauseAtMostIf(wellNeverMind, 2, solver.newFreeVariables(4));
                     expectNoModelExists();
@@ -614,7 +613,7 @@ public abstract class AbstractSatSolverTest
             describe("when activated", () -> {
 
                 it("ensures no-more-than the degree", () -> {
-                    final int yes = solver.newFreeVariable();
+                    final var yes = solver.newFreeVariable();
                     solver.addClause(yes);
                     solver.addClauseExactlyIf(yes, 2, solver.newFreeVariables(4));
                     solver.addClause(2);
@@ -627,7 +626,7 @@ public abstract class AbstractSatSolverTest
                 });
 
                 it("ensures no-less-than the degree", () -> {
-                    final int yes = solver.newFreeVariable();
+                    final var yes = solver.newFreeVariable();
                     solver.addClause(yes);
                     solver.addClauseExactlyIf(yes, 2, solver.newFreeVariables(4));
                     solver.addClause(-2);
@@ -645,7 +644,7 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(-2);
                     expectNoModelExists();
 
-                    final int yes = solver.newFreeVariable();
+                    final var yes = solver.newFreeVariable();
                     solver.addClause(yes);
                     solver.addClauseExactlyIf(yes, 2, solver.newFreeVariables(4));
                     expectNoModelExists();
@@ -661,7 +660,7 @@ public abstract class AbstractSatSolverTest
                     expectModelExists();
                     expect(model().contains(2)).toBeTrue();
 
-                    final int wellNeverMind = solver.newFreeVariable();
+                    final var wellNeverMind = solver.newFreeVariable();
                     solver.addClause(-wellNeverMind);
                     solver.addClauseExactlyIf(wellNeverMind, 2, solver.newFreeVariables(4));
                     solver.addClause(4);
@@ -677,7 +676,7 @@ public abstract class AbstractSatSolverTest
                     solver.addClause(-2);
                     expectNoModelExists();
 
-                    final int wellNeverMind = solver.newFreeVariable();
+                    final var wellNeverMind = solver.newFreeVariable();
                     solver.addClause(-wellNeverMind);
                     solver.addClauseExactlyIf(wellNeverMind, 2, solver.newFreeVariables(4));
                     expectNoModelExists();

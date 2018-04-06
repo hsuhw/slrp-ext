@@ -12,12 +12,12 @@ import static com.mscharhag.oleaster.matcher.Matchers.expect;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.describe;
 import static com.mscharhag.oleaster.runner.StaticRunnerSupport.it;
 
-public abstract class AbstractLStarLearningTest
+abstract class AbstractLStarLearningTest
 {
-    protected final Alphabet<Object> alphabet;
-    protected final LStarLearning algorithm;
+    private final Alphabet<Object> alphabet;
+    private final LStarLearning algorithm;
 
-    protected abstract LStarLearning getAlgorithm();
+    abstract LStarLearning getAlgorithm();
 
     {
         algorithm = getAlgorithm();

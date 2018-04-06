@@ -109,9 +109,9 @@ public class Sat4jSolverAdapter implements SatSolver
             throw new IllegalArgumentException("ran out of available free variables");
         }
 
-        final int from = nextFreeVariableId;
+        final var from = nextFreeVariableId;
         nextFreeVariableId += howMany;
-        final int to = nextFreeVariableId - 1;
+        final var to = nextFreeVariableId - 1;
 
         return IntInterval.fromTo(from, to);
     }

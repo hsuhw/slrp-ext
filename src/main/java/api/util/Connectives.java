@@ -2,8 +2,6 @@ package api.util;
 
 import api.automata.Automaton;
 import api.automata.MutableState;
-import api.automata.State;
-import org.eclipse.collections.api.bimap.BiMap;
 import org.eclipse.collections.api.block.predicate.primitive.BooleanBooleanPredicate;
 import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.tuple.Tuples;
@@ -58,10 +56,10 @@ public interface Connectives
         static <S, T, R> Finalizer<S, T, R> select(Automaton<S> one, Automaton<T> two, BooleanBooleanPredicate matcher)
         {
             return (stateMapping, builder) -> {
-                final BiMap<MutableState<R>, Pair<State<S>, State<T>>> mapping = stateMapping.inverse();
+                final var mapping = stateMapping.inverse();
                 builder.states().forEach(state -> {
-                    final State<S> state1 = mapping.get(state).getOne();
-                    final State<T> state2 = mapping.get(state).getTwo();
+                    final var state1 = mapping.get(state).getOne();
+                    final var state2 = mapping.get(state).getTwo();
                     if (matcher.accept(one.isAcceptState(state1), two.isAcceptState(state2))) {
                         builder.setAsAccept((MutableState<R>) state);
                     }

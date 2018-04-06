@@ -5,13 +5,9 @@ import core.automata.SetAlphabetBuilder;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.eclipse.collections.api.set.MutableSet;
-import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.api.tuple.Twin;
 import org.eclipse.collections.impl.factory.Sets;
 import org.eclipse.collections.impl.tuple.Tuples;
-
-import java.util.Set;
 
 import static api.automata.Alphabet.Builder;
 import static common.util.Constants.NO_IMPLEMENTATION_FOUND;
@@ -48,16 +44,16 @@ public final class Alphabets
 
     public static <S, T> Alphabet<Pair<S, T>> product(Alphabet<S> one, Alphabet<T> two)
     {
-        final SetIterable<S> symbols1 = one.noEpsilonSet();
-        final Set<S> symbolSet1 = symbols1 instanceof ImmutableSet<?>
-                                  ? ((ImmutableSet<S>) symbols1).castToSet()
-                                  : (MutableSet<S>) symbols1;
-        final SetIterable<T> symbols2 = two.noEpsilonSet();
-        final Set<T> symbolSet2 = symbols2 instanceof ImmutableSet<?>
-                                  ? ((ImmutableSet<T>) symbols2).castToSet()
-                                  : (MutableSet<T>) symbols2;
-        final Pair<S, T> epsilon = Tuples.pair(one.epsilon(), two.epsilon());
-        final MutableSet<Pair<S, T>> product = Sets.cartesianProduct(symbolSet1, symbolSet2, Tuples::pair).toSet();
+        final var symbols1 = one.noEpsilonSet();
+        final var symbolSet1 = symbols1 instanceof ImmutableSet<?>
+                               ? ((ImmutableSet<S>) symbols1).castToSet()
+                               : (MutableSet<S>) symbols1;
+        final var symbols2 = two.noEpsilonSet();
+        final var symbolSet2 = symbols2 instanceof ImmutableSet<?>
+                               ? ((ImmutableSet<T>) symbols2).castToSet()
+                               : (MutableSet<T>) symbols2;
+        final var epsilon = Tuples.pair(one.epsilon(), two.epsilon());
+        final var product = Sets.cartesianProduct(symbolSet1, symbolSet2, Tuples::pair).toSet();
         product.add(epsilon);
 
         return create(product, epsilon);

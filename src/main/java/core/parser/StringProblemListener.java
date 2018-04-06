@@ -39,12 +39,12 @@ public class StringProblemListener extends ProblemBaseListener
 
     public ListIterable<Problem<String>> result()
     {
-        final FSA<String> init = fsaListener.result().get(0);
-        final FSA<String> fin = fsaListener.result().get(1);
-        final FSA<String> inv = fsaListener.result().size() == 2 ? null : fsaListener.result().getLast();
-        final FST<String, String> sched = fstListener.result().get(0);
-        final FST<String, String> proc = fstListener.result().get(1);
-        final FST<String, String> ord = fstListener.result().size() == 2 ? null : fstListener.result().getLast();
+        final var init = fsaListener.result().get(0);
+        final var fin = fsaListener.result().get(1);
+        final var inv = fsaListener.result().size() == 2 ? null : fsaListener.result().getLast();
+        final var sched = fstListener.result().get(0);
+        final var proc = fstListener.result().get(1);
+        final var ord = fstListener.result().size() == 2 ? null : fstListener.result().getLast();
         final Problem<String> problem = new BasicProblem<>(init, fin, sched, proc, inv, ord, invSize, ordSize,
                                                            invEnclosesAll);
 
@@ -55,7 +55,7 @@ public class StringProblemListener extends ProblemBaseListener
     public void enterProblem(ProblemContext ctx)
     {
         commonCapacity = (ctx.getStop().getLine() - ctx.getStart().getLine()) / 4; // loose upper bound
-        final Alphabet.Builder<String> alphabetRecorder = Alphabets.builder(commonCapacity, EPSILON_SYMBOL);
+        final var alphabetRecorder = Alphabets.builder(commonCapacity, EPSILON_SYMBOL);
         fsaListener = new FSAListener(alphabetRecorder);
         fstListener = new FSTListener(alphabetRecorder);
     }
@@ -104,16 +104,16 @@ public class StringProblemListener extends ProblemBaseListener
     @Override
     public void enterInvariantSizeBound(InvariantSizeBoundContext ctx)
     {
-        final int from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 0);
-        final int to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 0);
+        final var from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 0);
+        final var to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 0);
         invSize = sortedIntIntPair(from, to);
     }
 
     @Override
     public void enterOrderSizeBound(OrderSizeBoundContext ctx)
     {
-        final int from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 0);
-        final int to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 0);
+        final var from = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(0).getText()), 0);
+        final var to = Math.max(Integer.parseInt(ctx.integerRange().INTEGER(1).getText()), 0);
         ordSize = sortedIntIntPair(from, to);
     }
 
@@ -177,8 +177,8 @@ public class StringProblemListener extends ProblemBaseListener
         @Override
         public void enterTransition(TransitionContext ctx)
         {
-            final String symbol = ctx.transitionLabel().emptyLabel() != null // see if it is epsilon symbol
-                                  ? EPSILON_SYMBOL : ctx.transitionLabel().simpleLabel().getText();
+            final var symbol = ctx.transitionLabel().emptyLabel() != null // see if it is epsilon symbol
+                               ? EPSILON_SYMBOL : ctx.transitionLabel().simpleLabel().getText();
 
             listener.enterTransition(ctx.ID(), symbol);
         }
@@ -193,7 +193,7 @@ public class StringProblemListener extends ProblemBaseListener
     private class FSTListener extends ProblemBaseListener
     {
         private final AbstractAutomatonListListener<Pair<String, String>> listener;
-        private Alphabet.Builder<String> alphabetRecorder;
+        private final Alphabet.Builder<String> alphabetRecorder;
 
         private FSTListener(Alphabet.Builder<String> alphabetRecorder)
         {
@@ -242,7 +242,7 @@ public class StringProblemListener extends ProblemBaseListener
         public void enterInOutTransition(InOutTransitionContext ctx)
         {
             final Pair<String, String> symbol;
-            final InOutTransitionLabelContext label = ctx.inOutTransitionLabel();
+            final var label = ctx.inOutTransitionLabel();
             symbol = label.emptyLabel() != null
                      ? TWIN_EPSILON_SYMBOL
                      : Tuples.twin(label.slashedLabel().ID(0).getText(), label.slashedLabel().ID(1).getText());

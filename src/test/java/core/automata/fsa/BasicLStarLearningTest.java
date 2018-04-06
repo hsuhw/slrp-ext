@@ -8,7 +8,7 @@ import org.junit.runner.RunWith;
 public class BasicLStarLearningTest extends AbstractLStarLearningTest
 {
     @Override
-    protected LStarLearning getAlgorithm()
+    LStarLearning getAlgorithm()
     {
         return new BasicLStarLearning();
     }

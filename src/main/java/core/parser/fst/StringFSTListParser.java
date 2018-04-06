@@ -29,9 +29,9 @@ public class StringFSTListParser extends AbstractAntlrParser<FST<String, String>
                     () -> (profilingStartTime = Stopwatch.currentThreadCpuTimeInMs()));
 
         final TokenStream tokens = new CommonTokenStream(new AutomatonListLexer(charStream));
-        final AutomatonListParser parseTreeHandler = new AutomatonListParser(tokens);
-        final StringFSTListListener collector = new StringFSTListListener(SEPARATE);
-        final ParseTreeWalker parseTreeWalker = new ParseTreeWalker();
+        final var parseTreeHandler = new AutomatonListParser(tokens);
+        final var collector = new StringFSTListListener(SEPARATE);
+        final var parseTreeWalker = new ParseTreeWalker();
         parseTreeWalker.walk(collector, parseTreeHandler.automatonList());
 
         LOGGER.info("Automata parsed in {}ms.", //
