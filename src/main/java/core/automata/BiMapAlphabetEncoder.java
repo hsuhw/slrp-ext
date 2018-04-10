@@ -77,7 +77,7 @@ public class BiMapAlphabetEncoder<S, T> implements AlphabetEncoder<S, T>
     @Override
     public S decode(T symbol)
     {
-        if (!encoder.containsKey(symbol)) {
+        if (!decoder.containsKey(symbol)) {
             throw new IllegalStateException("symbol " + symbol + " not present");
         }
 

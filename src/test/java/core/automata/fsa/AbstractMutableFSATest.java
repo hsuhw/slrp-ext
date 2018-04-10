@@ -385,7 +385,7 @@ abstract class AbstractMutableFSATest
                 expect(fsa2.checkContaining(all).passed()).toBeFalse();
                 expect(fsa3.checkContaining(none).passed()).toBeTrue();
                 expect(fsa3.checkContaining(fsa1).passed()).toBeFalse();
-                expect(fsa2.checkContaining(fsa1).counterexample().witness()).toEqual(input1);
+                expect(fsa3.checkContaining(fsa1).counterexample().witness()).toEqual(input1);
                 expect(fsa3.checkContaining(fsa2).passed()).toBeTrue();
                 expect(fsa3.checkContaining(fsa3).passed()).toBeTrue();
                 expect(fsa3.checkContaining(all).passed()).toBeFalse();
