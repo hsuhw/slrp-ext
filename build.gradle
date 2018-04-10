@@ -79,16 +79,34 @@ model {
                 cppCompiler.args "-I${javaHome}/include"
                 cppCompiler.args "-I${javaHome}/include/${isOnMac ? 'darwin' : 'linux'}"
             }
+            binaries.withType(NativeBinarySpec) {
+                buildable = false // disable the default task behaviour
+            }
         }
     }
 }
 
-task copyLibVata(type: Copy) {
-    from "build/libs/vata/shared/libvata.${isOnMac ? 'dylib' : 'so'}"
-    into 'lib'
+task assembleNative {
+    doLast {
+        tasks.withType(CppCompile) {
+            if (it.name.contains('Shared')) {
+                println(":${it.name}")
+                it.execute()
+            }
+        }
+        tasks.withType(LinkSharedLibrary) { task ->
+            println(":${task.name}")
+            task.execute()
+            copy {
+                println(":${task.name.replace('link', 'copy')}")
+                from task.binaryFile
+                into 'lib'
+            }
+        }
+    }
 }
 
-assemble.finalizedBy copyLibVata
+check.dependsOn assembleNative
 
 // test
 test {
@@ -96,8 +114,6 @@ test {
         showStandardStreams = true
     }
 }
-
-test.dependsOn assemble
 
 tasks.withType(Test) {
     systemProperty 'java.library.path', 'lib'
