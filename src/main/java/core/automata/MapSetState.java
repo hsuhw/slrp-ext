@@ -40,7 +40,7 @@ public class MapSetState<S> implements MutableState<S>
     public RichIterable<Pair<S, State<S>>> transitions()
     {
         return transitions.keyValuesView().flatCollect(each -> {
-            final S transLabel = each.getOne();
+            final var transLabel = each.getOne();
             return each.getTwo().collect(dest -> Tuples.pair(transLabel, dest));
         });
     }
