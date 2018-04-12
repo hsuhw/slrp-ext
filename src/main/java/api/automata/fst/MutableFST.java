@@ -3,6 +3,8 @@ package api.automata.fst;
 import api.automata.*;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
+import api.automata.fsa.MutableFSA;
+import api.automata.fsa.VATA;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.set.SetIterable;
@@ -21,6 +23,22 @@ public interface MutableFST<S, T> extends MutableAutomaton<Pair<S, T>>, FST<S, T
         @SuppressWarnings("unchecked")
         final SetIterable<MutableState<Pair<S, T>>> unreachableStates = (SetIterable) unreachableStates();
         return FSTs.deepCopy(this).removeStates(unreachableStates);
+    }
+
+    @Override
+    default FST<S, T> trimEpsilonTransitions()
+    {
+        return (FST<S, T>) MutableAutomaton.super.trimEpsilonTransitions();
+    }
+
+    @Override
+    default FST<S, T> minimize()
+    {
+        if (hasEpsilonTransitions()) {
+            throw new UnsupportedOperationException("only available on instances without epsilon transitions");
+        }
+
+        return FSTs.castFrom((MutableFSA<Pair<S, T>>) VATA.reduce(asFSA()));
     }
 
     @Override

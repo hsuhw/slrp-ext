@@ -274,11 +274,6 @@ abstract class AbstractMutableFSATest
 
         describe("#minimize", () -> {
 
-            it("complains on nondeterministic instances", () -> {
-                final var fsa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input1, input2));
-                expect(fsa::minimize).toThrow(UnsupportedOperationException.class);
-            });
-
             it("meets a minimum expectation", () -> {
                 final var nfa = FSAs.acceptingOnly(alphabet, Sets.immutable.of(input5, input6));
                 final var dfa = nfa.determinize();

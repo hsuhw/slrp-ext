@@ -34,6 +34,63 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
     }
 
     @Override
+    default FSA<S> trimEpsilonTransitions()
+    {
+        return (FSA<S>) MutableAutomaton.super.trimEpsilonTransitions();
+    }
+
+    @Override
+    default FSA<S> minimize()
+    {
+        if (!isDeterministic()) {
+            if (hasEpsilonTransitions()) {
+                throw new UnsupportedOperationException("only available on instances without epsilon transitions");
+            }
+            return VATA.reduce(this);
+        }
+        if (acceptsNone()) {
+            return FSAs.acceptingNone(alphabet()); // shared reference
+        }
+        if (complement().acceptsNone()) {
+            return FSAs.acceptingAll(alphabet()); // shared reference
+        }
+
+        final var target = trimUnreachableStates().complete();
+        final ListIterable<State<S>> accepts = target.acceptStates().toList();
+        final ListIterable<State<S>> nonAccepts = target.nonAcceptStates().toList();
+        final RichIterable<ListIterable<State<S>>> initialPart = Lists.immutable.of(accepts, nonAccepts);
+        final var initialCheck = accepts.size() < nonAccepts.size() ? accepts : nonAccepts;
+        final var statePartition = target.refinePartition(initialPart, initialCheck);
+
+        final var symbols = alphabet().noEpsilonSet();
+        final var result = FSAs.create(alphabet(), statePartition.size());
+        final MutableMap<ListIterable<State<S>>, MutableState<S>> partitionMapping = UnifiedMap
+            .newMap(statePartition.size());
+        statePartition.forEach(part -> partitionMapping.put(part, result.newState()));
+        final MutableMap<State<S>, MutableState<S>> stateMapping = UnifiedMap.newMap(target.states().size());
+        statePartition.forEach(part -> part.forEach(state -> stateMapping.put(state, partitionMapping.get(part))));
+
+        final var originalStart = target.startState();
+        statePartition.forEach(part -> {
+            final var newState = partitionMapping.get(part);
+            if (part.contains(originalStart)) {
+                final var dummyStart = result.startState();
+                result.setAsStart(newState);
+                result.removeState(dummyStart);
+            }
+            if (part.anySatisfy(target::isAcceptState)) {
+                result.setAsAccept(newState);
+            }
+            symbols.forEach(symbol -> {
+                final var newSuccessor = stateMapping.get(part.getFirst().successor(symbol));
+                result.addTransition(newState, newSuccessor, symbol);
+            });
+        });
+
+        return result; // one-off
+    }
+
+    @Override
     default <R> FSA<R> project(Alphabet<R> alphabet, Function<S, R> projector)
     {
         final var result = FSAs.create(alphabet, states().size()); // upper bound
@@ -156,54 +213,6 @@ public interface MutableFSA<S> extends MutableAutomaton<S>, FSA<S>
         completeAlphabet.forEach(symbol -> result.addTransition(sink, sink, symbol));
         incomplete.forEach(state -> completeAlphabet.reject(state.enabledSymbols()::contains).forEach(
             nonTrans -> result.addTransition((MutableState<S>) state, sink, nonTrans)));
-
-        return result; // one-off
-    }
-
-    @Override
-    default FSA<S> minimize()
-    {
-        if (!isDeterministic()) {
-            throw new UnsupportedOperationException("only available on deterministic instances");
-        }
-        if (acceptsNone()) {
-            return FSAs.acceptingNone(alphabet()); // shared reference
-        }
-        if (complement().acceptsNone()) {
-            return FSAs.acceptingAll(alphabet()); // shared reference
-        }
-
-        final var target = trimUnreachableStates().complete();
-        final ListIterable<State<S>> accepts = target.acceptStates().toList();
-        final ListIterable<State<S>> nonAccepts = target.nonAcceptStates().toList();
-        final RichIterable<ListIterable<State<S>>> initialPart = Lists.immutable.of(accepts, nonAccepts);
-        final var initialCheck = accepts.size() < nonAccepts.size() ? accepts : nonAccepts;
-        final var statePartition = target.refinePartition(initialPart, initialCheck);
-
-        final var symbols = alphabet().noEpsilonSet();
-        final var result = FSAs.create(alphabet(), statePartition.size());
-        final MutableMap<ListIterable<State<S>>, MutableState<S>> partitionMapping = UnifiedMap
-            .newMap(statePartition.size());
-        statePartition.forEach(part -> partitionMapping.put(part, result.newState()));
-        final MutableMap<State<S>, MutableState<S>> stateMapping = UnifiedMap.newMap(target.states().size());
-        statePartition.forEach(part -> part.forEach(state -> stateMapping.put(state, partitionMapping.get(part))));
-
-        final var originalStart = target.startState();
-        statePartition.forEach(part -> {
-            final var newState = partitionMapping.get(part);
-            if (part.contains(originalStart)) {
-                final var dummyStart = result.startState();
-                result.setAsStart(newState);
-                result.removeState(dummyStart);
-            }
-            if (part.anySatisfy(target::isAcceptState)) {
-                result.setAsAccept(newState);
-            }
-            symbols.forEach(symbol -> {
-                final var newSuccessor = stateMapping.get(part.getFirst().successor(symbol));
-                result.addTransition(newState, newSuccessor, symbol);
-            });
-        });
 
         return result; // one-off
     }

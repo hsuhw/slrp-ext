@@ -74,13 +74,11 @@ public final class VATA
 
         result.append("Transitions").append(DISPLAY_NEWLINE);
         result.append("init -> ").append(stateNames.get(target.startState())).append(DISPLAY_NEWLINE);
-        target.states().forEach(state -> state.enabledSymbols().forEach(symbol -> {
-            state.successors(symbol).forEach(destination -> {
-                final var s = alphabetEncoder.encode(symbol);
-                final var dept = stateNames.get(state);
-                final var dest = stateNames.get(destination);
-                result.append(s).append("(").append(dept).append(") -> ").append(dest).append(DISPLAY_NEWLINE);
-            });
+        target.states().forEach(state -> state.transitions().forEach(symbolAndDest -> {
+            final var s = alphabetEncoder.encode(symbolAndDest.getOne());
+            final var dept = stateNames.get(state);
+            final var dest = stateNames.get(symbolAndDest.getTwo());
+            result.append(s).append("(").append(dept).append(") -> ").append(dest).append(DISPLAY_NEWLINE);
         }));
 
         return result.toString();

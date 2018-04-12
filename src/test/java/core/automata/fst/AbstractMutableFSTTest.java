@@ -82,16 +82,14 @@ abstract class AbstractMutableFSTTest
                 final var ts21 = fst.newState();
                 final var ts22 = fst.newState();
                 final var ts23 = fst.newState();
-                fst.addTransition(ts0, ts11, aa);
-                fst.addTransition(ts0, ts12, ba);
+                fst.addTransition(ts0, ts11, ee);
                 fst.addTransition(ts11, ts11, aa);
                 fst.addTransition(ts11, ts12, ba);
                 fst.addTransition(ts12, ts13, ab);
                 fst.addTransition(ts12, ts13, bb);
                 fst.addTransition(ts13, ts13, aa);
                 fst.addTransition(ts13, ts13, bb);
-                fst.addTransition(ts0, ts22, bb);
-                fst.addTransition(ts0, ts22, ab);
+                fst.addTransition(ts0, ts21, ee);
                 fst.addTransition(ts21, ts22, bb);
                 fst.addTransition(ts21, ts22, ab);
                 fst.addTransition(ts22, ts22, aa);
@@ -100,7 +98,7 @@ abstract class AbstractMutableFSTTest
                 fst.setAsAccept(ts13);
                 fst.setAsAccept(ts23);
 
-                final var resultWithStepCount = fst.postStarImageOnLength(fsa, 4);
+                final var resultWithStepCount = fst.trimEpsilonTransitions().postStarImageOnLength(fsa, 4);
                 final var result = resultWithStepCount.getOne();
                 final var stepCount = resultWithStepCount.getTwo();
                 expect(result.accepts(Lists.immutable.of(a, b, a, b))).toBeTrue();

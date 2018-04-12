@@ -13,6 +13,7 @@ import org.eclipse.collections.impl.map.mutable.UnifiedMap;
 import org.eclipse.collections.impl.set.mutable.UnifiedSet;
 import org.eclipse.collections.impl.tuple.Tuples;
 
+import static api.util.Constants.NONEXISTING_STATE;
 import static core.Parameters.NONDETERMINISTIC_TRANSITION_CAPACITY;
 
 public class MapSetState<S> implements MutableState<S>
@@ -100,11 +101,31 @@ public class MapSetState<S> implements MutableState<S>
     }
 
     @Override
-    public boolean addTransition(S transLabel, MutableState<S> to)
+    public MutableState<S> addTransition(S transLabel, MutableState<S> to)
     {
         Assert.argumentNotNull(transLabel, to);
 
-        return transitions.computeIfAbsent(transLabel, __ -> newDestinationSet()).add(to);
+        transitions.computeIfAbsent(transLabel, __ -> newDestinationSet()).add(to);
+
+        return this;
+    }
+
+    @Override
+    public MutableState<S> removeTransition(S transLabel, MutableState<S> to)
+    {
+        final var dests = transitions.get(transLabel);
+
+        if (dests == null) {
+            throw new IllegalArgumentException("non-existing transition label");
+        }
+        if (!dests.remove(to)) {
+            throw new IllegalArgumentException(NONEXISTING_STATE);
+        }
+        if (dests.isEmpty()) {
+            transitions.remove(transLabel);
+        }
+
+        return this;
     }
 
     @Override

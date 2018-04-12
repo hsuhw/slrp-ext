@@ -36,6 +36,16 @@ public abstract class AbstractMutableFSA<S> extends AbstractMutableAutomaton<S> 
     }
 
     @Override
+    public FSA<S> minimize()
+    {
+        if (!hasChanged && minimized != null) {
+            return minimized;
+        }
+
+        return (minimized = MutableFSA.super.minimize());
+    }
+
+    @Override
     public boolean isDeterministic()
     {
         if (!hasChanged && isDeterministic != null) {
@@ -64,16 +74,6 @@ public abstract class AbstractMutableFSA<S> extends AbstractMutableAutomaton<S> 
 
 
         return (completed = MutableFSA.super.complete());
-    }
-
-    @Override
-    public FSA<S> minimize()
-    {
-        if (!hasChanged && minimized != null) {
-            return minimized;
-        }
-
-        return (minimized = MutableFSA.super.minimize());
     }
 
     @Override

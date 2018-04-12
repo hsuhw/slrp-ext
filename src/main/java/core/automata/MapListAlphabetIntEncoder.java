@@ -81,8 +81,8 @@ public class MapListAlphabetIntEncoder<S> implements AlphabetIntEncoder<S>
     public int hashCode()
     {
         if (hashCode == -1) {
-            final int prime = 61;
-            int result = 1;
+            final var prime = 61;
+            var result = 1;
 
             result = prime * result + decoder.hashCode();
 
@@ -102,7 +102,7 @@ public class MapListAlphabetIntEncoder<S> implements AlphabetIntEncoder<S>
         if (obj instanceof MapListAlphabetIntEncoder<?>) {
             try {
                 @SuppressWarnings("unchecked")
-                final MapListAlphabetIntEncoder<S> other = (MapListAlphabetIntEncoder<S>) obj;
+                final MapListAlphabetIntEncoder<S> other = (MapListAlphabetIntEncoder) obj;
                 return other.decoder.equals(this.decoder);
             } catch (ClassCastException e) {
                 return false;

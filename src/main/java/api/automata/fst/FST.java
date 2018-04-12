@@ -27,6 +27,12 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
     FST<S, T> trimUnreachableStates();
 
     @Override
+    FST<S, T> trimEpsilonTransitions();
+
+    @Override
+    FST<S, T> minimize();
+
+    @Override
     default boolean isDeterministic()
     {
         throw new UnsupportedOperationException(NOT_IMPLEMENTED_YET);
@@ -59,6 +65,14 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
         return Alphabets.create(alphabet().asSet().collect(Pair::getTwo, set), epsilon);
     }
 
+    default boolean isSameSpaceMapping()
+    {
+        final var input = alphabet().epsilon().getOne();
+        final var output = alphabet().epsilon().getTwo();
+
+        return input.getClass().isInstance(output) && output.getClass().isInstance(input);
+    }
+
     default FSA<S> domain()
     {
         return (FSA<S>) project(inputAlphabet(), Pair::getOne);
@@ -67,13 +81,6 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
     default FSA<T> range()
     {
         return (FSA<T>) project(outputAlphabet(), Pair::getTwo);
-    }
-
-    default FST<T, S> inverse()
-    {
-        final var inverseAlphabet = Alphabets.product(outputAlphabet(), inputAlphabet());
-
-        return (FST<T, S>) project(inverseAlphabet, Labels.flipped());
     }
 
     default FST<S, T> maskByInput(FSA<S> mask)
@@ -102,22 +109,20 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
         final MutableSet<MutableStack<T>> result = UnifiedSet.newSet(resultCapacity);
         final var epsilon = alphabet().epsilon();
 
-        SetIterable<MutableStack<T>> postfixImages;
         boolean isEpsilonStep;
-        for (var inOut : state.enabledSymbols()) {
-            if ((isEpsilonStep = inOut.equals(epsilon)) || inOut.getOne().equals(inputNoAnyEpsilon.get(0))) {
-                for (var succ : state.successors(inOut)) {
-                    final var postfix = isEpsilonStep
-                                        ? inputNoAnyEpsilon
-                                        : inputNoAnyEpsilon.subList(1, inputNoAnyEpsilon.size());
-                    postfixImages = run(succ, postfix, capacity);
-                    for (var postfixOutput : postfixImages) {
-                        if (!isEpsilonStep) {
-                            postfixOutput.push(inOut.getTwo());
-                        }
-                        result.add(postfixOutput);
-                    }
+        for (var inOutAndDest : state.transitions()) {
+            final var inOut = inOutAndDest.getOne();
+            if (!(isEpsilonStep = inOut.equals(epsilon)) && !inOut.getOne().equals(inputNoAnyEpsilon.get(0))) {
+                continue;
+            }
+            final var postfix = isEpsilonStep
+                                ? inputNoAnyEpsilon
+                                : inputNoAnyEpsilon.subList(1, inputNoAnyEpsilon.size());
+            for (var postfixOutput : run(inOutAndDest.getTwo(), postfix, capacity)) {
+                if (!isEpsilonStep) {
+                    postfixOutput.push(inOut.getTwo());
                 }
+                result.add(postfixOutput);
             }
         }
 
@@ -141,15 +146,7 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
 
     private static <S> ObjectIntPair<FSA<S>> postStarImageOnLength(FST<S, S> fst, FSA<S> target, int length)
     {
-        final var epsilon = fst.alphabet().epsilon();
-        final var input = epsilon.getOne();
-        final var output = epsilon.getTwo();
-        if (!input.getClass().isInstance(output) || !output.getClass().isInstance(input)) {
-            throw new UnsupportedOperationException("only available on same space mapping instances");
-        }
-        final var targetEpsilon = target.alphabet().epsilon();
-        if (fst.states().anySatisfyWith(State::transitionExists, epsilon) ||
-            target.states().anySatisfyWith(State::transitionExists, targetEpsilon)) {
+        if (fst.hasEpsilonTransitions() || target.hasEpsilonTransitions()) {
             throw new UnsupportedOperationException("only available without epsilon transitions");
         }
 
@@ -169,8 +166,12 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
 
     default ObjectIntPair<FSA<S>> postStarImageOnLength(FSA<S> target, int length)
     {
+        if (!isSameSpaceMapping()) {
+            throw new UnsupportedOperationException("only available on same space mapping instances");
+        }
+
         @SuppressWarnings("unchecked")
-        final var fst = (FST<S, S>) this;
+        final FST<S, S> fst = (FST) this;
         return postStarImageOnLength(fst, target, length);
     }
 
@@ -194,9 +195,20 @@ public interface FST<S, T> extends Automaton<Pair<S, T>>
 
     default ObjectIntPair<FSA<S>> preStarImageOnLength(FSA<S> target, int length)
     {
+        if (!isSameSpaceMapping()) {
+            throw new UnsupportedOperationException("only available on same space mapping instances");
+        }
+
         @SuppressWarnings("unchecked")
-        final var fst = (FST<S, S>) this;
+        final FST<S, S> fst = (FST) this;
         return postStarImageOnLength(fst.inverse(), target, length);
+    }
+
+    default FST<T, S> inverse()
+    {
+        final var inverseAlphabet = Alphabets.product(outputAlphabet(), inputAlphabet());
+
+        return (FST<T, S>) project(inverseAlphabet, Labels.flipped());
     }
 
     FST<S, T> intersect(FST<S, T> target);

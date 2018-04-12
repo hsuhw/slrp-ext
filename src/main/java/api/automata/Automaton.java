@@ -18,9 +18,7 @@ import java.util.function.Function;
 
 import static api.util.Constants.DISPLAY_DUMMY_STATE_NAME_PREFIX;
 import static api.util.Constants.NONEXISTING_STATE;
-import static common.util.Constants.DISPLAY_INDENT;
-import static common.util.Constants.DISPLAY_NEWLINE;
-import static common.util.Constants.NOT_IMPLEMENTED_YET;
+import static common.util.Constants.*;
 
 public interface Automaton<S>
 {
@@ -87,7 +85,29 @@ public interface Automaton<S>
         return resultCasted;
     }
 
-    SetIterable<State<S>> liveStates();
+    default SetIterable<State<S>> liveStates()
+    {
+        final MutableSet<State<S>> result = UnifiedSet.newSet(states().size()); // upper bound
+        final var predecessors = predecessorRelation();
+        final var acceptStates = acceptStates();
+        final Queue<State<S>> pendingChecks = new LinkedList<>();
+        acceptStates.forEach(pendingChecks::add);
+        result.addAllIterable(acceptStates);
+
+        State<S> currLiving;
+        SetIterable<State<S>> preds;
+        while ((currLiving = pendingChecks.poll()) != null) {
+            if ((preds = predecessors.get(currLiving)) != null) {
+                preds.forEach(alsoLiving -> {
+                    if (result.add(alsoLiving)) {
+                        pendingChecks.add(alsoLiving);
+                    }
+                });
+            }
+        }
+
+        return result;
+    }
 
     default SetIterable<State<S>> deadEndStates()
     {
@@ -101,12 +121,21 @@ public interface Automaton<S>
 
     Automaton<S> trimUnreachableStates();
 
+    Automaton<S> trimEpsilonTransitions();
+
+    Automaton<S> minimize();
+
     <R> Automaton<R> project(Alphabet<R> alphabet, Function<S, R> projector);
 
     <T, R> Automaton<R> product(Automaton<T> target, Alphabet<R> alphabet, StepMaker<S, T, R> stepMaker,
         Finalizer<S, T, R> finalizer);
 
     boolean isDeterministic();
+
+    default boolean hasEpsilonTransitions()
+    {
+        return states().anySatisfyWith(State::transitionExists, alphabet().epsilon());
+    }
 
     TransitionGraph<S> transitionGraph();
 

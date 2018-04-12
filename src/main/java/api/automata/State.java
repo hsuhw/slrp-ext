@@ -48,7 +48,7 @@ public interface State<S>
         final var result = new StringBuilder();
         final Function<State<S>, String> getName = state -> nameMask != null
                                                             ? nameMask.get(state)
-                                                            : (state.name() != null ? state.name() : this.toString());
+                                                            : (state.name() != null ? state.name() : state.toString());
 
         transitions().forEach(labelAndState -> {
             result.append(indent);

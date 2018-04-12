@@ -77,7 +77,7 @@ public class SetAlphabet<S> implements Alphabet<S>
         if (obj instanceof SetAlphabet<?>) {
             try {
                 @SuppressWarnings("unchecked")
-                final var other = (SetAlphabet<S>) obj;
+                final SetAlphabet<S> other = (SetAlphabet) obj;
                 return other.symbols.equals(this.symbols) && other.epsilon.equals(this.epsilon);
             } catch (ClassCastException e) {
                 return false;

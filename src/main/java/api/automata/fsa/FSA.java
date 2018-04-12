@@ -32,6 +32,9 @@ public interface FSA<S> extends Automaton<S>
     FSA<S> trimUnreachableStates();
 
     @Override
+    FSA<S> trimEpsilonTransitions();
+
+    @Override
     <R> FSA<R> project(Alphabet<R> alphabet, Function<S, R> projector);
 
     default boolean isDeterministic()
@@ -143,12 +146,11 @@ public interface FSA<S> extends Automaton<S>
                 return word.reverseThis();
             }
             final var visitor = currState; // effectively finalized for the lambda expression
-            for (var symbol : currState.enabledSymbols()) {
-                visitRecord.computeIfAbsent(visitor.successor(symbol), visited -> {
-                    pendingChecks.add(visited);
-                    return Tuples.pair(visitor, symbol);
-                });
-            }
+            visitor.transitions()
+                   .forEach(symbolAndDest -> visitRecord.computeIfAbsent(symbolAndDest.getTwo(), visited -> {
+                       pendingChecks.add(visited);
+                       return Tuples.pair(visitor, symbolAndDest.getOne());
+                   }));
         }
 
         return null;

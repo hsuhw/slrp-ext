@@ -12,6 +12,7 @@ public abstract class AbstractMutableFST<S, T> extends AbstractMutableAutomaton<
 {
     private Alphabet<S> inputAlphabet;
     private Alphabet<T> outputAlphabet;
+    private FST<S, T> minimized;
     private FST<T, S> inverse;
     private FSA<Pair<S, T>> fsaForm;
 
@@ -23,6 +24,16 @@ public abstract class AbstractMutableFST<S, T> extends AbstractMutableAutomaton<
     public AbstractMutableFST(AbstractMutableAutomaton<Pair<S, T>> toCopy, boolean deep)
     {
         super(toCopy, deep);
+    }
+
+    @Override
+    public FST<S, T> minimize()
+    {
+        if (!hasChanged && minimized != null) {
+            return minimized;
+        }
+
+        return (minimized = MutableFST.super.minimize());
     }
 
     @Override

@@ -26,7 +26,7 @@ public class BiMapAlphabetEncoder<S, T> implements AlphabetEncoder<S, T>
             throw new IllegalArgumentException("null found in the definition");
         }
 
-        final ImmutableBiMap<S, T> symbolTable = definition.toImmutable();
+        final var symbolTable = definition.toImmutable();
         encoder = symbolTable;
         decoder = symbolTable.inverse();
         this.originEpsilon = originEpsilon;
@@ -67,29 +67,33 @@ public class BiMapAlphabetEncoder<S, T> implements AlphabetEncoder<S, T>
     @Override
     public T encode(S symbol)
     {
-        if (!encoder.containsKey(symbol)) {
+        final var result = encoder.get(symbol);
+
+        if (result == null) {
             throw new IllegalStateException("symbol " + symbol + " not present");
         }
 
-        return encoder.get(symbol);
+        return result;
     }
 
     @Override
     public S decode(T symbol)
     {
-        if (!decoder.containsKey(symbol)) {
+        final var result = decoder.get(symbol);
+
+        if (result == null) {
             throw new IllegalStateException("symbol " + symbol + " not present");
         }
 
-        return decoder.get(symbol);
+        return result;
     }
 
     @Override
     public int hashCode()
     {
         if (hashCode == -1) {
-            final int prime = 41;
-            int result = 1;
+            final var prime = 41;
+            var result = 1;
 
             result = prime * result + encoder.hashCode();
             result = prime * result + originEpsilon.hashCode();
@@ -110,7 +114,7 @@ public class BiMapAlphabetEncoder<S, T> implements AlphabetEncoder<S, T>
         if (obj instanceof BiMapAlphabetEncoder<?, ?>) {
             try {
                 @SuppressWarnings("unchecked")
-                final BiMapAlphabetEncoder<S, T> other = (BiMapAlphabetEncoder<S, T>) obj;
+                final BiMapAlphabetEncoder<S, T> other = (BiMapAlphabetEncoder) obj;
                 return other.encoder.equals(this.encoder) && other.originEpsilon.equals(this.originEpsilon);
             } catch (ClassCastException e) {
                 return false;

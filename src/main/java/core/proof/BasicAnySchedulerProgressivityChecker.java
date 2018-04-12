@@ -143,7 +143,7 @@ public class BasicAnySchedulerProgressivityChecker implements AnySchedulerProgre
             if (obj instanceof StateTuple<?>) {
                 try {
                     @SuppressWarnings("unchecked")
-                    final var other = (StateTuple<S>) obj;
+                    final StateTuple<S> other = (StateTuple) obj;
                     return other.sched.equals(this.sched) && other.inv.equals(this.inv) && other.rhs.equals(this.rhs);
                 } catch (ClassCastException e) {
                     return false;

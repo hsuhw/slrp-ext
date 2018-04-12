@@ -60,10 +60,10 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
 
             toCopy.states.forEach(stateToCopy -> {
                 final var newState = stateMapping.computeIfAbsent(stateToCopy, __ -> newState());
-                stateToCopy.enabledSymbols().forEach(symbol -> stateToCopy.successors(symbol).forEach(succ -> {
-                    final var newSucc = stateMapping.computeIfAbsent(succ, __ -> newState());
-                    newState.addTransition(symbol, newSucc);
-                }));
+                stateToCopy.transitions().forEach(symbolAndDest -> {
+                    final var newSucc = stateMapping.computeIfAbsent(symbolAndDest.getTwo(), __ -> newState());
+                    newState.addTransition(symbolAndDest.getOne(), newSucc);
+                });
             });
             acceptStates = UnifiedSet.newSet(toCopy.states.size());
             toCopy.acceptStates.forEach(state -> acceptStates.add(stateMapping.get(state)));
@@ -159,23 +159,7 @@ public abstract class AbstractMutableAutomaton<S> implements MutableAutomaton<S>
             return liveStates;
         }
 
-        final MutableSet<State<S>> result = UnifiedSet.newSet(states().size()); // upper bound
-        final var predecessors = predecessorRelation();
-        final Queue<State<S>> pendingChecks = new LinkedList<>(acceptStates);
-        result.addAllIterable(acceptStates);
-
-        State<S> currLiving;
-        while ((currLiving = pendingChecks.poll()) != null) {
-            if (predecessors.containsKey(currLiving)) {
-                predecessors.get(currLiving).forEach(alsoLiving -> {
-                    if (result.add(alsoLiving)) {
-                        pendingChecks.add(alsoLiving);
-                    }
-                });
-            }
-        }
-
-        return (liveStates = result);
+        return (liveStates = MutableAutomaton.super.liveStates());
     }
 
     @Override
