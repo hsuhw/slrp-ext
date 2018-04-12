@@ -1,12 +1,10 @@
 package api.automata.fst;
 
-import api.automata.Alphabet;
-import api.automata.Automaton;
-import api.automata.MutableAutomaton;
-import api.automata.MutableState;
+import api.automata.*;
 import api.automata.fsa.FSA;
 import api.automata.fsa.FSAs;
 import org.eclipse.collections.api.RichIterable;
+import org.eclipse.collections.api.block.procedure.Procedure;
 import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.tuple.Pair;
 
@@ -113,14 +111,18 @@ public interface MutableFST<S, T> extends MutableAutomaton<Pair<S, T>>, FST<S, T
         }
 
         final var result = FSTs.shallowCopy(this);
-        final var newStart = result.newState();
         @SuppressWarnings("unchecked")
         final SetIterable<MutableState<Pair<S, T>>> targetStates = (SetIterable) target.states();
         @SuppressWarnings("unchecked")
         final SetIterable<MutableState<Pair<S, T>>> targetAccepts = (SetIterable) target.acceptStates();
-        result.addEpsilonTransition(newStart, startState()).setAsStart(newStart) //
-              .addStates(targetStates).addEpsilonTransition(newStart, (MutableState<Pair<S, T>>) target.startState())
-              .setAllAsAccept(targetAccepts);
+        result.addStates(targetStates).setAllAsAccept(targetAccepts);
+
+        final var newStart = result.newState();
+        final Procedure<Pair<Pair<S, T>, State<Pair<S, T>>>> addToNewStart = symbolAndDest -> //
+            result.addTransition(newStart, (MutableState<Pair<S, T>>) symbolAndDest.getTwo(), symbolAndDest.getOne());
+        startState().transitions().forEach(addToNewStart);
+        target.startState().transitions().forEach(addToNewStart);
+        result.setAsStart(newStart);
 
         return result; // shallow reference
     }

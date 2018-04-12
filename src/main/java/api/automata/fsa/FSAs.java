@@ -172,7 +172,7 @@ public final class FSAs
         S symbol;
         for (var word : words) {
             if (word.isEmpty()) {
-                result.addEpsilonTransition(currState, acceptState);
+                result.setAsAccept(startState);
                 continue;
             }
             for (var i = 0; i < (lastSymbolPos = word.size() - 1); i++) {
