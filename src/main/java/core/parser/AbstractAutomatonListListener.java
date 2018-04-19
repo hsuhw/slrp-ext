@@ -16,6 +16,7 @@ import java.util.List;
 import static api.parser.Parser.SymbolPolicy;
 import static api.parser.Parser.SymbolPolicy.AGGREGATE;
 import static api.parser.Parser.SymbolPolicy.SEPARATE;
+import static common.util.Constants.SHOULD_NOT_HAPPEN;
 import static core.Parameters.PARSER_COMMON_CAPACITY;
 
 public abstract class AbstractAutomatonListListener<S>
@@ -53,7 +54,7 @@ public abstract class AbstractAutomatonListListener<S>
                 predefinedAlphabet = Alphabets.create(UnifiedSet.newSet(PARSER_COMMON_CAPACITY), epsilonSymbol);
                 break;
             default:
-                break; // should not happen
+                throw new IllegalStateException(SHOULD_NOT_HAPPEN);
         }
         result = FastList.newList(PARSER_COMMON_CAPACITY);
         symbolPolicy = policy;
@@ -105,7 +106,7 @@ public abstract class AbstractAutomatonListListener<S>
                 currAlphabet = null;
                 break;
             default:
-                break; // should not happen
+                throw new IllegalStateException(SHOULD_NOT_HAPPEN);
         }
         stateNameTable = null;
         currBuilder = null;
